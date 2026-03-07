@@ -1,0 +1,61 @@
+<view class="container">
+  <!-- 积分卡片 -->
+  <view class="card points-card">
+    <text class="points-label">当前积分</text>
+    <text class="points-value">{{userInfo.points}}</text>
+    <view class="points-history" bindtap="goToHistory">
+      <text>兑换记录</text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 奖励列表 -->
+  <view class="rewards-list">
+    <block wx:for="{{rewards}}" wx:key="_id">
+      <view class="reward-item">
+        <view class="reward-image-wrapper">
+          <image class="reward-image" src="{{item.image || '/images/default-reward.png'}}" mode="aspectFill"></image>
+          <view class="reward-badge" wx:if="{{item.stock < 20}}">剩余{{item.stock}}</view>
+        </view>
+        <view class="reward-content">
+          <text class="reward-name">{{item.name}}</text>
+          <text class="reward-desc">{{item.description}}</text>
+          <view class="reward-bottom">
+            <text class="reward-points">{{item.points}}积分</text>
+            <button class="btn-exchange" bindtap="exchangeReward" data-id="{{item._id}}" data-points="{{item.points}}" disabled="{{userInfo.points < item.points || item.stock <= 0}}">
+              {{userInfo.points >= item.points && item.stock > 0 ? '兑换' : '积分不足'}}
+            </button>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 兑换记录弹窗 -->
+  <view class="modal" wx:if="{{showHistory}}">
+    <view class="modal-mask" bindtap="closeHistory"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text>兑换记录</text>
+        <text class="close-btn" bindtap="closeHistory">×</text>
+      </view>
+      <scroll-view class="modal-body" scroll-y>
+        <block wx:for="{{exchangeRecords}}" wx:key="_id">
+          <view class="record-item">
+            <view class="record-info">
+              <image src="{{item.rewardImage || '/images/default-reward.png'}}" mode="aspectFill"></image>
+              <view class="record-text">
+                <text class="record-name">{{item.rewardName}}</text>
+                <text class="record-time">{{item.createTime}}</text>
+              </view>
+            </view>
+            <text class="record-points">-{{item.pointsUsed}}积分</text>
+          </view>
+        </block>
+        <view class="empty-history" wx:if="{{exchangeRecords.length === 0}}">
+          <text>暂无兑换记录</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

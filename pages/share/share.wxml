@@ -1,0 +1,28 @@
+<view class="container">
+  <!-- 海报预览 -->
+  <view class="poster-wrapper">
+    <canvas type="2d" id="posterCanvas" class="poster-canvas"></canvas>
+    <image class="poster-preview" src="{{posterImage}}" mode="widthFix" wx:if="{{posterImage}}"></image>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="actions">
+    <button class="btn-save" bindtap="savePoster" wx:if="{{posterImage}}">
+      <text class="btn-icon">💾</text>
+      <text>保存到相册</text>
+    </button>
+    <button class="btn-share" bindtap="shareToMoments" open-type="share">
+      <text class="btn-icon">📤</text>
+      <text>分享到朋友圈</text>
+    </button>
+    <button class="btn-back" bindtap="goBack">
+      <text class="btn-icon">←</text>
+      <text>返回</text>
+    </button>
+  </view>
+
+  <!-- 提示 -->
+  <view class="tip">
+    <text>💡 提示：保存海报后可在朋友圈分享</text>
+  </view>
+</view>

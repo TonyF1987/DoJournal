@@ -1,0 +1,244 @@
+/* 页面滚动容器 */
+page {
+  height: auto;
+  min-height: 100vh;
+}
+
+.points-card {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  position: relative;
+  overflow: hidden;
+}
+
+.points-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+}
+
+.points-label {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.9);
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.points-value {
+  font-size: 80rpx;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+  text-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.points-history {
+  position: absolute;
+  top: 30rpx;
+  right: 30rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  color: #fff;
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+.arrow {
+  font-size: 32rpx;
+}
+
+.rewards-list {
+  padding-top: 20rpx;
+}
+
+.reward-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  display: flex;
+  gap: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.reward-image-wrapper {
+  width: 160rpx;
+  height: 160rpx;
+  position: relative;
+}
+
+.reward-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 12rpx;
+}
+
+.reward-badge {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  background: rgba(255, 82, 82, 0.9);
+  color: #fff;
+  font-size: 18rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+}
+
+.reward-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.reward-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.reward-desc {
+  font-size: 24rpx;
+  color: #999;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.reward-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reward-points {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #FFA500;
+}
+
+.btn-exchange {
+  padding: 16rpx 40rpx;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: #fff;
+  border-radius: 50rpx;
+  font-size: 26rpx;
+  font-weight: bold;
+  border: none;
+}
+
+.btn-exchange[disabled] {
+  background: #e0e0e0;
+  color: #999;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.close-btn {
+  font-size: 48rpx;
+  color: #999;
+  line-height: 1;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20rpx;
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  background: #f9f9f9;
+  border-radius: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.record-info {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.record-info image {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 8rpx;
+}
+
+.record-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.record-name {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.record-time {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.record-points {
+  font-size: 28rpx;
+  color: #FF5252;
+  font-weight: bold;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}

@@ -1,0 +1,153 @@
+<scroll-view scroll-y="true" class="scroll-container">
+  <wxs module="utils">
+    module.exports = {
+      includes: function(arr, val) {
+        if (!arr || arr.length === 0) return false;
+        for (var i = 0; i < arr.length; i++) {
+          if (arr[i] === val) return true;
+        }
+        return false;
+      }
+    }
+  </wxs>
+  <view class="container">
+    <form bindsubmit="submitHomework">
+      <!-- 作业标题 -->
+      <view class="card">
+        <view class="form-label">作业标题 *</view>
+        <view class="form-input-container">
+          <input class="form-input" name="title" placeholder="例如：数学作业、英语单词" value="{{title}}" bindinput="onTitleInput"></input>
+        </view>
+      </view>
+
+      <!-- 作业内容 -->
+      <view class="card">
+        <view class="form-label">作业内容 *</view>
+        <view class="form-textarea-container">
+          <textarea class="form-textarea" name="content" placeholder="详细描述作业内容..." value="{{content}}" bindinput="onContentInput"></textarea>
+        </view>
+      </view>
+
+      <!-- 选择类型 -->
+      <view class="card">
+        <view class="form-label">添加方式</view>
+        <view class="type-selector">
+          <view class="type-item {{type === 'manual' ? 'active' : ''}}" bindtap="selectType" data-type="manual">
+            <text class="type-icon">✍️</text>
+            <text class="type-text">手动添加</text>
+          </view>
+          <view class="type-item {{type === 'import' ? 'active' : ''}}" bindtap="selectType" data-type="import">
+            <text class="type-icon">📱</text>
+            <text class="type-text">从聊天导入</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 从聊天导入 -->
+      <view class="card" wx:if="{{type === 'import'}}">
+        <view class="form-label">导入作业内容</view>
+
+        <!-- 快捷操作按钮 -->
+        <view class="quick-actions">
+          <view class="action-btn" bindtap="selectFromAlbum">
+            <text class="action-icon">📷</text>
+            <text class="action-title">选择图片</text>
+            <text class="action-desc">从相册选择作业图片</text>
+          </view>
+          <view class="action-btn" bindtap="takePhoto">
+            <text class="action-icon">📸</text>
+            <text class="action-title">拍照识别</text>
+            <text class="action-desc">拍摄作业并自动识别</text>
+          </view>
+          <view class="action-btn" bindtap="showForwardGuide">
+            <text class="action-icon">💬</text>
+            <text class="action-title">聊天转发</text>
+            <text class="action-desc">从聊天消息导入</text>
+          </view>
+        </view>
+
+        <!-- 已导入内容预览 -->
+        <view class="import-preview-section" wx:if="{{importedContent.length > 0}}">
+          <view class="preview-header">
+            <text class="preview-title">已导入内容</text>
+            <text class="preview-count">{{importedContent.length}}张图片</text>
+          </view>
+          <view class="import-preview">
+            <block wx:for="{{importedContent}}" wx:key="index">
+              <view class="preview-item" wx:if="{{item.type === 'image'}}">
+                <image src="{{item.url}}" mode="aspectFill" bindtap="previewImage" data-src="{{item.url}}"></image>
+                <view class="remove-image" bindtap="removeImage" data-index="{{index}}">×</view>
+              </view>
+            </block>
+          </view>
+          <view class="image-action-buttons">
+            <button class="btn-secondary" bindtap="selectFromAlbum">添加更多图片</button>
+            <button class="btn-primary" bindtap="recognizeAllImages">识别全部图片</button>
+          </view>
+        </view>
+
+        <!-- 转发说明(当没有内容时显示) -->
+        <view class="forward-guide" wx:if="{{!importedContent.length}}">
+          <view class="guide-title">💡 三种导入方式</view>
+          <view class="guide-step">
+            <text class="step-badge">1</text>
+            <text class="step-text">选择图片：从相册选择作业图片</text>
+          </view>
+          <view class="guide-step">
+            <text class="step-badge">2</text>
+            <text class="step-text">拍照识别：直接拍摄作业照片</text>
+          </view>
+          <view class="guide-step">
+            <text class="step-badge">3</text>
+            <text class="step-text">聊天转发：从微信聊天转发作业内容</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 设置周期 -->
+      <view class="card">
+        <view class="form-label">
+          <text>设为周期作业</text>
+          <switch checked="{{recurring}}" bindchange="onRecurringChange" color="#4CAF50"></switch>
+        </view>
+        <view class="recurring-days" wx:if="{{recurring}}">
+          <block wx:for="{{weekDays}}" wx:key="index">
+            <view class="day-item {{utils.includes(recurringDays, index) ? 'active' : ''}}" bindtap="toggleDay" data-index="{{index}}">
+              <text>{{item}}</text>
+            </view>
+          </block>
+        </view>
+        <text class="tip" wx:if="{{recurring && recurringDays.length === 0}}">请选择至少一天</text>
+      </view>
+
+      <!-- 作业积分 -->
+      <view class="card">
+        <view class="form-label">作业积分</view>
+        <view class="points-display">
+          <text class="points-value">{{points}}</text>
+          <text class="points-unit">积分</text>
+        </view>
+        <view class="points-selector">
+          <view class="point-item {{points === 5 ? 'active' : ''}}" bindtap="selectPoints" data-points="5">5</view>
+          <view class="point-item {{points === 10 ? 'active' : ''}}" bindtap="selectPoints" data-points="10">10</view>
+          <view class="point-item {{points === 20 ? 'active' : ''}}" bindtap="selectPoints" data-points="20">20</view>
+          <view class="point-item {{points === 50 ? 'active' : ''}}" bindtap="selectPoints" data-points="50">50</view>
+          <view class="point-item {{points === 100 ? 'active' : ''}}" bindtap="selectPoints" data-points="100">100</view>
+        </view>
+        <view class="custom-points-section">
+          <view class="custom-label">或自定义积分：</view>
+          <view class="stepper">
+            <view class="stepper-btn minus" bindtap="decreasePoints">−</view>
+            <input type="number" class="stepper-input" value="{{points}}" bindinput="onCustomPointsInput" />
+            <view class="stepper-btn plus" bindtap="increasePoints">+</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 提交按钮 -->
+      <view class="submit-section">
+        <button class="btn-submit" form-type="submit" disabled="{{!canSubmit}}">{{isEdit ? '保存修改' : '添加作业'}}</button>
+      </view>
+    </form>
+  </view>
+</scroll-view>

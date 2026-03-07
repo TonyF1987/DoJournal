@@ -1,0 +1,12 @@
+{
+  "name": "ocrGeneral",
+  "version": "1.0.0",
+  "description": "OCR通用印刷体识别云函数",
+  "main": "index.js",
+  "dependencies": {
+    "@alicloud/ocr-api20210707": "^3.1.3",
+    "@alicloud/openapi-client": "^0.4.6",
+    "@alicloud/tea-util": "^1.4.5",
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,98 @@
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <view class="user-header">
+      <image class="avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill"></image>
+      <view class="user-info">
+        <text class="greeting">{{greeting}}</text>
+        <text class="user-name">{{userInfo.nickName || '小宝贝'}}</text>
+      </view>
+    </view>
+    <view class="stats-row">
+      <view class="stat-box">
+        <text class="stat-value">{{userInfo.points}}</text>
+        <text class="stat-label">积分</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-box">
+        <text class="stat-value">🔥 {{userInfo.streak}}</text>
+        <text class="stat-label">连续打卡</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-box">
+        <text class="stat-value">{{completedToday}}</text>
+        <text class="stat-label">今日完成</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 待完成 -->
+  <view class="section">
+    <view class="section-header">
+      <view class="section-title-wrap">
+        <text class="section-icon">📋</text>
+        <text class="section-title">待完成</text>
+      </view>
+      <view class="count-badge" wx:if="{{pendingHomework.length > 0}}">{{pendingHomework.length}}</view>
+    </view>
+    <view class="homework-list" wx:if="{{pendingHomework.length > 0}}">
+      <block wx:for="{{pendingHomework}}" wx:key="_id">
+        <view class="homework-card" bindtap="goToEdit" data-id="{{item._id}}">
+          <view class="card-header">
+            <text class="card-title">{{item.title}}</text>
+            <view class="points-tag">+{{item.points}}</view>
+          </view>
+          <text class="card-desc">{{item.content}}</text>
+          <view class="card-footer">
+            <view class="card-meta">
+              <text class="meta-tag recurring" wx:if="{{item.recurring}}">🔄 {{item.recurringDaysText}}</text>
+              <text class="meta-time" wx:else>{{item.createTime}}</text>
+            </view>
+            <view class="checkin-btn" catchtap="goToCheckIn" data-id="{{item._id}}">
+              <text>去打卡</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+    <view class="empty-state" wx:else>
+      <text class="empty-icon">🎉</text>
+      <text class="empty-text">太棒了，全部完成！</text>
+      <text class="empty-sub">快去添加新任务吧</text>
+    </view>
+  </view>
+
+  <!-- 已完成 -->
+  <view class="section">
+    <view class="section-header">
+      <view class="section-title-wrap">
+        <text class="section-icon">✅</text>
+        <text class="section-title">已完成</text>
+      </view>
+      <view class="count-badge completed" wx:if="{{completedHomework.length > 0}}">{{completedHomework.length}}</view>
+    </view>
+    <view class="homework-list" wx:if="{{completedHomework.length > 0}}">
+      <block wx:for="{{completedHomework}}" wx:key="_id">
+        <view class="homework-card done">
+          <view class="card-header">
+            <text class="card-title">{{item.title}}</text>
+            <view class="points-tag done">+{{item.points}}</view>
+          </view>
+          <text class="card-desc">{{item.content}}</text>
+          <view class="card-footer">
+            <text class="done-time">完成于 {{item.checkInTime}}</text>
+            <view class="done-icon-small">✓</view>
+          </view>
+        </view>
+      </block>
+    </view>
+    <view class="empty-state small" wx:else>
+      <text class="empty-text">暂无完成记录</text>
+    </view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="add-btn" bindtap="goToAdd">
+    <text>+</text>
+  </view>
+</view>
