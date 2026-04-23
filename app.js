@@ -10,8 +10,8 @@ App({
       });
     }
 
-    // 获取用户信息
-    this.getUserInfo();
+    // 检查登录状态，但不自动获取用户信息（需用户主动登录）
+    this.checkLoginStatus();
   },
 
   onShow(options) {
@@ -25,31 +25,53 @@ App({
     }
   },
 
-  // 获取用户信息
-  getUserInfo() {
-    const that = this;
-    wx.getSetting({
-      success: (res) => {
-        if (res.authSetting['scope.userInfo']) {
-          wx.getUserInfo({
-            success: (res) => {
-              that.globalData.userInfo = res.userInfo;
-              that.login();
-            }
-          });
-        }
-      }
-    });
+  // 检查登录状态
+  checkLoginStatus() {
+    // 检查是否已经有用户信息
+    const userInfo = wx.getStorageSync('userInfo');
+    if (userInfo) {
+      this.globalData.userInfo = JSON.parse(userInfo);
+    }
+
+    // 检查是否已经登录
+    const openid = wx.getStorageSync('openid');
+    const userId = wx.getStorageSync('userId');
+    if (openid && userId) {
+      this.globalData.openid = openid;
+      this.globalData.userId = userId;
+    }
   },
 
   // 登录并获取openid
-  login() {
+  login(callback) {
     wx.cloud.callFunction({
       name: 'login',
       data: {},
       success: res => {
-        this.globalData.openid = res.result.openid;
-        this.globalData.userId = res.result.userId;
+        const { openid, userId, isNewUser } = res.result;
+        this.globalData.openid = openid;
+        this.globalData.userId = userId;
+        
+        // 保存到本地存储
+        wx.setStorageSync('openid', openid);
+        wx.setStorageSync('userId', userId);
+        
+        console.log('登录成功:', res.result);
+        
+        if (callback) {
+          callback(res.result);
+        }
+      },
+      fail: err => {
+        console.error('登录失败:', err);
+        wx.showToast({
+          title: '登录失败',
+          icon: 'none'
+        });
+        
+        if (callback) {
+          callback(null, err);
+        }
       }
     });
   },
@@ -58,6 +80,25 @@ App({
     userInfo: null,
     openid: null,
     userId: null,
-    sharedMessage: null // 存储从聊天转发的消息
-  }
+    sharedMessage: null, // 存储从聊天转发的消息
+    isLoggedIn: false // 登录状态标记
+  },
+
+  // 保存用户信息到本地存储
+  saveUserInfo(userInfo) {
+    this.globalData.userInfo = userInfo;
+    wx.setStorageSync('userInfo', JSON.stringify(userInfo));
+  },
+
+  // 清除用户信息（退出登录）
+  clearUserInfo() {
+    this.globalData.userInfo = null;
+    this.globalData.openid = null;
+    this.globalData.userId = null;
+    this.globalData.isLoggedIn = false;
+    
+    wx.removeStorageSync('userInfo');
+    wx.removeStorageSync('openid');
+    wx.removeStorageSync('userId');
+  },
 });

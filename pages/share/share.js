@@ -1,3 +1,4 @@
+const app = getApp();
 const db = wx.cloud.database();
 
 Page({
@@ -12,6 +13,15 @@ Page({
   },
 
   onLoad(options) {
+    // 检查登录状态
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      console.log('用户未登录，跳转到登录页面');
+      wx.navigateTo({
+        url: '/pages/login/login'
+      });
+      return;
+    }
+
     if (options.homeworkId) {
       this.setData({
         homeworkId: options.homeworkId,

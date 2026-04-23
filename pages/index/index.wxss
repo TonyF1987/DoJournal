@@ -8,56 +8,49 @@ page {
   padding: 24rpx;
 }
 
-/* 用户卡片 */
-.user-card {
+/* 顶部区域 */
+.top-header {
   background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
-  border-radius: 24rpx;
-  padding: 32rpx;
-  margin-bottom: 32rpx;
-  box-shadow: 0 8rpx 32rpx rgba(76, 175, 80, 0.3);
+  padding: 40rpx 24rpx 80rpx;
+  margin: -24rpx -24rpx 32rpx;
+  position: relative;
+  overflow: hidden;
 }
 
-.user-header {
+.header-content {
   display: flex;
-  align-items: center;
-  margin-bottom: 28rpx;
-}
-
-.avatar {
-  width: 100rpx;
-  height: 100rpx;
-  border-radius: 50%;
-  border: 4rpx solid rgba(255, 255, 255, 0.4);
-  margin-right: 24rpx;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32rpx;
 }
 
 .user-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.greeting {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 4rpx;
+  flex: 1;
 }
 
 .user-name {
-  font-size: 36rpx;
+  font-size: 40rpx;
   font-weight: bold;
   color: #fff;
+  margin-bottom: 8rpx;
+  display: block;
 }
 
-.stats-row {
+.header-slogan {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+  display: block;
+}
+
+.header-stats {
   display: flex;
-  align-items: center;
   justify-content: space-around;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 16rpx;
   padding: 20rpx 0;
 }
 
-.stat-box {
+.stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -76,15 +69,13 @@ page {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.stat-divider {
-  width: 1rpx;
-  height: 50rpx;
-  background: rgba(255, 255, 255, 0.3);
-}
-
 /* 区块样式 */
 .section {
   margin-bottom: 32rpx;
+}
+
+.section:last-child {
+  margin-bottom: 120rpx;
 }
 
 .section-header {
@@ -126,6 +117,136 @@ page {
   background: linear-gradient(135deg, #4CAF50, #66BB6A);
 }
 
+.subject-count {
+  font-size: 24rpx;
+  color: #999;
+  background: #f5f5f5;
+  padding: 4rpx 16rpx;
+  border-radius: 16rpx;
+}
+
+/* 作业区域 */
+.homework-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+  padding: 0 8rpx;
+}
+
+.homework-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333;
+}
+
+.homework-actions {
+  display: flex;
+  gap: 32rpx;
+}
+
+.action-btn {
+  font-size: 28rpx;
+  color: #FFA726;
+  font-weight: 600;
+}
+
+/* 科目标签栏 */
+.subject-tabs-container {
+  margin-bottom: 32rpx;
+}
+
+.subject-tabs {
+  white-space: nowrap;
+}
+
+.tab-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 20rpx 32rpx;
+  margin-right: 16rpx;
+  background: #f5f5f5;
+  border-radius: 40rpx;
+  position: relative;
+  min-width: 80rpx;
+}
+
+.tab-item.active {
+  background: linear-gradient(135deg, #FF9800, #FFA726);
+}
+
+.tab-status {
+  position: absolute;
+  top: -8rpx;
+  right: 8rpx;
+  font-size: 20rpx;
+  padding: 2rpx 8rpx;
+  border-radius: 10rpx;
+  color: #fff;
+  z-index: 10;
+}
+
+.tab-status.pending {
+  background: #FF5252;
+}
+
+.tab-check.completed {
+  position: absolute;
+  top: -8rpx;
+  left: 8rpx;
+  font-size: 24rpx;
+  color: #fff;
+  font-weight: bold;
+  background: #4CAF50;
+  border-radius: 50%;
+  width: 36rpx;
+  height: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.tab-text {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #666;
+}
+
+.tab-item.active .tab-text {
+  color: #fff;
+  font-weight: bold;
+}
+
+.add-subject-btn {
+  width: 50rpx;
+  height: 50rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 28rpx;
+  flex-shrink: 0;
+  font-weight: bold;
+  position: relative;
+  z-index: 10;
+  margin-left: 16rpx;
+  margin-right: 20rpx;
+  vertical-align: middle;
+  display: inline-flex;
+  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.3);
+}
+
+.add-subject-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.3);
+}
+
+
+
 /* 任务列表 */
 .homework-list {
   display: flex;
@@ -137,11 +258,54 @@ page {
   background: #fff;
   border-radius: 20rpx;
   padding: 24rpx;
-  flex: 1 1 calc(50% - 10rpx);
-  min-width: 300rpx;
+  flex: 1 1 100%;
+  min-width: 100%;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   border: 2rpx solid transparent;
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+.card-left {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 4rpx;
+}
+
+.done-icon-left {
+  width: 48rpx;
+  height: 48rpx;
+  background: #4CAF50;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.25);
+}
+
+.check-circle {
+  width: 40rpx;
+  height: 40rpx;
+  border: 2rpx solid #ddd;
+  border-radius: 50%;
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.check-circle:active {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: #4CAF50;
+}
+
+.card-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .homework-card:active {
@@ -177,6 +341,21 @@ page {
   flex-shrink: 0;
 }
 
+.card-desc-wrapper {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+  min-height: 72rpx;
+}
+
+.card-content-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8rpx;
+  min-height: 72rpx;
+}
+
 .card-desc {
   font-size: 26rpx;
   color: #888;
@@ -185,8 +364,8 @@ page {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-bottom: 16rpx;
-  min-height: 72rpx;
+  flex: 1;
+  margin-right: 16rpx;
 }
 
 .card-footer {
@@ -231,16 +410,18 @@ page {
 
 /* 已完成样式 */
 .homework-card.done {
-  background: #fafafa;
-  border: 2rpx solid #eee;
+  background: #f8f9fa;
+  border: 2rpx solid #e9ecef;
+  opacity: 0.8;
 }
 
 .homework-card.done .card-title {
-  color: #999;
+  color: #6c757d;
+  text-decoration: line-through;
 }
 
 .homework-card.done .card-desc {
-  color: #bbb;
+  color: #adb5bd;
 }
 
 .points-tag.done {
@@ -260,6 +441,12 @@ page {
   font-size: 24rpx;
   font-weight: bold;
   flex-shrink: 0;
+}
+
+.done-time {
+  font-size: 22rpx;
+  color: #6c757d;
+  flex: 1;
 }
 
 .done-icon {
@@ -339,4 +526,1007 @@ page {
 .add-btn:active {
   transform: scale(0.95);
   box-shadow: 0 4rpx 16rpx rgba(76, 175, 80, 0.4);
+}
+
+/* 日历样式 */
+.calendar-section {
+  margin-top: -48rpx;
+  position: relative;
+  z-index: 10;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding: 0 8rpx;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40rpx;
+}
+
+.nav-btn {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  width: 60rpx;
+  height: 60rpx;
+  text-align: center;
+  line-height: 60rpx;
+  flex-shrink: 0;
+}
+
+.month-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  min-width: 200rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+
+
+.calendar {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx 24rpx 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 20rpx;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  font-weight: 500;
+  padding: 12rpx 0;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4rpx;
+  margin-bottom: 12rpx;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  position: relative;
+  background: #f5f5f5;
+  margin: 10rpx;
+}
+
+.day-count {
+  position: absolute;
+  top: -6rpx;
+  font-size: 16rpx;
+  background: #FF6B6B;
+  color: #fff;
+  border-radius: 50%;
+  width: 24rpx;
+  height: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-weight: bold;
+  z-index: 2;
+}
+
+.day-text {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.calendar-day.other-month .day-text {
+  color: #ccc;
+}
+
+.calendar-day.current-month .day-text {
+  color: #333;
+}
+
+.calendar-day.today {
+  background: rgba(76, 175, 80, 0.3);
+  border: 2rpx solid #4CAF50;
+}
+
+.calendar-day.today .day-text {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.calendar-day.has-homework {
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.calendar-day.has-pending {
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.calendar-day.selected {
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  transform: scale(1.15);
+}
+
+.calendar-day.selected .day-text {
+  color: #fff;
+  font-weight: bold;
+}
+
+.day-check {
+  position: absolute;
+  bottom: -4rpx;
+  font-size: 26rpx;
+  color: #4CAF50;
+  font-weight: 900;
+  z-index: 2;
+  text-shadow: 0 1rpx 2rpx rgba(76, 175, 80, 0.3);
+}
+
+.calendar-day.all-completed {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.calendar-day.all-completed.has-pending {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.calendar-toggle {
+  text-align: center;
+  padding: 16rpx 0 8rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.calendar-toggle text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 弹窗通用样式 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.close-btn {
+  font-size: 48rpx;
+  color: #999;
+  line-height: 1;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20rpx;
+}
+
+.modal-footer {
+  padding: 20rpx 30rpx 30rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+/* 科目管理弹窗 */
+.subject-manage-modal .modal-body {
+  padding: 0;
+}
+
+.subject-manage-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  gap: 20rpx;
+}
+
+.subject-sort {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.sort-btn {
+  width: 36rpx;
+  height: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 4rpx;
+  font-size: 20rpx;
+  color: #666;
+}
+
+.sort-btn:active {
+  background: #e0e0e0;
+}
+
+.sort-btn.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.subject-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.subject-color {
+  width: 30rpx;
+  height: 30rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+}
+
+.subject-name {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.subject-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.subject-actions .action-btn {
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+}
+
+.subject-actions .action-btn.edit {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+}
+
+.subject-actions .action-btn.delete {
+  background: rgba(255, 82, 82, 0.1);
+  color: #FF5252;
+}
+
+.empty-subjects {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.btn-add-subject {
+  width: 100%;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+/* 添加/编辑科目弹窗 */
+.add-subject-modal .modal-body,
+.edit-subject-modal .modal-body {
+  padding: 30rpx;
+}
+
+.form-item {
+  margin-bottom: 30rpx;
+}
+
+.form-label {
+  font-size: 28rpx;
+  font-weight: bold;
+  margin-bottom: 16rpx;
+  color: #333;
+  display: block;
+}
+
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  line-height: 88rpx;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 24rpx;
+  background: #f5f5f5;
+  color: #666;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  border: none;
+  margin-right: 10rpx;
+}
+
+.btn-confirm {
+  flex: 1;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  border: none;
+  margin-left: 10rpx;
+}
+
+.add-subject-modal .modal-footer,
+.edit-subject-modal .modal-footer {
+  display: flex;
+  gap: 20rpx;
+}
+
+.checkin-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.checkin-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.checkin-popup {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.checkin-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.checkin-popup-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.checkin-close {
+  font-size: 48rpx;
+  color: #999;
+  line-height: 1;
+  padding: 0 10rpx;
+}
+
+.checkin-popup-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24rpx;
+}
+
+.checkin-homework-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24rpx;
+  background: #f8fdf8;
+  border-radius: 12rpx;
+  margin-bottom: 24rpx;
+}
+
+.checkin-homework-content {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.5;
+}
+
+.checkin-homework-points {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #4CAF50;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+.checkin-section {
+  margin-bottom: 24rpx;
+}
+
+.checkin-section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.checkin-section-label {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.checkin-section-optional {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 8rpx;
+}
+
+.checkin-upload {
+  display: flex;
+}
+
+.checkin-upload-preview {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.checkin-upload-preview image {
+  width: 100%;
+  height: 100%;
+}
+
+.checkin-upload-delete {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 28rpx;
+}
+
+.checkin-upload-btn {
+  width: 160rpx;
+  height: 160rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx dashed #ddd;
+}
+
+.checkin-upload-icon {
+  font-size: 48rpx;
+  margin-bottom: 8rpx;
+}
+
+.checkin-upload-text {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.checkin-rating {
+  display: flex;
+  gap: 16rpx;
+}
+
+.checkin-rating-item {
+  flex: 1;
+  padding: 20rpx 12rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  text-align: center;
+  border: 2rpx solid transparent;
+  transition: all 0.3s ease;
+}
+
+.checkin-rating-item.active {
+  background: #e8f5e9;
+  border-color: #4CAF50;
+}
+
+.checkin-rating-stars {
+  display: block;
+  font-size: 24rpx;
+  margin-bottom: 8rpx;
+}
+
+.checkin-rating-label {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 4rpx;
+}
+
+.checkin-rating-item.active .checkin-rating-label {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.checkin-rating-percent {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+}
+
+.checkin-rating-item.active .checkin-rating-percent {
+  color: #4CAF50;
+}
+
+.checkin-comment {
+  width: 100%;
+  height: 160rpx;
+  padding: 20rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+
+.checkin-popup-footer {
+  padding: 20rpx 24rpx 30rpx;
+  border-top: 1rpx solid #f0f0f0;
+  display: flex;
+  gap: 16rpx;
+}
+
+.checkin-btn-quick {
+  flex: 1;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+.checkin-btn-submit {
+  flex: 1;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+/* 复制用日历弹窗 - 底部弹出样式 */
+.copy-calendar-full-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999999 !important; /* 层级最高，覆盖所有元素包括tab */
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: flex-end;
+  padding: 0; /* 去掉所有内边距，让弹窗占满底部 */
+  margin: 0;
+}
+
+.copy-calendar-popup {
+  width: 100%;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 20rpx 20rpx 30rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom)); /* 只留安全区距离 */
+  box-sizing: border-box;
+  min-height: 60vh; /* 缩小弹窗高度 */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000000 !important;
+}
+
+/* 头部 */
+.copy-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 居中对齐 */
+  margin-bottom: 16rpx;
+  position: relative;
+  padding: 0 10rpx; /* 调整左右padding */
+}
+
+.copy-calendar-arrow {
+  font-size: 40rpx;
+  color: #666;
+  width: 60rpx; /* 调整箭头宽度 */
+  text-align: center;
+  z-index: 100; /* 层级比标题高，不会被挡住 */
+  pointer-events: auto;
+  flex-shrink: 0; /* 防止被压缩 */
+}
+
+.copy-calendar-arrow-right {
+  /* 右边箭头不需要额外样式 */
+}
+
+.copy-calendar-month {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  z-index: 50;
+  pointer-events: none; /* 标题不接收点击事件，点击箭头区域直接触发箭头事件 */
+  white-space: nowrap; /* 不换行 */
+  padding: 0 20rpx; /* 增加标题左右间距，让箭头更靠近 */
+  flex-shrink: 0; /* 防止被压缩 */
+}
+
+.copy-calendar-close {
+  font-size: 40rpx;
+  color: #666;
+  width: 60rpx; /* 调整关闭按钮宽度 */
+  text-align: center;
+  z-index: 100;
+  pointer-events: auto;
+  flex-shrink: 0; /* 防止被压缩 */
+  position: absolute; /* 绝对定位到右边 */
+  right: 10rpx;
+}
+
+/* 星期 */
+.copy-calendar-week-header {
+  display: flex;
+  margin-bottom: 12rpx;
+}
+
+.copy-calendar-week-header .copy-week-item {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 日期 */
+.copy-calendar-dates {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 10rpx;
+  min-height: 420rpx; /* 缩小高度 */
+  height: auto;
+}
+
+.copy-date-item {
+  width: 14.28%;
+  padding: 4rpx 0; /* 缩小上下间距，行更紧凑 */
+  text-align: center;
+  position: relative;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.copy-date-text {
+  width: 70rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+  border-radius: 50%;
+  display: inline-block;
+  font-size: 28rpx;
+  color: #333;
+  z-index: 20;
+  position: relative;
+  pointer-events: none;
+}
+
+/* 日历中选中日期的高亮样式 */
+.copy-date-selected .copy-date-text {
+  background: #4CAF50 !important;
+  color: #fff !important;
+  font-weight: bold !important;
+}
+
+.copy-date-disabled .copy-date-text {
+  color: #ccc;
+  opacity: 0.6;
+}
+
+/* 日期选择显示框，确保文字完整显示 */
+.copy-date-text-input {
+  font-size: 28rpx;
+  color: #999;
+  white-space: nowrap;
+  overflow: visible;
+  width: auto;
+  flex: 1;
+}
+
+.copy-date-text-input.copy-date-selected {
+  color: #333;
+}
+
+.copy-date-dot {
+  position: absolute;
+  bottom: 5rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12rpx;
+  height: 12rpx;
+  background: #f43f3f;
+  border-radius: 50%;
+  z-index: 30;
+}
+
+/* 底部按钮 */
+.copy-calendar-footer {
+  position: absolute;
+  bottom: 20rpx;
+  left: 20rpx;
+  right: 20rpx;
+  z-index: 200;
+}
+
+.copy-confirm-btn {
+  width: 100%;
+  height: 90rpx;
+  line-height: 90rpx;
+  background: linear-gradient(135deg, #FFB800, #FF9500);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 50rpx;
+  border: none;
+  pointer-events: auto;
+}
+
+/* 复制作业弹窗 */
+.copy-modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  background: transparent; /* 去掉容器背景，避免层级冲突 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15rpx; /* 左右边距更小，弹窗更宽 */
+}
+
+.copy-modal-container .modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1; /* 蒙版层级低 */
+}
+
+.copy-modal-content {
+  width: 100%;
+  max-width: 720rpx; /* 增加宽度，更接近参考图 */
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  z-index: 2; /* 弹窗内容层级更高，在蒙版上面 */
+  position: relative; /* z-index需要配合position生效 */
+}
+
+/* 头部 */
+.copy-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.copy-modal-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.copy-modal-close {
+  font-size: 40rpx;
+  color: #999;
+  line-height: 1;
+  padding: 0 10rpx;
+}
+
+/* 内容 */
+.copy-modal-body {
+  padding: 30rpx;
+}
+
+.copy-tip-text {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 24rpx;
+}
+
+/* 日期选择框 */
+.copy-date-input {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24rpx;
+  min-height: 88rpx; /* 增加高度，确保文字不换行 */
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  margin-bottom: 32rpx;
+}
+
+.copy-date-text {
+  font-size: 28rpx;
+  color: #999;
+  white-space: nowrap; /* 强制不换行 */
+  overflow: hidden;
+}
+
+.copy-date-text.copy-date-selected {
+  color: #333;
+}
+
+.copy-date-arrow {
+  font-size: 32rpx;
+  color: #999;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* 科目选择 */
+.copy-subject-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 24rpx;
+}
+
+.copy-subject-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx 30rpx;
+  margin-bottom: 40rpx;
+}
+
+.copy-subject-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  width: 45%; /* 固定两列布局 */
+  min-height: 60rpx;
+  z-index: 10;
+  position: relative;
+  pointer-events: auto;
+}
+
+.copy-checkbox {
+  width: 36rpx;
+  height: 36rpx;
+  border: 2rpx solid #ddd;
+  border-radius: 6rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.copy-checkbox.copy-checkbox-checked {
+  background: #FFB800;
+  border-color: #FFB800;
+}
+
+.copy-checkbox-check {
+  font-size: 24rpx;
+  color: #fff;
+  font-weight: bold;
+}
+
+.copy-subject-name {
+  font-size: 28rpx;
+  color: #333;
+  white-space: nowrap;
+}
+
+/* 底部按钮 */
+.copy-modal-footer {
+  padding: 0 30rpx 30rpx;
+  display: flex;
+  gap: 20rpx;
+}
+
+.copy-btn {
+  flex: 1;
+  height: 88rpx; /* 增加按钮高度，和参考图一致 */
+  line-height: 88rpx;
+  font-size: 30rpx;
+  border-radius: 16rpx; /* 更大的圆角，匹配参考图 */
+  border: none;
+  font-weight: bold;
+}
+
+.copy-btn-cancel {
+  background: #fff;
+  color: #FFB800;
+  border: 2rpx solid #FFB800;
+}
+
+.copy-btn-confirm {
+  background: linear-gradient(135deg, #FFB800, #FF9500);
+  color: #fff;
 }

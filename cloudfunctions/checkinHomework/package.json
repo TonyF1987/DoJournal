@@ -1,0 +1,9 @@
+{
+  "name": "checkinHomework",
+  "version": "1.0.0",
+  "description": "快速打卡作业",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

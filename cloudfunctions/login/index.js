@@ -21,23 +21,36 @@ exports.main = async (event, context) => {
     let addRes = await db.collection('users').add({
       data: {
         _openid: wxContext.OPENID,
-        nickName: '小宝贝',
-        avatarUrl: '',
+        nickName: event.userInfo ? event.userInfo.nickName : '小宝贝',
+        avatarUrl: event.userInfo ? event.userInfo.avatarUrl : '',
         points: 0,
         streak: 0,
         lastCheckInDate: '',
-        createTime: db.serverDate()
+        createTime: db.serverDate(),
+        updateTime: db.serverDate()
       }
     });
     userId = addRes._id;
     isNewUser = true;
   } else {
     userId = userRes.data[0]._id;
+    
+    // 更新用户信息（如果有）
+    if (event.userInfo) {
+      await db.collection('users').doc(userId).update({
+        data: {
+          nickName: event.userInfo.nickName,
+          avatarUrl: event.userInfo.avatarUrl,
+          updateTime: db.serverDate()
+        }
+      });
+    }
   }
 
   return {
     openid: wxContext.OPENID,
     userId: userId,
-    isNewUser: isNewUser
+    isNewUser: isNewUser,
+    userInfo: userRes.data.length > 0 ? userRes.data[0] : null
   };
 };

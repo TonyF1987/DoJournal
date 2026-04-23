@@ -9,12 +9,21 @@
     </view>
   </view>
 
+  <!-- 添加自定义礼物按钮 -->
+  <view class="add-custom-btn" bindtap="showAddCustom">
+    <text class="add-icon">+</text>
+    <text class="add-text">添加自定义礼物</text>
+  </view>
+
   <!-- 奖励列表 -->
   <view class="rewards-list">
     <block wx:for="{{rewards}}" wx:key="_id">
       <view class="reward-item">
         <view class="reward-image-wrapper">
-          <image class="reward-image" src="{{item.image || '/images/default-reward.png'}}" mode="aspectFill"></image>
+          <view class="reward-emoji" wx:if="{{!item.image || item.image.startsWith('/images/') || item.image === 'custom'}}">
+            {{item.isCustom ? '�' : '🎁'}}
+          </view>
+          <image class="reward-image" wx:else src="{{item.image}}" mode="aspectFill"></image>
           <view class="reward-badge" wx:if="{{item.stock < 20}}">剩余{{item.stock}}</view>
         </view>
         <view class="reward-content">
@@ -43,7 +52,8 @@
         <block wx:for="{{exchangeRecords}}" wx:key="_id">
           <view class="record-item">
             <view class="record-info">
-              <image src="{{item.rewardImage || '/images/default-reward.png'}}" mode="aspectFill"></image>
+              <view class="record-emoji" wx:if="{{!item.rewardImage || item.rewardImage.startsWith('/images/') || item.rewardImage === 'custom'}}">🎁</view>
+              <image wx:else src="{{item.rewardImage}}" mode="aspectFill"></image>
               <view class="record-text">
                 <text class="record-name">{{item.rewardName}}</text>
                 <text class="record-time">{{item.createTime}}</text>
@@ -56,6 +66,45 @@
           <text>暂无兑换记录</text>
         </view>
       </scroll-view>
+    </view>
+  </view>
+
+  <!-- 添加自定义礼物弹窗 -->
+  <view class="modal" wx:if="{{showAddCustomModal}}">
+    <view class="modal-mask" bindtap="closeAddCustom"></view>
+    <view class="modal-content add-custom-modal">
+      <view class="modal-header">
+        <text>添加自定义礼物</text>
+        <text class="close-btn" bindtap="closeAddCustom">×</text>
+      </view>
+      <view class="modal-body">
+        <view class="form-item">
+          <text class="form-label">礼物名称 *</text>
+          <input class="form-input" placeholder="例如：冰淇淋、看电影" value="{{customGift.name}}" bindinput="onCustomNameInput" />
+        </view>
+        <view class="form-item">
+          <text class="form-label">所需积分 *</text>
+          <input class="form-input" type="number" placeholder="例如：50" value="{{customGift.points}}" bindinput="onCustomPointsInput" />
+        </view>
+        <view class="form-item">
+          <text class="form-label">礼物描述</text>
+          <textarea class="form-textarea" placeholder="描述这个礼物..." value="{{customGift.description}}" bindinput="onCustomDescInput" />
+        </view>
+        <view class="form-item">
+          <text class="form-label">礼物图片</text>
+          <view class="image-picker" bindtap="chooseCustomImage">
+            <image wx:if="{{customGift.image}}" src="{{customGift.image}}" mode="aspectFill"></image>
+            <view wx:else class="image-placeholder">
+              <text class="placeholder-icon">📷</text>
+              <text class="placeholder-text">点击选择图片</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-cancel" bindtap="closeAddCustom">取消</button>
+        <button class="btn-confirm" bindtap="saveCustomGift">保存</button>
+      </view>
     </view>
   </view>
 </view>

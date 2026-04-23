@@ -6,7 +6,18 @@ const db = cloud.database();
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { title, content, type, recurring, recurringDays, images, points } = event;
+  const { title, content, type, recurring, recurringDays, images, points, subject, date } = event;
+
+  // 解析日期
+  let homeworkDate;
+  if (date) {
+    homeworkDate = new Date(date);
+    // 设置为 UTC+8
+    homeworkDate = new Date(homeworkDate.getTime() + 8 * 60 * 60 * 1000);
+  } else {
+    homeworkDate = new Date();
+    homeworkDate.setHours(0, 0, 0, 0);
+  }
 
   // 添加作业
   const res = await db.collection('homework').add({
@@ -18,8 +29,10 @@ exports.main = async (event, context) => {
       recurring: recurring || false,
       recurringDays: recurringDays || [],
       images: images || [],
+      subject: subject || '',
       status: 'pending', // pending, completed
       points: points || 10, // 默认10分
+      homeworkDate: date || '', // 作业日期
       checkInTime: null,
       createTime: db.serverDate(),
       updateTime: db.serverDate()

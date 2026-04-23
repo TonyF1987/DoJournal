@@ -14,26 +14,29 @@ function getLocalDateStr(date) {
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { homeworkId, proofImage, comment, rating, ratingPercent, checkinDate } = event;
-
-  // 获取作业信息
-  const homeworkRes = await db.collection('homework').doc(homeworkId).get();
-  const homework = homeworkRes.data;
+  const { homeworkId, date, ratingPercent } = event;
 
   const today = new Date();
   const todayStr = getLocalDateStr(today);
-  
-  // 使用传递的打卡日期，如果没有则使用今天
-  const targetDateStr = checkinDate || todayStr;
+  const targetDateStr = date || todayStr;
 
-  // 获取用户信息
+  const homeworkRes = await db.collection('homework').doc(homeworkId).get();
+  const homework = homeworkRes.data;
+
+  if (!homework) {
+    return { success: false, errMsg: '作业不存在' };
+  }
+
   const userRes = await db.collection('users').where({
     _openid: wxContext.OPENID
   }).get();
   const user = userRes.data[0];
 
+  if (!user) {
+    return { success: false, errMsg: '用户不存在' };
+  }
+
   if (homework.recurring) {
-    // 周期作业：检查该日期是否已打卡
     const existingCheckin = await db.collection('checkins').where({
       homeworkId: homeworkId,
       _openid: wxContext.OPENID,
@@ -41,20 +44,16 @@ exports.main = async (event, context) => {
     }).get();
 
     if (existingCheckin.data.length > 0) {
-      return {
-        success: false,
-        errMsg: '该日期已经打过卡了'
-      };
+      return { success: false, errMsg: '该日期已经打过卡了' };
     }
 
-    // 创建打卡记录
     await db.collection('checkins').add({
       data: {
         homeworkId: homeworkId,
         homeworkTitle: homework.title,
-        proofImage: proofImage,
-        comment: comment || '',
-        rating: rating || 3,
+        proofImage: '',
+        comment: '',
+        rating: 3,
         ratingPercent: ratingPercent || 100,
         date: targetDateStr,
         createTime: db.serverDate(),
@@ -62,13 +61,11 @@ exports.main = async (event, context) => {
       }
     });
 
-    // 计算积分
     const basePoints = homework.points || 10;
     const actualPercent = ratingPercent || 100;
     const actualPoints = Math.round(basePoints * actualPercent / 100);
 
-    // 计算连续打卡（只有打卡今天才算连续）
-    let streak = user.streak;
+    let streak = user.streak || 0;
     let streakBonus = 0;
 
     if (targetDateStr === todayStr && user.lastCheckInDate !== todayStr) {
@@ -86,7 +83,6 @@ exports.main = async (event, context) => {
 
     const totalPoints = actualPoints + streakBonus;
 
-    // 更新用户积分（只有打卡今天才更新连续打卡）
     const updateData = {
       points: _.inc(totalPoints),
       updateTime: db.serverDate()
@@ -95,7 +91,7 @@ exports.main = async (event, context) => {
       updateData.streak = streak;
       updateData.lastCheckInDate = todayStr;
     }
-    
+
     await db.collection('users').doc(user._id).update({
       data: updateData
     });
@@ -103,43 +99,27 @@ exports.main = async (event, context) => {
     return {
       success: true,
       isRecurring: true,
-      points: totalPoints,
-      basePoints: basePoints,
-      actualPoints: actualPoints,
-      rating: rating || 3,
-      ratingPercent: actualPercent,
-      streak: streak,
-      streakBonus: streakBonus
+      points: totalPoints
     };
   } else {
-    // 非周期作业：原有逻辑
-    
-    // 先计算得分
-    const basePoints = homework.points || 10;
-    const actualPercent = ratingPercent || 100;
-    const actualPoints = Math.round(basePoints * actualPercent / 100);
-    
+    if (homework.status === 'completed') {
+      return { success: false, errMsg: '该作业已完成' };
+    }
+
     await db.collection('homework').doc(homeworkId).update({
       data: {
         status: 'completed',
         checkInTime: db.serverDate(),
-        proofImage: proofImage,
-        comment: comment || '',
-        rating: rating || 3,
+        rating: 3,
         ratingPercent: ratingPercent || 100,
-        actualPoints: actualPoints,
-        basePoints: basePoints,
         updateTime: db.serverDate()
       }
     });
 
-    // 计算连续打卡天数
-    let streak = user.streak;
+    let streak = user.streak || 0;
     let streakBonus = 0;
 
-    if (user.lastCheckInDate === todayStr) {
-      // 今天已经打过卡，不增加连续天数
-    } else {
+    if (user.lastCheckInDate !== todayStr) {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = getLocalDateStr(yesterday);
@@ -152,10 +132,11 @@ exports.main = async (event, context) => {
       }
     }
 
-    // 计算总分（根据等级评价）
+    const basePoints = homework.points || 10;
+    const actualPercent = ratingPercent || 100;
+    const actualPoints = Math.round(basePoints * actualPercent / 100);
     const totalPoints = actualPoints + streakBonus;
 
-    // 更新用户积分
     await db.collection('users').doc(user._id).update({
       data: {
         points: _.inc(totalPoints),
@@ -168,13 +149,7 @@ exports.main = async (event, context) => {
     return {
       success: true,
       isRecurring: false,
-      points: totalPoints,
-      basePoints: basePoints,
-      actualPoints: actualPoints,
-      rating: rating || 3,
-      ratingPercent: actualPercent,
-      streak: streak,
-      streakBonus: streakBonus
+      points: totalPoints
     };
   }
 };

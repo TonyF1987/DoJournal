@@ -1,0 +1,59 @@
+<view class="container">
+  <!-- 顶部装饰 -->
+  <view class="top-decoration">
+    <view class="main-icon">📚</view>
+    <view class="main-title">作业打卡</view>
+    <view class="main-subtitle">坚持每天完成作业，养成学习好习惯</view>
+  </view>
+
+  <!-- 登录区域 -->
+  <view class="login-section">
+    <!-- 用户信息预览 -->
+    <view class="user-preview" wx:if="{{userInfo}}">
+      <image class="user-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+      <view class="user-name">{{userInfo.nickName}}</view>
+    </view>
+
+    <!-- 登录按钮 -->
+    <button 
+      class="login-btn {{userInfo ? 'btn-logged' : 'btn-login'}}" 
+      open-type="{{userInfo ? 'getUserInfo' : 'getUserProfile'}}"
+      bindgetuserinfo="handleGetUserInfo"
+      bindtap="{{userInfo ? 'handleLogout' : 'handleLogin'}}"
+    >
+      {{userInfo ? '已登录' : '登录'}}
+    </button>
+
+    <!-- 登录说明 -->
+    <view class="login-description">
+      点击登录获取完整功能体验
+    </view>
+  </view>
+
+  <!-- 功能特点 -->
+  <view class="features-section">
+    <view class="feature-item">
+      <view class="feature-icon">✅</view>
+      <view class="feature-content">
+        <view class="feature-title">作业管理</view>
+        <view class="feature-description">添加、查看、管理每日作业</view>
+      </view>
+    </view>
+    
+    <view class="feature-item">
+      <view class="feature-icon">🔥</view>
+      <view class="feature-content">
+        <view class="feature-title">连续打卡</view>
+        <view class="feature-description">记录每日作业完成情况</view>
+      </view>
+    </view>
+    
+    <view class="feature-item">
+      <view class="feature-icon">🎁</view>
+      <view class="feature-content">
+        <view class="feature-title">积分奖励</view>
+        <view class="feature-description">完成作业获得积分奖励</view>
+      </view>
+    </view>
+  </view>
+</view>

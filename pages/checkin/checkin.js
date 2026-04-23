@@ -1,8 +1,10 @@
+const app = getApp();
 const db = wx.cloud.database();
 
 Page({
   data: {
     homeworkId: '',
+    checkinDate: '',
     homework: null,
     proofImage: '',
     comment: '',
@@ -12,8 +14,20 @@ Page({
   },
 
   onLoad(options) {
+    // 检查登录状态
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      console.log('用户未登录，跳转到登录页面');
+      wx.navigateTo({
+        url: '/pages/login/login'
+      });
+      return;
+    }
+
     if (options.id) {
-      this.setData({ homeworkId: options.id });
+      this.setData({ 
+        homeworkId: options.id,
+        checkinDate: options.date || ''
+      });
       this.loadHomework();
     }
   },
@@ -137,7 +151,8 @@ Page({
             proofImage: res.fileID,
             comment: this.data.comment,
             rating: this.data.rating,
-            ratingPercent: this.data.ratingPercent
+            ratingPercent: this.data.ratingPercent,
+            checkinDate: this.data.checkinDate
           },
           success: (cloudRes) => {
             wx.hideLoading();

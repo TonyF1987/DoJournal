@@ -1,0 +1,9 @@
+{
+  "name": "cancelCheckin",
+  "version": "1.0.0",
+  "description": "取消作业打卡",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

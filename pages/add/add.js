@@ -1,3 +1,6 @@
+const app = getApp();
+const db = wx.cloud.database();
+
 Page({
   data: {
     isEdit: false,
@@ -10,15 +13,46 @@ Page({
     recurringDays: [],
     weekDays: ['日', '一', '二', '三', '四', '五', '六'],
     points: 10,
-    canSubmit: false
+    canSubmit: false,
+    subjects: [],
+    selectedSubject: '',
+    showSubjectSelector: false,
+    newSubjectName: '',
+    showAddSubjectModal: false,
+    isSubjectMode: false,
+    subjectHomeworkList: [],
+    showAddForm: false,
+    editingHomework: null
   },
 
   onLoad(options) {
+    // 检查登录状态
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      console.log('用户未登录，跳转到登录页面');
+      wx.navigateTo({
+        url: '/pages/login/login'
+      });
+      return;
+    }
+
     if (options.id) {
       this.setData({ isEdit: true, homeworkId: options.id });
       this.loadHomework(options.id);
       wx.setNavigationBarTitle({ title: '编辑任务' });
+    } else if (options.subject) {
+      const subject = decodeURIComponent(options.subject);
+      const selectedDate = options.date || '';
+      this.setData({ 
+        isSubjectMode: true, 
+        selectedSubject: subject,
+        selectedDate: selectedDate,
+        showAddForm: false 
+      });
+      wx.setNavigationBarTitle({ title: `${subject} 作业` });
+      this.loadSubjectHomework(subject);
     } else {
+      const selectedDate = options.date || '';
+      this.setData({ selectedDate: selectedDate });
       wx.setNavigationBarTitle({ title: '添加任务' });
     }
 
@@ -54,6 +88,8 @@ Page({
             recurring: data.recurring || false,
             recurringDays: data.recurringDays || [],
             points: data.points || 10,
+            subject: data.subject || '',
+            selectedSubject: data.subject || '',
             importedContent: (data.images || []).map(url => ({ type: 'image', url }))
           });
           this.updateCanSubmit();
@@ -133,6 +169,165 @@ Page({
       app.globalData.sharedMessage = null;
       this.setData({ hasHandledShare: true });
     }
+    
+    if (this.data.isSubjectMode) {
+      this.loadSubjectHomework(this.data.selectedSubject);
+    }
+  },
+
+  loadSubjectHomework(subject) {
+    wx.showLoading({ title: '加载中...' });
+    const selectedDate = this.data.selectedDate;
+    
+    // 先获取该科目的所有未完成作业
+    db.collection('homework')
+      .where({
+        subject: subject,
+        status: 'pending'
+      })
+      .orderBy('createTime', 'desc')
+      .get()
+      .then(res => {
+        wx.hideLoading();
+        
+        let homeworkList = res.data || [];
+        
+        // 如果有选中的日期，只显示该日期的作业
+        if (selectedDate) {
+          homeworkList = homeworkList.filter(item => {
+            if (item.recurring) {
+              // 循环作业：判断选中日期的星期几是否匹配
+              const targetDate = new Date(selectedDate);
+              const dayOfWeek = targetDate.getDay();
+              return item.recurringDays && item.recurringDays.includes(dayOfWeek);
+            } else {
+              // 非循环作业：优先使用 homeworkDate 字段
+              if (item.homeworkDate) {
+                return item.homeworkDate === selectedDate;
+              }
+              // 回退到使用 createTime
+              const createDate = new Date(item.createTime);
+              const createDateStr = `${createDate.getFullYear()}-${String(createDate.getMonth() + 1).padStart(2, '0')}-${String(createDate.getDate()).padStart(2, '0')}`;
+              return createDateStr === selectedDate;
+            }
+          });
+        }
+        
+        this.setData({
+          subjectHomeworkList: homeworkList.map(item => ({
+            ...item,
+            createTimeText: this.formatDate(item.createTime),
+            recurringDaysText: item.recurring ? this.formatRecurringDays(item.recurringDays) : ''
+          }))
+        });
+      })
+      .catch(err => {
+        wx.hideLoading();
+        console.error('加载科目作业失败:', err);
+        wx.showToast({ title: '加载失败', icon: 'none' });
+      });
+  },
+
+  formatDate(date) {
+    if (!date) return '';
+    // 处理云数据库返回的日期格式
+    let d;
+    if (typeof date === 'object' && date.getFullYear) {
+      // 已经是 Date 对象
+      d = date;
+    } else if (typeof date === 'string') {
+      d = new Date(date);
+    } else if (date._seconds) {
+      // 云数据库时间戳格式
+      d = new Date(date._seconds * 1000);
+    } else {
+      d = new Date(date);
+    }
+    if (isNaN(d.getTime())) return '';
+    return `创建于${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  },
+
+  formatRecurringDays(days) {
+    if (!days || days.length === 0) return '';
+    const weekDayNames = ['日', '一', '二', '三', '四', '五', '六'];
+    const sortedDays = [...days].sort((a, b) => a - b);
+    return '每' + sortedDays.map(d => '周' + weekDayNames[d]).join('、');
+  },
+
+  toggleAddForm() {
+    if (this.data.showAddForm) {
+      this.setData({ showAddForm: false });
+    } else {
+      this.resetForm();
+      this.setData({ showAddForm: true });
+    }
+  },
+
+  resetForm() {
+    this.setData({
+      content: '',
+      type: 'manual',
+      importedContent: [],
+      recurring: false,
+      recurringDays: [],
+      points: 10,
+      editingHomework: null
+    });
+  },
+
+  editHomework(e) {
+    const homework = e.currentTarget.dataset.homework;
+    this.setData({
+      editingHomework: homework,
+      content: homework.content,
+      type: homework.type || 'manual',
+      recurring: homework.recurring || false,
+      recurringDays: homework.recurringDays || [],
+      points: homework.points || 10,
+      showAddForm: true
+    });
+  },
+
+  deleteHomeworkFromList(e) {
+    const homework = e.currentTarget.dataset.homework;
+    const that = this;
+    
+    wx.showModal({
+      title: '删除作业',
+      content: '确定要删除这个作业吗？',
+      confirmText: '确定删除',
+      confirmColor: '#FF5252',
+      success(res) {
+        if (res.confirm) {
+          that.doDeleteHomeworkFromList(homework);
+        }
+      }
+    });
+  },
+
+  doDeleteHomeworkFromList(homework) {
+    wx.showLoading({ title: '删除中...' });
+    
+    wx.cloud.callFunction({
+      name: 'deleteHomework',
+      data: {
+        homeworkId: homework._id
+      },
+      success: (res) => {
+        wx.hideLoading();
+        if (res.result && res.result.success) {
+          wx.showToast({ title: '删除成功', icon: 'success' });
+          this.loadSubjectHomework(this.data.selectedSubject);
+        } else {
+          wx.showToast({ title: (res.result && res.result.errMsg) || '删除失败', icon: 'none' });
+        }
+      },
+      fail: (err) => {
+        wx.hideLoading();
+        console.error('删除作业失败:', err);
+        wx.showToast({ title: '删除失败', icon: 'none' });
+      }
+    });
   },
 
   onTitleInput(e) {
@@ -206,33 +401,31 @@ Page({
       return;
     }
     
+    const hasExistingContent = this.data.content && this.data.content.trim().length > 0;
+    
     if (images.length === 1) {
-      this.recognizeImageContent(images[0].url);
+      this.recognizeImageContent(images[0].url, hasExistingContent);
     } else {
-      wx.showModal({
-        title: '识别多张图片',
-        content: `是否识别${images.length}张图片的内容并合并？`,
-        success: (res) => {
-          if (res.confirm) {
-            this.recognizeMultipleImages(images);
-          }
-        }
-      });
+      this.recognizeMultipleImages(images);
     }
   },
 
   recognizeMultipleImages(images) {
-    wx.showLoading({ title: '正在识别第1张图片...' });
+    wx.showLoading({ title: '图片识别中...' });
     
     let totalContent = [];
+    const existingContent = this.data.content || '';
     
     const recognizeNext = (index) => {
       if (index >= images.length) {
         wx.hideLoading();
         if (totalContent.length > 0) {
-          const content = totalContent.join('\n---\n');
+          let finalContent = totalContent.join('\n---\n');
+          if (existingContent) {
+            finalContent = existingContent + '\n---\n' + finalContent;
+          }
           this.setData({
-            content: content
+            content: finalContent
           });
           this.updateCanSubmit();
           
@@ -244,74 +437,18 @@ Page({
         return;
       }
       
-      wx.showLoading({ title: `正在识别第${index + 1}张图片...` });
-      
-      this.recognizeSingleImage(images[index].url).then(result => {
+      this.uploadAndRecognize(images[index].url).then(result => {
         if (result) {
           totalContent.push(result);
         }
         recognizeNext(index + 1);
       }).catch(error => {
         console.error(`识别第${index + 1}张图片失败:`, error);
-        wx.showToast({
-          title: `第${index + 1}张图片识别失败`,
-          icon: 'none'
-        });
         recognizeNext(index + 1);
       });
     };
     
     recognizeNext(0);
-  },
-
-  recognizeSingleImage(imagePath) {
-    return new Promise((resolve, reject) => {
-      const cloudPath = `homework-ocr/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
-      
-      wx.cloud.uploadFile({
-        cloudPath: cloudPath,
-        filePath: imagePath,
-        success: (uploadRes) => {
-          const fileID = uploadRes.fileID;
-          
-          wx.cloud.callFunction({
-            name: 'ocrGeneral',
-            data: {
-              imgUrl: fileID
-            },
-            success: (res) => {
-              if (res.result && res.result.errCode === 0) {
-                if (res.result.isMock) {
-                  resolve('');
-                  return;
-                }
-                
-                const text = res.result.items
-                  .map(item => item.text)
-                  .join('\n');
-                
-                if (text.trim()) {
-                  resolve(text.trim());
-                } else {
-                  resolve('');
-                }
-              } else {
-                console.error('OCR识别失败:', res.result);
-                resolve('');
-              }
-            },
-            fail: (err) => {
-              console.error('云函数调用失败:', err);
-              resolve('');
-            }
-          });
-        },
-        fail: (err) => {
-          console.error('上传图片失败:', err);
-          reject(err);
-        }
-      });
-    });
   },
 
   selectFromAlbum() {
@@ -320,7 +457,7 @@ Page({
       sizeType: ['original', 'compressed'],
       sourceType: ['album'],
       success: (res) => {
-        const images = res.tempFilePaths.map(path => ({
+        const newImages = res.tempFilePaths.map(path => ({
           type: 'image',
           url: path
         }));
@@ -329,19 +466,29 @@ Page({
           this.setData({ title: '作业' });
         }
 
-        if (images.length > 0) {
-          this.setData({ importedContent: images });
+        if (newImages.length > 0) {
+          const existingImages = this.data.importedContent || [];
+          const allImages = [...existingImages, ...newImages];
+          
+          this.setData({ importedContent: allImages });
 
+          const hasExistingContent = this.data.content && this.data.content.trim().length > 0;
+          
           wx.showModal({
             title: '识别作业内容',
-            content: '是否使用AI识别图片中的作业文字?',
+            content: hasExistingContent ? '是否使用AI识别新图片中的作业文字？（将追加到现有内容后）' : '是否使用AI识别图片中的作业文字?',
             success: (modalRes) => {
               if (modalRes.confirm) {
-                this.recognizeImageContent(images[0].url);
+                this.recognizeImageContent(newImages[0].url, hasExistingContent);
               } else {
-                this.setData({
-                  content: `包含${images.length}张作业图片`
-                });
+                if (!hasExistingContent) {
+                  this.setData({
+                    title: '作业',
+                    content: `包含${allImages.length}张作业图片`,
+                    importedContent: allImages,
+                    type: 'import'
+                  });
+                }
                 this.updateCanSubmit();
               }
             }
@@ -381,132 +528,177 @@ Page({
     });
   },
 
-  recognizeImageContent(imagePath) {
-    wx.showLoading({ title: '上传图片中...' });
+  recognizeImageContent(imagePath, appendMode = false) {
+    this.showOCRModeSelector(imagePath, appendMode);
+  },
 
-    const cloudPath = `homework-ocr/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+  showOCRModeSelector(imagePath, appendMode = false) {
+    wx.showActionSheet({
+      itemList: ['🔥 AI智能识别（推荐）', '✏️ 手动输入'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          this.recognizeWithAI(imagePath, appendMode);
+        } else {
+          let newContent = `已导入图片，请手动输入作业内容`;
+          if (appendMode && this.data.content) {
+            newContent = this.data.content + '\n---\n' + newContent;
+          }
+          this.setData({
+            content: newContent
+          });
+          this.updateCanSubmit();
+        }
+      }
+    });
+  },
 
-    wx.cloud.uploadFile({
-      cloudPath: cloudPath,
-      filePath: imagePath,
-      success: (uploadRes) => {
-        const fileID = uploadRes.fileID;
+  // 使用AI识别
+  recognizeWithAI(imagePath, appendMode = false) {
+    this.uploadAndRecognize(imagePath, appendMode);
+  },
 
-        wx.showLoading({ title: '识别中...' });
+  uploadAndRecognize(imagePath, appendMode = false) {
+    const that = this;
 
-        wx.cloud.callFunction({
-          name: 'ocrGeneral',
-          data: {
-            imgUrl: fileID
-          },
-          success: (res) => {
-            wx.hideLoading();
+    return new Promise((resolve, reject) => {
+      wx.showLoading({ title: '上传图片中...' });
 
-            if (res.result && res.result.errCode === 0) {
-              if (res.result.isMock) {
+      const cloudPath = `homework-ocr/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+
+      wx.cloud.uploadFile({
+        cloudPath: cloudPath,
+        filePath: imagePath,
+        success: (uploadRes) => {
+          const fileID = uploadRes.fileID;
+
+          wx.showLoading({ title: 'AI识别中...' });
+
+          wx.cloud.callFunction({
+            name: 'ocrBaidu',
+            data: {
+              imgUrl: fileID,
+              mode: 'auto'
+            },
+            success: (res) => {
+              wx.hideLoading();
+
+              if (res.result && res.result.errCode === 0) {
+                if (res.result.isMock) {
+                  wx.showModal({
+                    title: 'OCR服务未开通',
+                    content: res.result.notice || 'OCR服务暂不可用,请手动输入作业内容',
+                    confirmText: '手动输入',
+                    showCancel: false,
+                    success: () => {
+                      that.setData({
+                        content: ''
+                      });
+                      that.updateCanSubmit();
+                    }
+                  });
+                  resolve('');
+                  return;
+                }
+
+                const text = res.result.items
+                  .map(item => item.text)
+                  .join('\n');
+
+                if (text.trim()) {
+                  let finalContent = text.trim();
+                  if (appendMode && that.data.content) {
+                    finalContent = that.data.content + '\n---\n' + text.trim();
+                  }
+                  that.setData({
+                    content: finalContent
+                  });
+                  that.updateCanSubmit();
+
+                  wx.showToast({
+                    title: '识别成功',
+                    icon: 'success'
+                  });
+                  resolve(text.trim());
+                } else {
+                  wx.showToast({
+                    title: '未识别到文字',
+                    icon: 'none'
+                  });
+                  resolve('');
+                }
+              } else if (res.result && res.result.errMsg) {
+                console.error('OCR识别失败:', res.result.errMsg);
+                
+                let title = '服务错误';
+                let content = res.result.notice || 'OCR服务暂时不可用，您可以手动输入作业内容';
+                
+                if (res.result.errCode === -3) {
+                  title = 'OCR服务未开通';
+                  content = res.result.notice || '请先开通阿里云OCR服务，或使用手动输入方式添加作业';
+                }
+                
                 wx.showModal({
-                  title: 'OCR服务未开通',
-                  content: res.result.notice || 'OCR服务暂不可用,请手动输入作业内容',
+                  title: title,
+                  content: content,
                   confirmText: '手动输入',
                   showCancel: false,
                   success: () => {
-                    this.setData({
+                    that.setData({
                       content: ''
                     });
-                    this.updateCanSubmit();
+                    that.updateCanSubmit();
                   }
                 });
-                return;
-              }
-
-              const text = res.result.items
-                .map(item => item.text)
-                .join('\n');
-
-              if (text.trim()) {
-                this.setData({
-                  content: text.trim()
-                });
-                this.updateCanSubmit();
-
-                wx.showToast({
-                  title: '识别成功',
-                  icon: 'success'
-                });
+                resolve('');
               } else {
-                wx.showToast({
-                  title: '未识别到文字',
-                  icon: 'none'
+                console.error('OCR识别失败:', res.result);
+
+                let errorMsg = res.result?.errMsg || '无法识别图片中的文字';
+                if (res.result?.errorDetail) {
+                  errorMsg += `\n错误代码: ${res.result.errorDetail.errCode}`;
+                  errorMsg += `\n详细信息: ${res.result.errorDetail.errMsg}`;
+                }
+                if (res.result?.notice) {
+                  errorMsg += `\n\n提示: ${res.result.notice}`;
+                }
+
+                wx.showModal({
+                  title: 'OCR识别失败',
+                  content: errorMsg,
+                  confirmText: '手动输入',
+                  showCancel: false,
+                  success: () => {
+                    that.setData({
+                      content: ''
+                    });
+                    that.updateCanSubmit();
+                  }
                 });
+                resolve('');
               }
-            } else if (res.result && res.result.errMsg) {
-              console.error('OCR识别失败:', res.result.errMsg);
-              
-              let title = '服务错误';
-              let content = res.result.notice || 'OCR服务暂时不可用，您可以手动输入作业内容';
-              
-              if (res.result.errCode === -3) {
-                title = 'OCR服务未开通';
-                content = res.result.notice || '请先开通阿里云OCR服务，或使用手动输入方式添加作业';
-              }
-              
+            },
+            fail: (err) => {
+              wx.hideLoading();
+              console.error('OCR识别失败:', err);
               wx.showModal({
-                title: title,
-                content: content,
-                confirmText: '手动输入',
-                showCancel: false,
-                success: () => {
-                  this.setData({
-                    content: ''
-                  });
-                  this.updateCanSubmit();
-                }
+                title: '识别失败',
+                content: err.errMsg || '云函数调用失败,请检查云函数是否已部署',
+                showCancel: false
               });
-            } else {
-              console.error('OCR识别失败:', res.result);
-
-              let errorMsg = res.result?.errMsg || '无法识别图片中的文字';
-              if (res.result?.errorDetail) {
-                errorMsg += `\n错误代码: ${res.result.errorDetail.errCode}`;
-                errorMsg += `\n详细信息: ${res.result.errorDetail.errMsg}`;
-              }
-              if (res.result?.notice) {
-                errorMsg += `\n\n提示: ${res.result.notice}`;
-              }
-
-              wx.showModal({
-                title: 'OCR识别失败',
-                content: errorMsg,
-                confirmText: '手动输入',
-                showCancel: false,
-                success: () => {
-                  this.setData({
-                    content: ''
-                  });
-                  this.updateCanSubmit();
-                }
-              });
+              reject(err);
             }
-          },
-          fail: (err) => {
-            wx.hideLoading();
-            console.error('OCR识别失败:', err);
-            wx.showModal({
-              title: '识别失败',
-              content: err.errMsg || '云函数调用失败,请检查云函数是否已部署',
-              showCancel: false
-            });
-          }
-        });
-      },
-      fail: (err) => {
-        wx.hideLoading();
-        console.error('上传图片失败:', err);
-        wx.showToast({
-          title: '上传失败',
-          icon: 'none'
-        });
-      }
+          });
+        },
+        fail: (err) => {
+          wx.hideLoading();
+          console.error('上传图片失败:', err);
+          wx.showToast({
+            title: '上传失败',
+            icon: 'none'
+          });
+          reject(err);
+        }
+      });
     });
   },
 
@@ -563,31 +755,79 @@ Page({
     }
 
     wx.showLoading({
-      title: this.data.isEdit ? '保存中...' : '添加中...'
+      title: this.data.editingHomework ? '保存中...' : (this.data.isEdit ? '保存中...' : '添加中...')
     });
 
     const images = this.data.importedContent
       .filter(item => item.type === 'image')
       .map(item => item.url);
 
-    if (this.data.isEdit) {
+    if (this.data.editingHomework) {
+      this.updateHomeworkFromList(images);
+    } else if (this.data.isEdit) {
       this.updateHomework(images);
     } else {
       this.addHomework(images);
     }
   },
 
-  addHomework(images) {
+  updateHomeworkFromList(images) {
+    const homework = this.data.editingHomework;
+    
     wx.cloud.callFunction({
-      name: 'addHomework',
+      name: 'updateHomework',
       data: {
-        title: this.data.title,
+        homeworkId: homework._id,
+        title: this.data.selectedSubject || '作业',
         content: this.data.content,
         type: this.data.type,
         recurring: this.data.recurring,
         recurringDays: this.data.recurringDays,
         images: images,
-        points: this.data.points
+        points: this.data.points,
+        subject: this.data.selectedSubject
+      },
+      success: (res) => {
+        wx.hideLoading();
+        if (res.result && res.result.success) {
+          wx.showToast({
+            title: '保存成功',
+            icon: 'success'
+          });
+          this.setData({
+            showAddForm: false,
+            editingHomework: null
+          });
+          this.loadSubjectHomework(this.data.selectedSubject);
+        } else {
+          wx.showToast({
+            title: (res.result && res.result.errMsg) || '保存失败',
+            icon: 'none'
+          });
+        }
+      },
+      fail: (err) => {
+        wx.hideLoading();
+        console.error('保存失败:', err);
+        wx.showToast({ title: '保存失败', icon: 'none' });
+      }
+    });
+  },
+
+  addHomework(images) {
+    const date = this.data.selectedDate || '';
+    wx.cloud.callFunction({
+      name: 'addHomework',
+      data: {
+        title: this.data.selectedSubject || '作业',
+        content: this.data.content,
+        type: this.data.type,
+        recurring: this.data.recurring,
+        recurringDays: this.data.recurringDays,
+        images: images,
+        points: this.data.points,
+        subject: this.data.selectedSubject,
+        date: date
       },
       success: (res) => {
         wx.hideLoading();
@@ -596,9 +836,16 @@ Page({
           icon: 'success'
         });
 
-        setTimeout(() => {
-          wx.navigateBack();
-        }, 1500);
+        if (this.data.isSubjectMode) {
+          this.setData({
+            showAddForm: false
+          });
+          this.loadSubjectHomework(this.data.selectedSubject);
+        } else {
+          setTimeout(() => {
+            wx.navigateBack();
+          }, 1500);
+        }
       },
       fail: (err) => {
         wx.hideLoading();
@@ -614,7 +861,7 @@ Page({
   updateHomework(images) {
     console.log('更新作业，ID:', this.data.homeworkId);
     console.log('更新数据:', {
-      title: this.data.title,
+      title: this.data.selectedSubject || '作业',
       content: this.data.content,
       points: this.data.points
     });
@@ -623,13 +870,14 @@ Page({
       name: 'updateHomework',
       data: {
         homeworkId: this.data.homeworkId,
-        title: this.data.title,
+        title: this.data.selectedSubject || '作业',
         content: this.data.content,
         type: this.data.type,
         recurring: this.data.recurring,
         recurringDays: this.data.recurringDays,
         images: images,
-        points: this.data.points
+        points: this.data.points,
+        subject: this.data.selectedSubject
       },
       success: (res) => {
         wx.hideLoading();
@@ -663,8 +911,8 @@ Page({
   },
 
   canSubmit() {
-    const { title, content, recurring, recurringDays } = this.data;
-    if (!title || !content) {
+    const { content, recurring, recurringDays, selectedSubject } = this.data;
+    if (!selectedSubject || !content) {
       return false;
     }
     if (recurring && recurringDays.length === 0) {
@@ -676,6 +924,183 @@ Page({
   updateCanSubmit() {
     this.setData({
       canSubmit: this.canSubmit()
+    });
+  },
+
+  // 加载科目列表
+  loadSubjects() {
+    const db = wx.cloud.database();
+    db.collection('subjects')
+      .orderBy('createTime', 'desc')
+      .get()
+      .then(res => {
+        this.setData({
+          subjects: res.data
+        });
+      });
+  },
+
+  // 显示科目选择器
+  showSubjectSelector() {
+    this.loadSubjects();
+    this.setData({
+      showSubjectSelector: true
+    });
+  },
+
+  // 关闭科目选择器
+  closeSubjectSelector() {
+    this.setData({
+      showSubjectSelector: false
+    });
+  },
+
+  // 选择科目
+  selectSubject(e) {
+    const subject = e.currentTarget.dataset.subject;
+    this.setData({
+      selectedSubject: subject,
+      showSubjectSelector: false
+    });
+  },
+
+  // 显示添加科目弹窗
+  showAddSubjectModal() {
+    this.setData({
+      showAddSubjectModal: true,
+      newSubjectName: ''
+    });
+  },
+
+  // 关闭添加科目弹窗
+  closeAddSubjectModal() {
+    this.setData({
+      showAddSubjectModal: false
+    });
+  },
+
+  // 输入新科目名称
+  onNewSubjectInput(e) {
+    this.setData({
+      newSubjectName: e.detail.value
+    });
+  },
+
+  // 添加新科目
+  addSubject() {
+    const name = this.data.newSubjectName.trim();
+    if (!name) {
+      wx.showToast({
+        title: '请输入科目名称',
+        icon: 'none'
+      });
+      return;
+    }
+
+    const db = wx.cloud.database();
+    db.collection('subjects').add({
+      data: {
+        name: name,
+        color: this.getRandomColor(),
+        createTime: db.serverDate()
+      },
+      success: (res) => {
+        wx.showToast({
+          title: '添加成功',
+          icon: 'success'
+        });
+        this.setData({
+          showAddSubjectModal: false,
+          selectedSubject: name,
+          showSubjectSelector: false,
+          newSubjectName: ''
+        });
+        this.updateCanSubmit();
+      },
+      fail: (err) => {
+        console.error('添加科目失败:', err);
+        wx.showToast({
+          title: '添加失败，请重试',
+          icon: 'none'
+        });
+      }
+    });
+  },
+
+  // 生成随机颜色
+  getRandomColor() {
+    const colors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
+      '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#FF9FF3'
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  },
+
+  deleteHomework() {
+    const that = this;
+    
+    if (this.data.recurring) {
+      wx.showModal({
+        title: '删除周期作业',
+        content: '这是一个周期作业，删除后将移除周期设置并影响所有日期。确定要删除吗？',
+        confirmText: '确定删除',
+        confirmColor: '#FF5252',
+        success(res) {
+          if (res.confirm) {
+            that.doDeleteHomework();
+          }
+        }
+      });
+    } else {
+      wx.showModal({
+        title: '删除作业',
+        content: '确定要删除这个作业吗？删除后无法恢复。',
+        confirmText: '确定删除',
+        confirmColor: '#FF5252',
+        success(res) {
+          if (res.confirm) {
+            that.doDeleteHomework();
+          }
+        }
+      });
+    }
+  },
+
+  doDeleteHomework() {
+    wx.showLoading({
+      title: '删除中...'
+    });
+
+    wx.cloud.callFunction({
+      name: 'deleteHomework',
+      data: {
+        homeworkId: this.data.homeworkId
+      },
+      success: (res) => {
+        wx.hideLoading();
+        if (res.result && res.result.success) {
+          wx.showToast({
+            title: '删除成功',
+            icon: 'success'
+          });
+          setTimeout(() => {
+            wx.navigateBack();
+          }, 1500);
+        } else {
+          wx.showToast({
+            title: (res.result && res.result.errMsg) || '删除失败',
+            icon: 'none'
+          });
+        }
+      },
+      fail: (err) => {
+        wx.hideLoading();
+        wx.showToast({
+          title: '删除失败',
+          icon: 'none'
+        });
+        console.error('删除作业失败:', err);
+      }
     });
   }
 });
