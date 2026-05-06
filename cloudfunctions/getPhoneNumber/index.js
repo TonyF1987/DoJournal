@@ -13,20 +13,24 @@ exports.main = async (event, context) => {
       list: [code],
     });
 
+    console.log('getOpenData result:', result);
+    
     // 解析手机号
     if (result && result.list && result.list.length > 0) {
       const phoneData = result.list[0];
       const phoneNumber = phoneData.phoneNumber || phoneData.purePhoneNumber;
       
-      return {
-        success: true,
-        phoneNumber: phoneNumber
-      };
+      if (phoneNumber) {
+        return {
+          success: true,
+          phoneNumber: phoneNumber
+        };
+      }
     }
 
     return {
       success: false,
-      errMsg: '获取手机号失败'
+      errMsg: '解析手机号失败'
     };
   } catch (err) {
     console.error('获取手机号异常:', err);

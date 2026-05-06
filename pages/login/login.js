@@ -40,6 +40,32 @@ Page({
   onChooseAvatar(e) {
     const { avatarUrl } = e.detail;
     this.setData({ avatarUrl });
+    // 上传头像到云存储
+    this.uploadAvatar(avatarUrl);
+  },
+
+  // 上传头像到云存储
+  uploadAvatar(filePath) {
+    wx.showLoading({ title: '上传头像中...' });
+    const cloudPath = `avatars/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+    
+    wx.cloud.uploadFile({
+      cloudPath: cloudPath,
+      filePath: filePath,
+      success: (res) => {
+        console.log('头像上传成功:', res);
+        this.setData({ avatarUrl: res.fileID });
+        wx.hideLoading();
+      },
+      fail: (err) => {
+        console.error('头像上传失败:', err);
+        wx.hideLoading();
+        wx.showToast({
+          title: '头像上传失败',
+          icon: 'none'
+        });
+      }
+    });
   },
 
   // 输入昵称
@@ -63,20 +89,29 @@ Page({
 
   // 调用云函数获取手机号
   getPhoneNumber(code) {
+    wx.showLoading({ title: '获取手机号中...' });
+    
     wx.cloud.callFunction({
       name: 'getPhoneNumber',
       data: { code },
       success: (res) => {
+        wx.hideLoading();
         console.log('获取手机号成功:', res);
-        if (res.result.phoneNumber) {
+        if (res.result.success && res.result.phoneNumber) {
           this.setData({ phoneNumber: res.result.phoneNumber });
           wx.showToast({
             title: '手机号绑定成功',
             icon: 'success'
           });
+        } else {
+          wx.showToast({
+            title: '获取手机号失败',
+            icon: 'none'
+          });
         }
       },
       fail: (err) => {
+        wx.hideLoading();
         console.error('获取手机号失败:', err);
         wx.showToast({
           title: '获取手机号失败',

@@ -14,10 +14,12 @@
     
     <!-- 科目模式页面 -->
     <view wx:if="{{isSubjectMode}}" class="subject-mode-container">
-      <!-- 顶部科目信息 -->
+      <!-- 顶部科目信息和日期 -->
       <view class="subject-header">
-        <text class="subject-title">{{selectedSubject}} 作业</text>
-        <text class="homework-count">共 {{subjectHomeworkList.length}} 条</text>
+        <view class="subject-info">
+          <text class="subject-title">{{selectedSubject}} 作业{{selectedDate ? ' (' + selectedDate + ')' : ''}}</text>
+          <text class="homework-count">共 {{subjectHomeworkList.length}} 条</text>
+        </view>
       </view>
 
       <!-- 作业列表 -->
@@ -155,6 +157,40 @@
               </block>
             </view>
             <text class="tip" wx:if="{{recurring && recurringDays.length === 0}}">请选择至少一天</text>
+            
+            <!-- 周期结束选项 -->
+            <view class="recurring-end" wx:if="{{recurring && recurringDays.length > 0}}">
+              <view class="form-label">重复结束</view>
+              <view class="end-type-selector">
+                <view class="end-type-item {{recurringEndType === 'date' ? 'active' : ''}}" bindtap="selectEndType" data-type="date">
+                  <text>截止日期</text>
+                </view>
+                <view class="end-type-item {{recurringEndType === 'times' ? 'active' : ''}}" bindtap="selectEndType" data-type="times">
+                  <text>重复次数</text>
+                </view>
+              </view>
+              
+              <!-- 截止日期选择 -->
+              <view class="end-date-section" wx:if="{{recurringEndType === 'date'}}">
+                <picker mode="date" fields="day" value="{{recurringEndDate}}" bindchange="onDateChange" start="{{today}}">
+                  <view class="date-picker-btn">
+                    <text>{{recurringEndDate ? recurringEndDate : '选择截止日期'}}</text>
+                    <text class="date-arrow">▼</text>
+                  </view>
+                </picker>
+              </view>
+              
+              <!-- 重复次数选择 -->
+              <view class="end-times-section" wx:if="{{recurringEndType === 'times'}}">
+                <view class="times-slider">
+                  <text class="times-label">重复</text>
+                  <view class="times-display">{{recurringEndTimes}}</view>
+                  <text class="times-label">次</text>
+                </view>
+                <slider class="times-slider-input" min="1" max="100" value="{{recurringEndTimes}}" bindchanging="onTimesChange" activeColor="#4CAF50" backgroundColor="#e0e0e0" />
+                <view class="times-tip">从今天开始，共 {{getTotalDays()}} 个学习日</view>
+              </view>
+            </view>
           </view>
 
           <!-- 作业积分 -->
@@ -302,6 +338,40 @@
             </block>
           </view>
           <text class="tip" wx:if="{{recurring && recurringDays.length === 0}}">请选择至少一天</text>
+          
+          <!-- 周期结束选项 -->
+          <view class="recurring-end" wx:if="{{recurring && recurringDays.length > 0}}">
+            <view class="form-label">重复结束</view>
+            <view class="end-type-selector">
+              <view class="end-type-item {{recurringEndType === 'date' ? 'active' : ''}}" bindtap="selectEndType" data-type="date">
+                <text>截止日期</text>
+              </view>
+              <view class="end-type-item {{recurringEndType === 'times' ? 'active' : ''}}" bindtap="selectEndType" data-type="times">
+                <text>重复次数</text>
+              </view>
+            </view>
+            
+            <!-- 截止日期选择 -->
+            <view class="end-date-section" wx:if="{{recurringEndType === 'date'}}">
+              <picker mode="date" fields="day" value="{{recurringEndDate}}" bindchange="onDateChange" start="{{today}}">
+                <view class="date-picker-btn">
+                  <text>{{recurringEndDate ? recurringEndDate : '选择截止日期'}}</text>
+                  <text class="date-arrow">▼</text>
+                </view>
+              </picker>
+            </view>
+            
+            <!-- 重复次数选择 -->
+              <view class="end-times-section" wx:if="{{recurringEndType === 'times'}}">
+                <view class="times-slider">
+                  <text class="times-label">重复</text>
+                  <view class="times-display">{{recurringEndTimes}}</view>
+                  <text class="times-label">次</text>
+                </view>
+                <slider class="times-slider-input" min="1" max="100" value="{{recurringEndTimes}}" bindchanging="onTimesChange" activeColor="#4CAF50" backgroundColor="#e0e0e0" />
+                <view class="times-tip">从今天开始，共 {{getTotalDays()}} 个学习日</view>
+              </view>
+          </view>
         </view>
 
         <!-- 作业积分 -->

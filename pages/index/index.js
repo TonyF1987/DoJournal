@@ -497,10 +497,15 @@ Page({
 
   goToEdit(e) {
     const homeworkId = e.currentTarget.dataset.id;
+    const selectedDate = this.data.selectedDate;
     console.log('编辑作业，ID:', homeworkId);
-    console.log('跳转路径:', `/pages/add/add?id=${homeworkId}`);
+    let url = `/pages/add/add?id=${homeworkId}`;
+    if (selectedDate) {
+      url += `&date=${selectedDate}`;
+    }
+    console.log('跳转路径:', url);
     wx.navigateTo({
-      url: `/pages/add/add?id=${homeworkId}`,
+      url: url,
       success: () => {
         console.log('跳转成功');
       },
@@ -1054,70 +1059,47 @@ Page({
   // 生成每天作业统计
   generateDateHomeworkStats() {
     const stats = {};
-    const allHomework = this.data.pendingHomework || [];
+    const pendingHomework = this.data.pendingHomework || [];
+    const completedHomework = this.data.completedHomework || [];
+    const allHomework = [...pendingHomework, ...completedHomework];
     const year = this.data.currentYear;
     const month = this.data.currentMonth;
-    const monthCheckins = this.data.monthCheckins || [];
-    
-    const checkinMap = new Map();
-    monthCheckins.forEach(c => {
-      if (!checkinMap.has(c.date)) {
-        checkinMap.set(c.date, new Map());
-      }
-      checkinMap.get(c.date).set(c.homeworkId, c);
+
+    console.log('generateDateHomeworkStats:', {
+      pendingCount: pendingHomework.length,
+      completedCount: completedHomework.length,
+      allHomeworkCount: allHomework.length,
+      year,
+      month,
+      sampleDates: allHomework.slice(0, 3).map(h => ({ date: h.homeworkDate, status: h.status }))
     });
-    
+
     for (let day = 1; day <= 31; day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const targetDate = new Date(dateStr);
       if (targetDate.getMonth() !== month) break;
-      
-      const dayOfWeek = targetDate.getDay();
+
       let total = 0;
       let pending = 0;
       let completed = 0;
-      
-      const dayCheckins = checkinMap.get(dateStr) || new Map();
-      
+
       allHomework.forEach(item => {
-        let hasOnDate = false;
-        if (item.recurring) {
-          hasOnDate = item.recurringDays && item.recurringDays.includes(dayOfWeek);
-        } else {
-          // 优先使用 homeworkDate 字段
-          if (item.homeworkDate) {
-            hasOnDate = item.homeworkDate === dateStr;
-          } else {
-            // 回退到使用 createTime
-            const createDate = new Date(item.createTimeRaw || item.createTime);
-            const createDateStr = `${createDate.getFullYear()}-${String(createDate.getMonth() + 1).padStart(2, '0')}-${String(createDate.getDate()).padStart(2, '0')}`;
-            hasOnDate = createDateStr === dateStr;
-          }
-        }
-        
-        if (hasOnDate) {
+        if (item.homeworkDate === dateStr) {
           total++;
-          if (item.recurring) {
-            if (dayCheckins.has(item._id)) {
-              completed++;
-            } else {
-              pending++;
-            }
+          if (item.status === 'pending') {
+            pending++;
           } else {
-            if (item.status === 'pending') {
-              pending++;
-            } else {
-              completed++;
-            }
+            completed++;
           }
         }
       });
-      
+
       if (total > 0) {
+        console.log('Date has homework:', dateStr, { total, pending, completed });
         stats[dateStr] = { total, pending, completed };
       }
     }
-    
+
     return stats;
   },
 
@@ -1125,7 +1107,6 @@ Page({
   checkDateHasHomework(dateStr) {
     const today = new Date();
     const targetDate = new Date(dateStr);
-    const dayOfWeek = targetDate.getDay();
     
     // 检查是否是今天或未来的日期
     if (targetDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
@@ -1134,17 +1115,10 @@ Page({
     
     // 检查是否有作业
     const pendingHomework = this.data.pendingHomework || [];
-    return pendingHomework.some(item => {
-      if (item.recurring) {
-        // 检查循环作业
-        return item.recurringDays.includes(dayOfWeek);
-      } else {
-          // 检查非循环作业
-          const createDate = new Date(item.createTimeRaw || item.createTime);
-          const createDateStr = `${createDate.getFullYear()}-${String(createDate.getMonth() + 1).padStart(2, '0')}-${String(createDate.getDate()).padStart(2, '0')}`;
-          return createDateStr === dateStr;
-        }
-    });
+    const completedHomework = this.data.completedHomework || [];
+    const allHomework = [...pendingHomework, ...completedHomework];
+    
+    return allHomework.some(item => item.homeworkDate === dateStr);
   },
 
   // 更新选中日期的作业列表
@@ -1152,26 +1126,24 @@ Page({
     const selectedDate = this.data.selectedDate;
     if (!selectedDate) return;
     
-    const targetDate = new Date(selectedDate);
-    const dayOfWeek = targetDate.getDay();
+    console.log('updateSelectedDateHomework - selectedDate:', selectedDate);
+    
     // 合并已完成和未完成的作业
     const pendingHomework = this.data.pendingHomework || [];
     const completedHomework = this.data.completedHomework || [];
     const allHomework = [...pendingHomework, ...completedHomework];
     
+    console.log('updateSelectedDateHomework - total homework count:', allHomework.length, {
+      pendingCount: pendingHomework.length,
+      completedCount: completedHomework.length
+    });
+    
     const selectedHomework = allHomework.filter(item => {
-      if (item.recurring) {
-        return item.recurringDays && item.recurringDays.includes(dayOfWeek);
-      } else {
-        // 优先使用 homeworkDate 字段
-        if (item.homeworkDate) {
-          return item.homeworkDate === selectedDate;
-        }
-        // 回退到使用 createTime
-        const createDate = new Date(item.createTimeRaw || item.createTime);
-        const createDateStr = `${createDate.getFullYear()}-${String(createDate.getMonth() + 1).padStart(2, '0')}-${String(createDate.getDate()).padStart(2, '0')}`;
-        return createDateStr === selectedDate;
-      }
+      return item.homeworkDate === selectedDate;
+    });
+    
+    console.log('updateSelectedDateHomework - filtered homework count:', selectedHomework.length, {
+      selectedHomework: selectedHomework.map(h => ({ id: h._id, title: h.title, date: h.homeworkDate, status: h.status }))
     });
     
     const recurringIds = selectedHomework.filter(item => item.recurring).map(item => item._id);

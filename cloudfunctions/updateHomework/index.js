@@ -7,7 +7,7 @@ const db = cloud.database();
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID;
-  const { homeworkId, title, content, type, recurring, recurringDays, images, points, subject } = event;
+  const { homeworkId, title, content, type, recurring, recurringDays, recurringEndType, recurringEndDate, recurringEndTimes, images, points, subject } = event;
 
   console.log('收到更新请求:', {
     homeworkId,
@@ -38,16 +38,19 @@ exports.main = async (event, context) => {
     }
 
     const updateData = {
-    title: title,
-    content: content,
-    type: type || 'manual',
-    recurring: recurring || false,
-    recurringDays: recurringDays || [],
-    images: images || [],
-    subject: subject || '',
-    points: points || 10,
-    updateTime: db.serverDate()
-  };
+      title: title,
+      content: content,
+      type: type || 'manual',
+      recurring: recurring || false,
+      recurringDays: recurringDays || [],
+      recurringEndType: recurring ? (recurringEndType || 'never') : '',
+      recurringEndDate: recurring && recurringEndType === 'date' ? (recurringEndDate || '') : '',
+      recurringEndTimes: recurring && recurringEndType === 'times' ? (recurringEndTimes || 0) : 0,
+      images: images || [],
+      subject: subject || '',
+      points: points || 10,
+      updateTime: db.serverDate()
+    };
 
     console.log('准备更新数据:', updateData);
 

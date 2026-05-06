@@ -2,10 +2,14 @@ page {
   background: linear-gradient(180deg, #f0f7f0 0%, #f5f5f5 100%);
   min-height: 100vh;
   padding-bottom: 40rpx;
+  box-sizing: border-box;
 }
 
 .container {
   padding: 24rpx;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* 顶部区域 */
@@ -406,13 +410,15 @@ page {
   border-radius: 20rpx;
   padding: 24rpx;
   flex: 1 1 100%;
-  min-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   border: 2rpx solid transparent;
   display: flex;
   align-items: flex-start;
   gap: 20rpx;
+  overflow: hidden;
 }
 
 .card-left {
@@ -743,8 +749,9 @@ page {
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4rpx;
+  gap: 8rpx;
   margin-bottom: 12rpx;
+  padding: 0 4rpx;
 }
 
 .calendar-day {
@@ -756,7 +763,9 @@ page {
   border-radius: 50%;
   position: relative;
   background: #f5f5f5;
-  margin: 10rpx;
+  width: 100%;
+  max-width: 80rpx;
+  margin: 0 auto;
 }
 
 .day-count {
@@ -810,7 +819,8 @@ page {
 
 .calendar-day.selected {
   background: linear-gradient(135deg, #4CAF50, #66BB6A);
-  transform: scale(1.15);
+  transform: scale(1.05);
+  z-index: 10;
 }
 
 .calendar-day.selected .day-text {
@@ -845,6 +855,82 @@ page {
 .calendar-toggle text {
   font-size: 24rpx;
   color: #999;
+}
+
+/* 横向滚动日历 */
+.calendar-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.calendar-scroll-inner {
+  display: flex;
+  gap: 12rpx;
+  padding: 8rpx 0;
+  width: max-content;
+}
+
+.calendar-scroll-item {
+  width: 80rpx;
+  min-width: 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 8rpx;
+  border-radius: 16rpx;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.calendar-scroll-item.today {
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+}
+
+.calendar-scroll-item.today .scroll-weekday,
+.calendar-scroll-item.today .scroll-day {
+  color: #fff;
+}
+
+.calendar-scroll-item.selected {
+  background: linear-gradient(135deg, #66BB6A, #81C784);
+  transform: scale(1.05);
+}
+
+.calendar-scroll-item.selected .scroll-weekday,
+.calendar-scroll-item.selected .scroll-day {
+  color: #fff;
+}
+
+.calendar-scroll-item.has-homework {
+  background: #f5f5f5;
+}
+
+.calendar-scroll-item.has-pending {
+  background: rgba(255, 193, 7, 0.15);
+}
+
+.calendar-scroll-item.all-completed {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.scroll-weekday {
+  font-size: 20rpx;
+  color: #999;
+  margin-bottom: 4rpx;
+}
+
+.scroll-day {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.scroll-month {
+  font-size: 16rpx;
+  color: #4CAF50;
+  margin-top: 2rpx;
 }
 
 /* 弹窗通用样式 */

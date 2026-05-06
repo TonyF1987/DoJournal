@@ -12,8 +12,9 @@
     <view class="user-form" wx:if="{{!isLoggedIn}}">
       <!-- 头像选择 -->
       <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-        <view class="avatar-img">{{avatarUrl ? '👤' : '👤'}}</view>
-        <view class="avatar-hint">选择头像</view>
+        <image class="avatar-img" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill"></image>
+        <text wx:else class="avatar-placeholder">👤</text>
+        <view class="avatar-hint">点击选择头像</view>
       </button>
       
       <!-- 昵称输入 -->

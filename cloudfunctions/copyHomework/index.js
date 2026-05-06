@@ -6,12 +6,12 @@ const db = cloud.database();
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { sourceDate, targetDate, subject } = event;
+  const { sourceDate, targetDate, subject, childId } = event;
 
-  if (!sourceDate || !targetDate) {
+  if (!sourceDate || !targetDate || !childId) {
     return {
       success: false,
-      errMsg: '缺少源日期或目标日期'
+      errMsg: '缺少必要参数'
     };
   }
 
@@ -19,6 +19,7 @@ exports.main = async (event, context) => {
     // 查询源日期下的所有作业
     const query = {
       _openid: wxContext.OPENID,
+      childId: childId,
       homeworkDate: sourceDate,
       recurring: false // 只复制非周期作业
     };
@@ -40,6 +41,7 @@ exports.main = async (event, context) => {
       return db.collection('homework').add({
         data: {
           _openid: wxContext.OPENID,
+          childId: childId,
           title: homework.title,
           content: homework.content,
           type: homework.type || 'manual',

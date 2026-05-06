@@ -40,6 +40,7 @@ exports.main = async (event, context) => {
         nickName: event.userInfo ? event.userInfo.nickName : '',
         avatarUrl: event.userInfo ? event.userInfo.avatarUrl : '',
         phoneNumber: event.userInfo ? event.userInfo.phoneNumber : '',
+        unionId: wxContext.UNIONID || '',
         children: [defaultChild],
         currentChildId: defaultChild.id,
         createTime: db.serverDate(),
@@ -153,6 +154,9 @@ exports.main = async (event, context) => {
           }
           if (event.userInfo.phoneNumber) {
             updateData.phoneNumber = event.userInfo.phoneNumber;
+          }
+          if (wxContext.UNIONID) {
+            updateData.unionId = wxContext.UNIONID;
           }
         }
         

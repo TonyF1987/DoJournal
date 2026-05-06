@@ -2,6 +2,9 @@
 page {
   height: auto;
   min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .homework-header {

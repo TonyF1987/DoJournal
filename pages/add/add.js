@@ -1,6 +1,28 @@
 const app = getApp();
 const db = wx.cloud.database();
 
+function getNthRecurringDate(recurringDays, nth, startDateStr) {
+  let currentDate = startDateStr ? new Date(startDateStr) : new Date();
+  currentDate.setHours(0, 0, 0, 0);
+  
+  let count = 0;
+  
+  while (count < nth) {
+    const dayOfWeek = currentDate.getDay();
+    if (recurringDays.includes(dayOfWeek)) {
+      count++;
+      if (count === nth) {
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  return null;
+}
+
 Page({
   data: {
     isEdit: false,
@@ -22,10 +44,19 @@ Page({
     isSubjectMode: false,
     subjectHomeworkList: [],
     showAddForm: false,
-    editingHomework: null
+    editingHomework: null,
+    recurringEndType: 'times', // 结束类型: date(截止日期), times(重复次数)
+    recurringEndDate: '', // 截止日期
+    recurringEndTimes: 8, // 重复次数(默认8次)
+    showDatePicker: false
   },
 
   onLoad(options) {
+    // 设置今天的日期
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    this.setData({ today: todayStr });
+    
     // 检查登录状态
     if (!app.globalData.isLoggedIn && !app.globalData.openid) {
       console.log('用户未登录，跳转到登录页面');
@@ -36,9 +67,14 @@ Page({
     }
 
     if (options.id) {
-      this.setData({ isEdit: true, homeworkId: options.id });
+      const selectedDate = options.date || '';
+      this.setData({ 
+        isEdit: true, 
+        homeworkId: options.id,
+        selectedDate: selectedDate
+      });
       this.loadHomework(options.id);
-      wx.setNavigationBarTitle({ title: '编辑任务' });
+      wx.setNavigationBarTitle({ title: '编辑任务' + (selectedDate ? ' (' + selectedDate + ')' : '') });
     } else if (options.subject) {
       const subject = decodeURIComponent(options.subject);
       const selectedDate = options.date || '';
@@ -48,12 +84,12 @@ Page({
         selectedDate: selectedDate,
         showAddForm: false 
       });
-      wx.setNavigationBarTitle({ title: `${subject} 作业` });
+      wx.setNavigationBarTitle({ title: subject + ' 作业' + (selectedDate ? ' (' + selectedDate + ')' : '') });
       this.loadSubjectHomework(subject);
     } else {
       const selectedDate = options.date || '';
       this.setData({ selectedDate: selectedDate });
-      wx.setNavigationBarTitle({ title: '添加任务' });
+      wx.setNavigationBarTitle({ title: '添加任务' + (selectedDate ? ' (' + selectedDate + ')' : '') });
     }
 
     if (options.scene === 1044 && options.shareTicket) {
@@ -86,6 +122,9 @@ Page({
             type: data.type || 'manual',
             recurring: data.recurring || false,
             recurringDays: data.recurringDays || [],
+            recurringEndType: data.recurringEndType || 'never',
+            recurringEndDate: data.recurringEndDate || '',
+            recurringEndTimes: data.recurringEndTimes || 4,
             points: data.points || 10,
             subject: data.subject || '',
             selectedSubject: data.subject || '',
@@ -205,19 +244,25 @@ Page({
           // 如果有选中的日期，只显示该日期的作业
           if (selectedDate) {
             homeworkList = homeworkList.filter(item => {
-              if (item.recurring) {
-                const targetDate = new Date(selectedDate);
-                const dayOfWeek = targetDate.getDay();
-                return item.recurringDays && item.recurringDays.includes(dayOfWeek);
-              } else {
-                if (item.homeworkDate) {
-                  return item.homeworkDate === selectedDate;
+              return item.homeworkDate === selectedDate;
+            });
+          } else {
+            // 没有选中日期时，正常去重显示
+            const seenBatchIds = new Set();
+            const filteredHomework = [];
+            homeworkList.forEach(item => {
+              if (item.recurringBatchId) {
+                // 同一批里只保留一条
+                if (!seenBatchIds.has(item.recurringBatchId)) {
+                  seenBatchIds.add(item.recurringBatchId);
+                  filteredHomework.push(item);
                 }
-                const createDate = new Date(item.createTime);
-                const createDateStr = `${createDate.getFullYear()}-${String(createDate.getMonth() + 1).padStart(2, '0')}-${String(createDate.getDate()).padStart(2, '0')}`;
-                return createDateStr === selectedDate;
+              } else {
+                // 没有批次ID的都保留
+                filteredHomework.push(item);
               }
             });
+            homeworkList = filteredHomework;
           }
           
           this.setData({
@@ -282,6 +327,9 @@ Page({
       importedContent: [],
       recurring: false,
       recurringDays: [],
+      recurringEndType: 'times',
+      recurringEndDate: '',
+      recurringEndTimes: 8,
       points: 10,
       editingHomework: null
     });
@@ -295,6 +343,9 @@ Page({
       type: homework.type || 'manual',
       recurring: homework.recurring || false,
       recurringDays: homework.recurringDays || [],
+      recurringEndType: homework.recurringEndType || 'never',
+      recurringEndDate: homework.recurringEndDate || '',
+      recurringEndTimes: homework.recurringEndTimes || 4,
       points: homework.points || 10,
       showAddForm: true
     });
@@ -304,32 +355,78 @@ Page({
     const homework = e.currentTarget.dataset.homework;
     const that = this;
     
-    wx.showModal({
-      title: '删除作业',
-      content: '确定要删除这个作业吗？',
-      confirmText: '确定删除',
-      confirmColor: '#FF5252',
-      success(res) {
-        if (res.confirm) {
-          that.doDeleteHomeworkFromList(homework);
+    if (homework.recurring || homework.recurringBatchId) {
+      // 这是周期作业（主作业或其中一天）
+      wx.showActionSheet({
+        itemList: ['仅删除当天作业', '删除所有周期作业'],
+        itemColor: '#FF5252',
+        success(res) {
+          if (res.tapIndex === 0) {
+            wx.showModal({
+              title: '确认删除',
+              content: '这是周期作业，删除将清除周期设置，并删除当前作业，是否继续？',
+              confirmText: '继续',
+              confirmColor: '#FF5252',
+              success(modalRes) {
+                if (modalRes.confirm) {
+                  that.doDeleteHomeworkFromList(homework, 'single-convert');
+                }
+              }
+            });
+          } else if (res.tapIndex === 1) {
+            wx.showModal({
+              title: '确认删除所有',
+              content: '确定要删除所有周期作业吗？此操作不可恢复。',
+              confirmText: '确定删除',
+              confirmColor: '#FF5252',
+              success(modalRes) {
+                if (modalRes.confirm) {
+                  that.doDeleteHomeworkFromList(homework, 'all');
+                }
+              }
+            });
+          }
         }
-      }
-    });
+      });
+    } else {
+      wx.showModal({
+        title: '删除作业',
+        content: '确定要删除这个作业吗？',
+        confirmText: '确定删除',
+        confirmColor: '#FF5252',
+        success(res) {
+          if (res.confirm) {
+            that.doDeleteHomeworkFromList(homework, 'single');
+          }
+        }
+      });
+    }
   },
 
-  doDeleteHomeworkFromList(homework) {
+  doDeleteHomeworkFromList(homework, deleteMode = 'single') {
     wx.showLoading({ title: '删除中...' });
     
     wx.cloud.callFunction({
       name: 'deleteHomework',
       data: {
-        homeworkId: homework._id
+        homeworkId: homework._id,
+        deleteMode: deleteMode
       },
       success: (res) => {
         wx.hideLoading();
         if (res.result && res.result.success) {
-          wx.showToast({ title: '删除成功', icon: 'success' });
+          const count = res.result.count || 1;
+          const msg = deleteMode === 'all' ? `成功删除${count}个作业` : '删除成功';
+          wx.showToast({ title: msg, icon: 'success' });
           this.loadSubjectHomework(this.data.selectedSubject);
+          
+          const pages = getCurrentPages();
+          if (pages.length > 1) {
+            const prevPage = pages[pages.length - 2];
+            if (prevPage && prevPage.loadHomework) {
+              prevPage.loadHomework();
+            }
+          }
         } else {
           wx.showToast({ title: (res.result && res.result.errMsg) || '删除失败', icon: 'none' });
         }
@@ -737,6 +834,35 @@ Page({
     this.updateCanSubmit();
   },
 
+  selectEndType(e) {
+    const type = e.currentTarget.dataset.type;
+    this.setData({ 
+      recurringEndType: type,
+      showDatePicker: false
+    });
+  },
+
+  onDateChange(e) {
+    this.setData({ 
+      recurringEndDate: e.detail.value,
+      showDatePicker: false
+    });
+  },
+
+  onTimesChange(e) {
+    this.setData({ 
+      recurringEndTimes: parseInt(e.detail.value)
+    });
+  },
+
+  getTotalDays() {
+    return this.data.recurringEndTimes;
+  },
+
+  showDatePicker() {
+    this.setData({ showDatePicker: true });
+  },
+
   selectPoints(e) {
     const points = parseInt(e.currentTarget.dataset.points);
     this.setData({ points: points });
@@ -795,6 +921,9 @@ Page({
         type: this.data.type,
         recurring: this.data.recurring,
         recurringDays: this.data.recurringDays,
+        recurringEndType: this.data.recurring ? this.data.recurringEndType : '',
+        recurringEndDate: this.data.recurring && this.data.recurringEndType === 'date' ? this.data.recurringEndDate : '',
+        recurringEndTimes: this.data.recurring && this.data.recurringEndType === 'times' ? this.data.recurringEndTimes : 0,
         images: images,
         points: this.data.points,
         subject: this.data.selectedSubject
@@ -839,6 +968,9 @@ Page({
         type: this.data.type,
         recurring: this.data.recurring,
         recurringDays: this.data.recurringDays,
+        recurringEndType: this.data.recurring ? this.data.recurringEndType : '',
+        recurringEndDate: this.data.recurring && this.data.recurringEndType === 'date' ? this.data.recurringEndDate : '',
+        recurringEndTimes: this.data.recurring && this.data.recurringEndType === 'times' ? this.data.recurringEndTimes : 0,
         images: images,
         points: this.data.points,
         subject: this.data.selectedSubject,
@@ -847,9 +979,11 @@ Page({
       },
       success: (res) => {
         wx.hideLoading();
+        const count = res.result.count || 1;
         wx.showToast({
-          title: '添加成功',
-          icon: 'success'
+          title: `添加成功，共${count}个作业`,
+          icon: 'success',
+          duration: 2000
         });
 
         if (this.data.isSubjectMode) {
@@ -860,7 +994,7 @@ Page({
         } else {
           setTimeout(() => {
             wx.navigateBack();
-          }, 1500);
+          }, 2000);
         }
       },
       fail: (err) => {
@@ -891,6 +1025,9 @@ Page({
         type: this.data.type,
         recurring: this.data.recurring,
         recurringDays: this.data.recurringDays,
+        recurringEndType: this.data.recurring ? this.data.recurringEndType : '',
+        recurringEndDate: this.data.recurring && this.data.recurringEndType === 'date' ? this.data.recurringEndDate : '',
+        recurringEndTimes: this.data.recurring && this.data.recurringEndType === 'times' ? this.data.recurringEndTimes : 0,
         images: images,
         points: this.data.points,
         subject: this.data.selectedSubject
@@ -1098,14 +1235,27 @@ Page({
     const that = this;
     
     if (this.data.recurring) {
-      wx.showModal({
-        title: '删除周期作业',
-        content: '这是一个周期作业，删除后将移除周期设置并影响所有日期。确定要删除吗？',
-        confirmText: '确定删除',
-        confirmColor: '#FF5252',
+      // 使用 actionSheet 让用户选择
+      wx.showActionSheet({
+        itemList: ['仅删除当天作业', '删除所有周期作业'],
+        itemColor: '#FF5252',
         success(res) {
-          if (res.confirm) {
-            that.doDeleteHomework();
+          if (res.tapIndex === 0) {
+            // 仅删除当天
+            that.doDeleteHomework('single');
+          } else if (res.tapIndex === 1) {
+            // 删除所有周期作业，再次确认
+            wx.showModal({
+              title: '确认删除所有',
+              content: '确定要删除所有周期作业吗？此操作不可恢复。',
+              confirmText: '确定删除',
+              confirmColor: '#FF5252',
+              success(modalRes) {
+                if (modalRes.confirm) {
+                  that.doDeleteHomework('all');
+                }
+              }
+            });
           }
         }
       });
@@ -1117,14 +1267,14 @@ Page({
         confirmColor: '#FF5252',
         success(res) {
           if (res.confirm) {
-            that.doDeleteHomework();
+            that.doDeleteHomework('single');
           }
         }
       });
     }
   },
 
-  doDeleteHomework() {
+  doDeleteHomework(deleteMode = 'single') {
     wx.showLoading({
       title: '删除中...'
     });
@@ -1132,15 +1282,27 @@ Page({
     wx.cloud.callFunction({
       name: 'deleteHomework',
       data: {
-        homeworkId: this.data.homeworkId
+        homeworkId: this.data.homeworkId,
+        deleteMode: deleteMode
       },
       success: (res) => {
         wx.hideLoading();
         if (res.result && res.result.success) {
+          const count = res.result.count || 1;
+          const msg = deleteMode === 'all' ? `成功删除${count}个作业` : '删除成功';
           wx.showToast({
-            title: '删除成功',
+            title: msg,
             icon: 'success'
           });
+          
+          const pages = getCurrentPages();
+          if (pages.length > 1) {
+            const prevPage = pages[pages.length - 2];
+            if (prevPage && prevPage.loadHomework) {
+              prevPage.loadHomework();
+            }
+          }
+          
           setTimeout(() => {
             wx.navigateBack();
           }, 1500);

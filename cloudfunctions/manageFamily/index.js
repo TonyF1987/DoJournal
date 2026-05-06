@@ -175,13 +175,20 @@ async function joinFamily(wxContext, data) {
     }
   });
 
-  // 更新用户，关联家庭
+  // 更新用户，关联家庭，并设置第一个小朋友为当前选择
+  const updateData = {
+    familyId: familyId,
+    familyRole: 'member',
+    updateTime: db.serverDate()
+  };
+
+  // 如果家庭有小朋友，设置第一个为当前选择
+  if (family.children && family.children.length > 0) {
+    updateData.currentChildId = family.children[0].id;
+  }
+
   await db.collection('users').doc(user._id).update({
-    data: {
-      familyId: familyId,
-      familyRole: 'member',
-      updateTime: db.serverDate()
-    }
+    data: updateData
   });
 
   return {
