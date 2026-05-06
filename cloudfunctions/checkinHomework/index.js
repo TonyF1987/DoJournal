@@ -14,12 +14,52 @@ function getLocalDateStr(date) {
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { homeworkId, date, ratingPercent } = event;
+  const { homeworkId, date, ratingPercent, childId } = event;
 
-  const today = new Date();
-  const todayStr = getLocalDateStr(today);
-  const targetDateStr = date || todayStr;
+  // 1. 验证用户身份
+  const userRes = await db.collection('users').where({
+    _openid: wxContext.OPENID
+  }).get();
+  
+  if (userRes.data.length === 0) {
+    return { success: false, errMsg: '用户不存在或未登录' };
+  }
+  
+  const user = userRes.data[0];
 
+  // 2. 确定小朋友ID
+  let selectedChildId = childId || user.currentChildId;
+  let children = [];
+  let currentChild = null;
+
+  if (user.familyId) {
+    // 有家庭，从家庭数据获取小朋友信息
+    const familyRes = await db.collection('families').doc(user.familyId).get();
+    if (familyRes.data) {
+      children = familyRes.data.children || [];
+    }
+  } else {
+    // 没有家庭，从用户数据获取
+    children = user.children || [];
+  }
+
+  if (!selectedChildId && children.length > 0) {
+    selectedChildId = children[0].id;
+  }
+
+  if (!selectedChildId) {
+    return { success: false, errMsg: '请先选择小朋友' };
+  }
+
+  // 3. 验证小朋友是否存在
+  const childIndex = children.findIndex(c => c.id === selectedChildId);
+  if (childIndex === -1) {
+    return { success: false, errMsg: '小朋友不存在' };
+  }
+
+  currentChild = children[childIndex];
+
+  // 4. 获取作业并验证所有权
   const homeworkRes = await db.collection('homework').doc(homeworkId).get();
   const homework = homeworkRes.data;
 
@@ -27,19 +67,32 @@ exports.main = async (event, context) => {
     return { success: false, errMsg: '作业不存在' };
   }
 
-  const userRes = await db.collection('users').where({
-    _openid: wxContext.OPENID
-  }).get();
-  const user = userRes.data[0];
+  // 5. 验证作业是否属于当前用户和小朋友
+  if (homework._openid !== wxContext.OPENID) {
+    return { success: false, errMsg: '无权操作该作业' };
+  }
 
-  if (!user) {
-    return { success: false, errMsg: '用户不存在' };
+  if (homework.childId && homework.childId !== selectedChildId) {
+    return { success: false, errMsg: '作业不属于当前小朋友' };
+  }
+
+  const today = new Date();
+  const todayStr = getLocalDateStr(today);
+  const targetDateStr = date || todayStr;
+
+  // 获取作业日期
+  let homeworkDate;
+  if (homework.recurring) {
+    homeworkDate = targetDateStr;
+  } else {
+    homeworkDate = homework.homeworkDate || homework.date || todayStr;
   }
 
   if (homework.recurring) {
     const existingCheckin = await db.collection('checkins').where({
       homeworkId: homeworkId,
       _openid: wxContext.OPENID,
+      childId: selectedChildId,
       date: targetDateStr
     }).get();
 
@@ -57,7 +110,8 @@ exports.main = async (event, context) => {
         ratingPercent: ratingPercent || 100,
         date: targetDateStr,
         createTime: db.serverDate(),
-        _openid: wxContext.OPENID
+        _openid: wxContext.OPENID,
+        childId: selectedChildId
       }
     });
 
@@ -65,15 +119,15 @@ exports.main = async (event, context) => {
     const actualPercent = ratingPercent || 100;
     const actualPoints = Math.round(basePoints * actualPercent / 100);
 
-    let streak = user.streak || 0;
+    let streak = currentChild.streak || 0;
     let streakBonus = 0;
 
-    if (targetDateStr === todayStr && user.lastCheckInDate !== todayStr) {
+    if (targetDateStr === todayStr && currentChild.lastCheckInDate !== todayStr) {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = getLocalDateStr(yesterday);
 
-      if (user.lastCheckInDate === yesterdayStr) {
+      if (currentChild.lastCheckInDate === yesterdayStr) {
         streak += 1;
         streakBonus = Math.floor(streak / 3) * 5;
       } else {
@@ -83,23 +137,72 @@ exports.main = async (event, context) => {
 
     const totalPoints = actualPoints + streakBonus;
 
-    const updateData = {
-      points: _.inc(totalPoints),
-      updateTime: db.serverDate()
-    };
-    if (targetDateStr === todayStr) {
-      updateData.streak = streak;
-      updateData.lastCheckInDate = todayStr;
-    }
-
-    await db.collection('users').doc(user._id).update({
-      data: updateData
+    // 记录积分获得明细
+    await db.collection('point_records').add({
+      data: {
+        type: 'checkin',
+        name: homework.title,
+        description: homework.content || '',
+        comment: '',
+        rating: 3,
+        ratingPercent: ratingPercent || 100,
+        basePoints: basePoints,
+        points: actualPoints,
+        streakBonus: streakBonus,
+        icon: '✅',
+        homeworkId: homeworkId,
+        homeworkDate: homeworkDate,
+        createTime: db.serverDate(),
+        _openid: wxContext.OPENID,
+        childId: selectedChildId
+      }
     });
+
+    currentChild.points = (currentChild.points || 0) + totalPoints;
+    if (targetDateStr === todayStr) {
+      currentChild.streak = streak;
+      currentChild.lastCheckInDate = todayStr;
+    }
+    children[childIndex] = currentChild;
+
+    if (user.familyId) {
+      // 有家庭，更新家庭数据
+      const familyRes = await db.collection('families').doc(user.familyId).get();
+      if (familyRes.data) {
+        const familyChildren = familyRes.data.children || [];
+        const updatedFamilyChildren = familyChildren.map(c => {
+          if (c.id === selectedChildId) {
+            return { ...currentChild };
+          }
+          return c;
+        });
+        await db.collection('families').doc(user.familyId).update({
+          data: {
+            children: updatedFamilyChildren,
+            updateTime: db.serverDate()
+          }
+        });
+      }
+    } else {
+      // 没有家庭，更新用户数据
+      await db.collection('users').doc(user._id).update({
+        data: {
+          children: children,
+          updateTime: db.serverDate()
+        }
+      });
+    }
 
     return {
       success: true,
       isRecurring: true,
-      points: totalPoints
+      points: totalPoints,
+      basePoints: basePoints,
+      actualPoints: actualPoints,
+      rating: 3,
+      ratingPercent: actualPercent,
+      streak: streak,
+      streakBonus: streakBonus
     };
   } else {
     if (homework.status === 'completed') {
@@ -116,15 +219,15 @@ exports.main = async (event, context) => {
       }
     });
 
-    let streak = user.streak || 0;
+    let streak = currentChild.streak || 0;
     let streakBonus = 0;
 
-    if (user.lastCheckInDate !== todayStr) {
+    if (currentChild.lastCheckInDate !== todayStr) {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = getLocalDateStr(yesterday);
 
-      if (user.lastCheckInDate === yesterdayStr) {
+      if (currentChild.lastCheckInDate === yesterdayStr) {
         streak += 1;
         streakBonus = Math.floor(streak / 3) * 5;
       } else {
@@ -137,19 +240,70 @@ exports.main = async (event, context) => {
     const actualPoints = Math.round(basePoints * actualPercent / 100);
     const totalPoints = actualPoints + streakBonus;
 
-    await db.collection('users').doc(user._id).update({
+    // 记录积分获得明细
+    await db.collection('point_records').add({
       data: {
-        points: _.inc(totalPoints),
-        streak: streak,
-        lastCheckInDate: todayStr,
-        updateTime: db.serverDate()
+        type: 'checkin',
+        name: homework.title,
+        description: homework.content || '',
+        comment: '',
+        rating: 3,
+        ratingPercent: ratingPercent || 100,
+        basePoints: basePoints,
+        points: actualPoints,
+        streakBonus: streakBonus,
+        icon: '✅',
+        homeworkId: homeworkId,
+        homeworkDate: homeworkDate,
+        createTime: db.serverDate(),
+        _openid: wxContext.OPENID,
+        childId: selectedChildId
       }
     });
+
+    currentChild.points = (currentChild.points || 0) + totalPoints;
+    currentChild.streak = streak;
+    currentChild.lastCheckInDate = todayStr;
+    children[childIndex] = currentChild;
+
+    if (user.familyId) {
+      // 有家庭，更新家庭数据
+      const familyRes = await db.collection('families').doc(user.familyId).get();
+      if (familyRes.data) {
+        const familyChildren = familyRes.data.children || [];
+        const updatedFamilyChildren = familyChildren.map(c => {
+          if (c.id === selectedChildId) {
+            return { ...currentChild };
+          }
+          return c;
+        });
+        await db.collection('families').doc(user.familyId).update({
+          data: {
+            children: updatedFamilyChildren,
+            updateTime: db.serverDate()
+          }
+        });
+      }
+    } else {
+      // 没有家庭，更新用户数据
+      await db.collection('users').doc(user._id).update({
+        data: {
+          children: children,
+          updateTime: db.serverDate()
+        }
+      });
+    }
 
     return {
       success: true,
       isRecurring: false,
-      points: totalPoints
+      points: totalPoints,
+      basePoints: basePoints,
+      actualPoints: actualPoints,
+      rating: 3,
+      ratingPercent: actualPercent,
+      streak: streak,
+      streakBonus: streakBonus
     };
   }
 };

@@ -1,0 +1,204 @@
+<view class="container">
+  <view class="header-gradient">
+    <view class="user-card" bindtap="openEditProfile">
+      <view class="user-avatar">
+        <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" mode="aspectFill" class="user-avatar-img" />
+        <text wx:else>👤</text>
+        <view class="edit-icon">✏️</view>
+      </view>
+      <view class="user-info">
+        <text class="user-name">{{userInfo.nickName || '微信用户'}}</text>
+        <text class="user-desc">当前小朋友：{{currentChild ? currentChild.name : '未选择'}}</text>
+      </view>
+      <text class="user-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="content-area">
+    <view class="menu-section">
+      <view class="menu-item" bindtap="openFamilyManage">
+        <view class="menu-icon-wrapper">
+          <text class="menu-icon">{{userInfo.familyId ? '👨‍👩‍👧‍👦' : '🏠'}}</text>
+        </view>
+        <view class="menu-content">
+          <text class="menu-title">家庭管理</text>
+          <text class="menu-desc">{{userInfo.familyId ? (familyInfo ? familyInfo.name + ' · ' + familyMembers.length + '人' : '家庭') : '创建/加入家庭'}}</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <view class="menu-divider"></view>
+
+      <view class="menu-item" bindtap="navigateTo" data-url="/pages/index/index">
+        <view class="menu-icon-wrapper">
+          <text class="menu-icon">📝</text>
+        </view>
+        <view class="menu-content">
+          <text class="menu-title">作业打卡</text>
+          <text class="menu-desc">查看和管理作业</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <view class="menu-item" bindtap="navigateTo" data-url="/pages/rewards/rewards">
+        <view class="menu-icon-wrapper">
+          <text class="menu-icon">🎁</text>
+        </view>
+        <view class="menu-content">
+          <text class="menu-title">积分管理</text>
+          <text class="menu-desc">查看积分和兑换奖励</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <view class="menu-divider"></view>
+
+      <view class="menu-item">
+        <view class="menu-icon-wrapper">
+          <text class="menu-icon">⚙️</text>
+        </view>
+        <view class="menu-content">
+          <text class="menu-title">设置</text>
+          <text class="menu-desc">应用设置</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <view class="menu-item">
+        <view class="menu-icon-wrapper">
+          <text class="menu-icon">❓</text>
+        </view>
+        <view class="menu-content">
+          <text class="menu-title">帮助与反馈</text>
+          <text class="menu-desc">使用帮助</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="logout-section">
+      <view class="logout-btn" bindtap="logout">
+        <text>退出登录</text>
+      </view>
+    </view>
+
+    <view class="version-info">
+      <text class="version-text">作业打卡 v1.0.0</text>
+    </view>
+  </view>
+</view>
+
+<view class="modal" wx:if="{{showEditProfile}}" bindtap="closeEditProfile">
+  <view class="modal-mask"></view>
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text>编辑资料</text>
+      <text class="close-btn" bindtap="closeEditProfile">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="edit-avatar-section">
+        <view class="edit-avatar" bindtap="chooseAvatar">
+          <image wx:if="{{editUserInfo.avatarUrl}}" src="{{editUserInfo.avatarUrl}}" mode="aspectFill" class="edit-avatar-img" />
+          <text wx:else class="edit-avatar-placeholder">📷</text>
+          <view class="avatar-edit-badge">更换头像</view>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="form-label">昵称</text>
+        <input class="form-input" placeholder="请输入昵称" value="{{editUserInfo.nickName}}" bindinput="onNickNameInput" />
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closeEditProfile">取消</button>
+      <button class="btn-confirm" bindtap="saveProfile">保存</button>
+    </view>
+  </view>
+</view>
+
+<view class="modal" wx:if="{{showFamilyManage || showCreateFamily || showJoinFamily || showInviteCode}}" bindtap="closeFamilyManage">
+  <view class="modal-mask"></view>
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text wx:if="{{showCreateFamily}}">创建家庭</text>
+      <text wx:elif="{{showJoinFamily}}">加入家庭</text>
+      <text wx:elif="{{showInviteCode}}">邀请码</text>
+      <text wx:else>{{familyInfo ? '家庭管理' : '创建/加入家庭'}}</text>
+      <text class="close-btn" bindtap="closeFamilyManage">×</text>
+    </view>
+
+    <view class="modal-body">
+      <view wx:if="{{showInviteCode}}">
+        <view class="invite-code-card">
+          <text class="invite-code">{{inviteCode}}</text>
+          <text class="invite-code-desc">请将此邀请码分享给家庭成员</text>
+        </view>
+        <view class="modal-footer">
+          <button class="btn-cancel" bindtap="closeFamilyManage">关闭</button>
+          <button class="btn-confirm" bindtap="copyInviteCode">复制邀请码</button>
+        </view>
+      </view>
+
+      <view wx:elif="{{showCreateFamily}}">
+        <view class="form-item">
+          <text class="form-label">家庭名称 *</text>
+          <input class="form-input" placeholder="例如：小明一家" value="{{familyName}}" bindinput="onFamilyNameInput" />
+        </view>
+        <view class="modal-footer">
+          <button class="btn-cancel" bindtap="closeFamilyManage">取消</button>
+          <button class="btn-confirm" bindtap="createFamily">创建</button>
+        </view>
+      </view>
+
+      <view wx:elif="{{showJoinFamily}}">
+        <view class="form-item">
+          <text class="form-label">邀请码 *</text>
+          <input class="form-input" placeholder="请输入6位邀请码" value="{{inputInviteCode}}" bindinput="onInviteCodeInput" maxlength="6" />
+          <text class="form-hint">请向家庭成员索取邀请码</text>
+        </view>
+        <view class="modal-footer">
+          <button class="btn-cancel" bindtap="closeFamilyManage">取消</button>
+          <button class="btn-confirm" bindtap="verifyInviteCode">加入</button>
+        </view>
+      </view>
+
+      <view wx:elif="{{familyInfo}}">
+        <view class="family-info-card">
+          <text class="family-name">{{familyInfo.name}}</text>
+          <text class="family-desc">成员：{{familyMembers.length}}人</text>
+        </view>
+        <view class="family-section">
+          <view class="section-title">家庭成员</view>
+          <view class="family-members-list">
+            <block wx:for="{{familyMembers}}" wx:key="openid">
+              <view class="family-member">
+                <view class="member-avatar">
+                  <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="member-avatar-img" />
+                  <text wx:else>👤</text>
+                </view>
+                <view class="member-info">
+                  <text class="member-name">{{item.nickName}}</text>
+                  <text class="member-role" wx:if="{{item.isOwner}}">创建者</text>
+                </view>
+              </view>
+            </block>
+          </view>
+        </view>
+        <view class="family-actions">
+          <button class="btn-cancel" bindtap="generateInviteCode">生成邀请码</button>
+          <button class="btn-danger" bindtap="leaveFamily">退出家庭</button>
+        </view>
+      </view>
+
+      <view wx:else>
+        <view class="family-empty-state">
+          <text class="empty-icon">🏠</text>
+          <text class="empty-text">您还没有加入任何家庭</text>
+        </view>
+        <view class="family-actions">
+          <button class="btn-confirm" bindtap="showCreateFamilyModal">创建家庭</button>
+          <button class="btn-cancel" bindtap="showJoinFamilyModal">加入已有家庭</button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

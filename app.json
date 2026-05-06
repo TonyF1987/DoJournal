@@ -2,9 +2,10 @@
   "pages": [
     "pages/login/login",
     "pages/index/index",
+    "pages/rewards/rewards",
+    "pages/me/me",
     "pages/add/add",
     "pages/checkin/checkin",
-    "pages/rewards/rewards",
     "pages/share/share"
   ],
   "window": {
@@ -26,7 +27,11 @@
       },
       {
         "pagePath": "pages/rewards/rewards",
-        "text": "奖励"
+        "text": "积分"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的"
       }
     ]
   },

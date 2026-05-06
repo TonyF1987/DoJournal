@@ -65,7 +65,6 @@ Page({
       });
     }
 
-    const app = getApp();
     if (app.globalData && app.globalData.sharedMessage) {
       this.handleSharedMessage(app.globalData.sharedMessage);
       app.globalData.sharedMessage = null;
@@ -179,53 +178,66 @@ Page({
     wx.showLoading({ title: '加载中...' });
     const selectedDate = this.data.selectedDate;
     
-    // 先获取该科目的所有未完成作业
-    db.collection('homework')
-      .where({
+    // 获取当前小朋友ID
+    const currentChild = app.getCurrentChild ? app.getCurrentChild() : null;
+    const childId = currentChild ? currentChild.id : (app.globalData.currentChildId || '');
+    
+    if (!childId) {
+      wx.hideLoading();
+      this.setData({ subjectHomeworkList: [] });
+      return;
+    }
+    
+    // 通过云函数获取该科目当前小朋友的所有未完成作业
+    wx.cloud.callFunction({
+      name: 'getHomeworks',
+      data: {
+        childId: childId,
         subject: subject,
         status: 'pending'
-      })
-      .orderBy('createTime', 'desc')
-      .get()
-      .then(res => {
+      },
+      success: (res) => {
         wx.hideLoading();
         
-        let homeworkList = res.data || [];
-        
-        // 如果有选中的日期，只显示该日期的作业
-        if (selectedDate) {
-          homeworkList = homeworkList.filter(item => {
-            if (item.recurring) {
-              // 循环作业：判断选中日期的星期几是否匹配
-              const targetDate = new Date(selectedDate);
-              const dayOfWeek = targetDate.getDay();
-              return item.recurringDays && item.recurringDays.includes(dayOfWeek);
-            } else {
-              // 非循环作业：优先使用 homeworkDate 字段
-              if (item.homeworkDate) {
-                return item.homeworkDate === selectedDate;
+        if (res.result && res.result.success) {
+          let homeworkList = res.result.data || [];
+          
+          // 如果有选中的日期，只显示该日期的作业
+          if (selectedDate) {
+            homeworkList = homeworkList.filter(item => {
+              if (item.recurring) {
+                const targetDate = new Date(selectedDate);
+                const dayOfWeek = targetDate.getDay();
+                return item.recurringDays && item.recurringDays.includes(dayOfWeek);
+              } else {
+                if (item.homeworkDate) {
+                  return item.homeworkDate === selectedDate;
+                }
+                const createDate = new Date(item.createTime);
+                const createDateStr = `${createDate.getFullYear()}-${String(createDate.getMonth() + 1).padStart(2, '0')}-${String(createDate.getDate()).padStart(2, '0')}`;
+                return createDateStr === selectedDate;
               }
-              // 回退到使用 createTime
-              const createDate = new Date(item.createTime);
-              const createDateStr = `${createDate.getFullYear()}-${String(createDate.getMonth() + 1).padStart(2, '0')}-${String(createDate.getDate()).padStart(2, '0')}`;
-              return createDateStr === selectedDate;
-            }
+            });
+          }
+          
+          this.setData({
+            subjectHomeworkList: homeworkList.map(item => ({
+              ...item,
+              createTimeText: this.formatDate(item.createTime),
+              recurringDaysText: item.recurring ? this.formatRecurringDays(item.recurringDays) : ''
+            }))
           });
+        } else {
+          this.setData({ subjectHomeworkList: [] });
         }
-        
-        this.setData({
-          subjectHomeworkList: homeworkList.map(item => ({
-            ...item,
-            createTimeText: this.formatDate(item.createTime),
-            recurringDaysText: item.recurring ? this.formatRecurringDays(item.recurringDays) : ''
-          }))
-        });
-      })
-      .catch(err => {
+      },
+      fail: (err) => {
         wx.hideLoading();
         console.error('加载科目作业失败:', err);
-        wx.showToast({ title: '加载失败', icon: 'none' });
-      });
+        wx.showToast({ title: '加载失败，请重试', icon: 'none' });
+        this.setData({ subjectHomeworkList: [] });
+      }
+    });
   },
 
   formatDate(date) {
@@ -816,6 +828,9 @@ Page({
 
   addHomework(images) {
     const date = this.data.selectedDate || '';
+    const currentChild = app.getCurrentChild ? app.getCurrentChild() : null;
+    const childId = currentChild ? currentChild.id : (app.globalData.currentChildId || '');
+    
     wx.cloud.callFunction({
       name: 'addHomework',
       data: {
@@ -827,7 +842,8 @@ Page({
         images: images,
         points: this.data.points,
         subject: this.data.selectedSubject,
-        date: date
+        date: date,
+        childId: childId
       },
       success: (res) => {
         wx.hideLoading();
@@ -929,15 +945,27 @@ Page({
 
   // 加载科目列表
   loadSubjects() {
-    const db = wx.cloud.database();
-    db.collection('subjects')
-      .orderBy('createTime', 'desc')
-      .get()
-      .then(res => {
-        this.setData({
-          subjects: res.data
-        });
-      });
+    const currentChild = app.getCurrentChild ? app.getCurrentChild() : null;
+    if (!currentChild) {
+      // 尝试从全局数据中获取
+      if (app.globalData.currentChildId && app.globalData.children) {
+        const child = app.globalData.children.find(c => c.id === app.globalData.currentChildId);
+        if (child && child.subjects) {
+          const subjects = [...child.subjects];
+          subjects.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+          this.setData({ subjects: subjects });
+        } else {
+          this.setData({ subjects: [] });
+        }
+      } else {
+        this.setData({ subjects: [] });
+      }
+      return;
+    }
+    
+    const subjects = currentChild.subjects || [];
+    subjects.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    this.setData({ subjects: subjects });
   },
 
   // 显示科目选择器
@@ -997,25 +1025,55 @@ Page({
       return;
     }
 
-    const db = wx.cloud.database();
-    db.collection('subjects').add({
+    const currentChild = app.getCurrentChild ? app.getCurrentChild() : null;
+    if (!currentChild) {
+      wx.showToast({
+        title: '请先选择小朋友',
+        icon: 'none'
+      });
+      return;
+    }
+
+    const subjects = currentChild.subjects || [];
+    const maxSort = subjects.reduce((max, s) => Math.max(max, s.sort || 0), 0);
+    
+    const newSubject = {
+      id: Date.now().toString(),
+      name: name,
+      color: this.getRandomColor(),
+      sort: maxSort + 1
+    };
+    
+    subjects.push(newSubject);
+
+    wx.cloud.callFunction({
+      name: 'manageSubjects',
       data: {
-        name: name,
-        color: this.getRandomColor(),
-        createTime: db.serverDate()
+        action: 'updateSubjects',
+        data: {
+          childId: currentChild.id,
+          subjects: subjects
+        }
       },
       success: (res) => {
-        wx.showToast({
-          title: '添加成功',
-          icon: 'success'
-        });
-        this.setData({
-          showAddSubjectModal: false,
-          selectedSubject: name,
-          showSubjectSelector: false,
-          newSubjectName: ''
-        });
-        this.updateCanSubmit();
+        if (res.result && res.result.success) {
+          wx.showToast({
+            title: '添加成功',
+            icon: 'success'
+          });
+          this.setData({
+            showAddSubjectModal: false,
+            selectedSubject: name,
+            showSubjectSelector: false,
+            newSubjectName: ''
+          });
+          this.updateCanSubmit();
+        } else {
+          wx.showToast({
+            title: res.result.errMsg || '添加失败，请重试',
+            icon: 'none'
+          });
+        }
       },
       fail: (err) => {
         console.error('添加科目失败:', err);

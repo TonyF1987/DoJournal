@@ -53,6 +53,28 @@
   pointsUsed: Number,     // 使用积分
   createTime: Date        // 创建时间
 }
+
+5. violations (违规行为表)
+{
+  _openid: String,        // 微信openid
+  name: String,           // 违规行为名称
+  points: Number,         // 扣除积分
+  icon: String,           // 违规图标
+  description: String,    // 违规描述
+  isCustom: Boolean,      // 是否自定义
+  createTime: Date,       // 创建时间
+  updateTime: Date        // 更新时间
+}
+
+6. violationRecords (扣分记录表)
+{
+  _openid: String,        // 微信openid
+  violationId: String,    // 违规行为ID
+  violationName: String,  // 违规行为名称
+  points: Number,         // 扣除积分
+  icon: String,           // 违规图标
+  createTime: Date        // 创建时间
+}
 */
 
 // 初始化奖励数据示例
@@ -130,4 +152,69 @@ rewards 集合添加索引：
 exchange_records 集合添加索引：
 - _openid: 1
 - createTime: -1
+
+violations 集合添加索引：
+- _openid: 1
+- createTime: -1
+
+violationRecords 集合添加索引：
+- _openid: 1
+- createTime: -1
+*/
+
+// 初始化违规行为数据示例
+/*
+在微信开发者工具 -> 云开发 -> 数据库 -> 添加集合 "violations" 和 "violationRecords"
+
+首先在 violations 集合中添加以下默认违规行为（如果代码自动初始化失败）：
+
+记录 1：
+{
+  "name": "迟到",
+  "points": 5,
+  "icon": "⚠️",
+  "description": "上学迟到或不按时完成作业",
+  "isCustom": false,
+  "createTime": "2026-01-16T00:00:00.000Z"
+}
+
+记录 2：
+{
+  "name": "未完成作业",
+  "points": 10,
+  "icon": "❌",
+  "description": "未按时完成指定作业",
+  "isCustom": false,
+  "createTime": "2026-01-16T00:00:00.000Z"
+}
+
+记录 3：
+{
+  "name": "不认真听讲",
+  "points": 5,
+  "icon": "😠",
+  "description": "上课不认真听讲或注意力不集中",
+  "isCustom": false,
+  "createTime": "2026-01-16T00:00:00.000Z"
+}
+
+记录 4：
+{
+  "name": "忘记带物品",
+  "points": 5,
+  "icon": "💢",
+  "description": "忘记带课本、文具或其他必要物品",
+  "isCustom": false,
+  "createTime": "2026-01-16T00:00:00.000Z"
+}
+
+记录 5：
+{
+  "name": "表现差",
+  "points": 20,
+  "icon": "🚫",
+  "description": "整体表现不佳或存在严重行为问题",
+  "isCustom": false,
+  "createTime": "2026-01-16T00:00:00.000Z"
+}
 */

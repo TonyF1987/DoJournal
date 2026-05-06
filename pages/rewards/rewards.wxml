@@ -1,110 +1,438 @@
 <view class="container">
-  <!-- 积分卡片 -->
-  <view class="card points-card">
-    <text class="points-label">当前积分</text>
-    <text class="points-value">{{userInfo.points}}</text>
-    <view class="points-history" bindtap="goToHistory">
-      <text>兑换记录</text>
-      <text class="arrow">›</text>
+  <view class="header-gradient">
+    <view class="user-card" bindtap="openChildModal">
+      <view class="user-avatar">
+        <image wx:if="{{currentChild && currentChild.avatarUrl}}" src="{{currentChild.avatarUrl}}" mode="aspectFill" class="user-avatar-img"></image>
+        <text wx:else>👦</text>
+      </view>
+      <view class="user-info">
+        <text class="user-name">{{currentChild.name || userInfo.nickName || '未设置'}}</text>
+        <text class="user-desc">学龄阶段：{{currentChild.schoolStage || '未设置'}}</text>
+      </view>
+      <text class="user-arrow">›</text>
+    </view>
+
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="stat-value">{{stats.todayPoints || 0}}</text>
+        <text class="stat-label">今日获得</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{currentChild.points || 0}}</text>
+        <text class="stat-label">可用积分</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{currentChild.punishedPoints || 0}}</text>
+        <text class="stat-label">已使用积分</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.totalPoints || 0}}</text>
+        <text class="stat-label">累计积分</text>
+      </view>
     </view>
   </view>
 
-  <!-- 添加自定义礼物按钮 -->
-  <view class="add-custom-btn" bindtap="showAddCustom">
-    <text class="add-icon">+</text>
-    <text class="add-text">添加自定义礼物</text>
+  <view class="tab-bar">
+    <view class="tab-item {{currentTab === 0 ? 'active' : ''}}" bindtap="switchTab" data-index="0">
+      <text>奖励商城</text>
+    </view>
+    <view class="tab-item {{currentTab === 1 ? 'active' : ''}}" bindtap="switchTab" data-index="1">
+      <text>惩罚管理</text>
+    </view>
+    <view class="tab-item {{currentTab === 2 ? 'active' : ''}}" bindtap="switchTab" data-index="2">
+      <text>兑换记录</text>
+    </view>
+    <view class="tab-item {{currentTab === 3 ? 'active' : ''}}" bindtap="switchTab" data-index="3">
+      <text>积分统计</text>
+    </view>
   </view>
 
-  <!-- 奖励列表 -->
-  <view class="rewards-list">
-    <block wx:for="{{rewards}}" wx:key="_id">
-      <view class="reward-item">
-        <view class="reward-image-wrapper">
-          <view class="reward-emoji" wx:if="{{!item.image || item.image.startsWith('/images/') || item.image === 'custom'}}">
-            {{item.isCustom ? '�' : '🎁'}}
+  <view class="content-area">
+    <view class="tab-content" hidden="{{currentTab !== 0}}">
+      <view class="grid-list">
+        <block wx:for="{{rewards}}" wx:key="id">
+          <view class="grid-item">
+            <view class="item-icon-wrapper">
+              <view class="item-emoji">{{item.icon || '🎁'}}</view>
+              <view class="item-actions">
+                <view class="item-edit" bindtap="editReward" data-item="{{item}}" data-type="reward">✏️</view>
+                <view class="item-delete" bindtap="deleteReward" data-item="{{item}}" data-type="reward">🗑️</view>
+              </view>
+            </view>
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-desc">{{item.description}}</text>
+            <view class="item-bottom">
+              <text class="item-points">{{item.points}} 积分</text>
+              <button class="btn-action" bindtap="exchangeReward" data-id="{{item.id}}" data-points="{{item.points}}" disabled="{{currentChild.points < item.points}}">
+                兑换
+              </button>
+            </view>
           </view>
-          <image class="reward-image" wx:else src="{{item.image}}" mode="aspectFill"></image>
-          <view class="reward-badge" wx:if="{{item.stock < 20}}">剩余{{item.stock}}</view>
-        </view>
-        <view class="reward-content">
-          <text class="reward-name">{{item.name}}</text>
-          <text class="reward-desc">{{item.description}}</text>
-          <view class="reward-bottom">
-            <text class="reward-points">{{item.points}}积分</text>
-            <button class="btn-exchange" bindtap="exchangeReward" data-id="{{item._id}}" data-points="{{item.points}}" disabled="{{userInfo.points < item.points || item.stock <= 0}}">
-              {{userInfo.points >= item.points && item.stock > 0 ? '兑换' : '积分不足'}}
-            </button>
-          </view>
-        </view>
+        </block>
       </view>
-    </block>
-  </view>
 
-  <!-- 兑换记录弹窗 -->
-  <view class="modal" wx:if="{{showHistory}}">
-    <view class="modal-mask" bindtap="closeHistory"></view>
-    <view class="modal-content">
-      <view class="modal-header">
-        <text>兑换记录</text>
-        <text class="close-btn" bindtap="closeHistory">×</text>
+      <view wx:if="{{rewards.length === 0}}" class="empty-state">
+        <text class="empty-icon">🎁</text>
+        <text class="empty-text">暂无奖励</text>
       </view>
-      <scroll-view class="modal-body" scroll-y>
-        <block wx:for="{{exchangeRecords}}" wx:key="_id">
-          <view class="record-item">
-            <view class="record-info">
-              <view class="record-emoji" wx:if="{{!item.rewardImage || item.rewardImage.startsWith('/images/') || item.rewardImage === 'custom'}}">🎁</view>
-              <image wx:else src="{{item.rewardImage}}" mode="aspectFill"></image>
-              <view class="record-text">
-                <text class="record-name">{{item.rewardName}}</text>
+
+      <view class="add-section">
+        <text class="add-title">自定义奖励</text>
+        <view class="add-btn" bindtap="showAddModal" data-type="reward">
+          <text class="add-icon">+</text>
+          <text class="add-text">添加奖励</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="tab-content" hidden="{{currentTab !== 1}}">
+      <view class="grid-list">
+        <block wx:for="{{violations}}" wx:key="id">
+          <view class="grid-item">
+            <view class="item-icon-wrapper">
+              <view class="item-emoji punishment">{{item.icon || '⚠️'}}</view>
+              <view class="item-actions">
+                <view class="item-edit" bindtap="editReward" data-item="{{item}}" data-type="violation">✏️</view>
+                <view class="item-delete" bindtap="deleteReward" data-item="{{item}}" data-type="violation">🗑️</view>
+              </view>
+            </view>
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-desc">{{item.description}}</text>
+            <view class="item-bottom">
+              <text class="item-points punishment">{{item.points}} 积分</text>
+              <button class="btn-action punishment" bindtap="executePunishment" data-item="{{item}}">
+                执行
+              </button>
+            </view>
+          </view>
+        </block>
+      </view>
+
+      <view wx:if="{{violations.length === 0}}" class="empty-state">
+        <text class="empty-icon">⚠️</text>
+        <text class="empty-text">暂无惩罚</text>
+      </view>
+
+      <view class="add-section">
+        <text class="add-title">自定义惩罚</text>
+        <view class="add-btn" bindtap="showAddModal" data-type="violation">
+          <text class="add-icon">+</text>
+          <text class="add-text">添加惩罚</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="tab-content" hidden="{{currentTab !== 2}}">
+      <view class="record-list">
+        <block wx:for="{{pointRecords}}" wx:key="_id">
+          <view class="record-item" bindtap="showDetailModal" data-item="{{item}}">
+            <view class="record-left">
+              <view class="record-emoji">{{item.icon || (item.type === 'reward' ? '🎁' : '⚠️')}}</view>
+              <view class="record-info">
+                <text class="record-name">
+                  <text class="type-tag" wx:if="{{item.type === 'reward'}}">【奖励】</text>
+                  <text class="type-tag violation" wx:if="{{item.type === 'violation'}}">【惩罚】</text>
+                  {{item.name}}
+                </text>
                 <text class="record-time">{{item.createTime}}</text>
               </view>
             </view>
-            <text class="record-points">-{{item.pointsUsed}}积分</text>
+            <text class="record-points {{item.type}}">{{item.type === 'reward' ? '+' : '-'}}{{item.points}}</text>
           </view>
         </block>
-        <view class="empty-history" wx:if="{{exchangeRecords.length === 0}}">
-          <text>暂无兑换记录</text>
-        </view>
-      </scroll-view>
-    </view>
-  </view>
-
-  <!-- 添加自定义礼物弹窗 -->
-  <view class="modal" wx:if="{{showAddCustomModal}}">
-    <view class="modal-mask" bindtap="closeAddCustom"></view>
-    <view class="modal-content add-custom-modal">
-      <view class="modal-header">
-        <text>添加自定义礼物</text>
-        <text class="close-btn" bindtap="closeAddCustom">×</text>
       </view>
-      <view class="modal-body">
-        <view class="form-item">
-          <text class="form-label">礼物名称 *</text>
-          <input class="form-input" placeholder="例如：冰淇淋、看电影" value="{{customGift.name}}" bindinput="onCustomNameInput" />
+
+      <view wx:if="{{pointRecords.length === 0}}" class="empty-state">
+        <text class="empty-icon">📋</text>
+        <text class="empty-text">暂无记录</text>
+      </view>
+
+      <view wx:if="{{isLoading}}" class="loading-more">
+        <text>加载中...</text>
+      </view>
+      
+      <view wx:if="{{!hasMore && pointRecords.length > 0}}" class="no-more">
+        <text>没有更多了</text>
+      </view>
+    </view>
+
+    <view class="tab-content" hidden="{{currentTab !== 3}}">
+      <view class="stats-section">
+        <view class="stats-header">
+          <text class="stats-title">积分获得</text>
         </view>
-        <view class="form-item">
-          <text class="form-label">所需积分 *</text>
-          <input class="form-input" type="number" placeholder="例如：50" value="{{customGift.points}}" bindinput="onCustomPointsInput" />
-        </view>
-        <view class="form-item">
-          <text class="form-label">礼物描述</text>
-          <textarea class="form-textarea" placeholder="描述这个礼物..." value="{{customGift.description}}" bindinput="onCustomDescInput" />
-        </view>
-        <view class="form-item">
-          <text class="form-label">礼物图片</text>
-          <view class="image-picker" bindtap="chooseCustomImage">
-            <image wx:if="{{customGift.image}}" src="{{customGift.image}}" mode="aspectFill"></image>
-            <view wx:else class="image-placeholder">
-              <text class="placeholder-icon">📷</text>
-              <text class="placeholder-text">点击选择图片</text>
-            </view>
+        <view class="stats-grid">
+          <view class="stats-cell">
+            <text class="stats-value green">{{stats.todayPoints || 0}}</text>
+            <text class="stats-label">今日获得</text>
+          </view>
+          <view class="stats-cell">
+            <text class="stats-value green">{{stats.weekPoints || 0}}</text>
+            <text class="stats-label">本周获得</text>
+          </view>
+          <view class="stats-cell">
+            <text class="stats-value green">{{stats.monthPoints || 0}}</text>
+            <text class="stats-label">本月获得</text>
+          </view>
+          <view class="stats-cell">
+            <text class="stats-value green">{{stats.totalPoints || 0}}</text>
+            <text class="stats-label">累计获得</text>
           </view>
         </view>
       </view>
-      <view class="modal-footer">
-        <button class="btn-cancel" bindtap="closeAddCustom">取消</button>
-        <button class="btn-confirm" bindtap="saveCustomGift">保存</button>
+
+      <view class="stats-section">
+        <view class="stats-header">
+          <text class="stats-title">积分消耗</text>
+        </view>
+        <view class="stats-grid">
+          <view class="stats-cell">
+            <text class="stats-value red">{{stats.todayConsume || 0}}</text>
+            <text class="stats-label">今日消耗</text>
+          </view>
+          <view class="stats-cell">
+            <text class="stats-value red">{{stats.weekConsume || 0}}</text>
+            <text class="stats-label">本周消耗</text>
+          </view>
+          <view class="stats-cell">
+            <text class="stats-value red">{{stats.monthConsume || 0}}</text>
+            <text class="stats-label">本月消耗</text>
+          </view>
+          <view class="stats-cell">
+            <text class="stats-value red">{{stats.totalConsume || 0}}</text>
+            <text class="stats-label">累计消耗</text>
+          </view>
+        </view>
       </view>
+
+      <view class="stats-section">
+        <view class="stats-header">
+          <text class="stats-title">积分明细</text>
+          <view class="correct-btn" bindtap="correctPoints">
+            <text>积分矫正</text>
+          </view>
+        </view>
+        <view class="record-list">
+          <block wx:for="{{checkinRecords}}" wx:key="_id">
+            <view class="record-item" bindtap="showDetailModal" data-item="{{item}}">
+              <view class="record-content">
+                <text class="record-first-line">
+                  <text class="record-type {{item.type === 'checkin' ? 'reward' : 'violation'}}">
+                    {{item.type === 'checkin' ? '完成' : '取消完成'}}
+                  </text>
+                  <text class="record-text">{{item.homeworkDate}} {{item.name}}：</text>
+                  <text class="record-desc" wx:if="{{item.description}}">{{item.description}}</text>
+                </text>
+                <text class="record-time">{{item.createTime}}</text>
+              </view>
+              <text class="record-points {{item.type === 'checkin' ? 'reward' : 'violation'}}">
+                {{item.type === 'checkin' ? '+' : '-'}}{{item.points}}积分
+              </text>
+            </view>
+          </block>
+        </view>
+        
+        <view wx:if="{{checkinRecords.length === 0}}" class="empty-state">
+          <text class="empty-icon">📋</text>
+          <text class="empty-text">暂无打卡记录</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<view class="modal" wx:if="{{showAddModal}}">
+  <view class="modal-mask" bindtap="closeAddModal"></view>
+  <view class="modal-content">
+    <view class="modal-header">
+      <text>{{editingItem ? '编辑' : '添加'}}{{currentModalType === 'reward' ? '奖励' : '惩罚'}}</text>
+      <text class="close-btn" bindtap="closeAddModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">图标</text>
+        <view class="icon-selector" bindtap="showIconPicker">
+          <text class="selected-icon">{{currentItem.icon}}</text>
+          <text class="icon-arrow">›</text>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="form-label">名称 *</text>
+        <input class="form-input" placeholder="请输入名称" value="{{currentItem.name}}" bindinput="onNameInput" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">积分 *</text>
+        <input class="form-input" type="number" placeholder="请输入积分" value="{{currentItem.points}}" bindinput="onPointsInput" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">描述</text>
+        <textarea class="form-textarea" placeholder="请输入描述" value="{{currentItem.description}}" bindinput="onDescInput" />
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closeAddModal">取消</button>
+      <button class="btn-confirm" bindtap="saveItem">保存</button>
+    </view>
+  </view>
+</view>
+
+<view class="modal" wx:if="{{showIconPicker}}">
+  <view class="modal-mask" bindtap="closeAddModal"></view>
+  <view class="modal-content icon-picker-content">
+    <view class="modal-header">
+      <text>选择图标</text>
+      <text class="close-btn" bindtap="closeAddModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="icon-grid">
+        <block wx:for="{{currentModalType === 'reward' ? rewardIcons : violationIcons}}" wx:key="*this">
+          <view class="icon-option {{currentItem.icon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}">
+            <text>{{item}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+</view>
+
+<view class="modal" wx:if="{{showDetailModal}}">
+  <view class="modal-mask" bindtap="closeDetailModal"></view>
+  <view class="modal-content detail-content">
+    <view class="modal-header">
+      <text>记录详情</text>
+      <text class="close-btn" bindtap="closeDetailModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="detail-section">
+        <view class="detail-icon">{{detailItem.icon || '📋'}}</view>
+        <view class="detail-info">
+          <text class="detail-name">{{detailItem.name}}</text>
+          <text class="detail-points {{detailItem.type === 'checkin' ? 'reward' : 'violation'}}">
+            {{detailItem.type === 'checkin' ? '+' : '-'}}{{detailItem.points}} 积分
+          </text>
+        </view>
+      </view>
+      <view class="detail-section">
+        <text class="detail-label">时间</text>
+        <text class="detail-value">{{detailItem.createTime}}</text>
+      </view>
+      <view class="detail-section" wx:if="{{detailItem.description}}">
+        <text class="detail-label">作业内容</text>
+        <text class="detail-value">{{detailItem.description}}</text>
+      </view>
+      <view class="detail-section" wx:if="{{detailItem.comment}}">
+        <text class="detail-label">评语</text>
+        <text class="detail-value">{{detailItem.comment}}</text>
+      </view>
+      <view class="detail-section" wx:if="{{detailItem.ratingPercent}}">
+        <text class="detail-label">完成百分比</text>
+        <text class="detail-value">{{detailItem.ratingPercent}}%</text>
+      </view>
+      <view class="detail-section" wx:if="{{detailItem.basePoints}}">
+        <text class="detail-label">基础积分</text>
+        <text class="detail-value">{{detailItem.basePoints}} 积分</text>
+      </view>
+      <view class="detail-section" wx:if="{{detailItem.streakBonus > 0}}">
+        <text class="detail-label">连续打卡奖励</text>
+        <text class="detail-value">+{{detailItem.streakBonus}} 积分</text>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-confirm" bindtap="closeDetailModal">关闭</button>
+    </view>
+  </view>
+</view>
+
+<!-- 小朋友选择弹窗 -->
+<view class="modal" wx:if="{{showChildModal}}">
+  <view class="modal-mask" bindtap="closeChildModal"></view>
+  <view class="modal-content child-list-content">
+    <view class="modal-header">
+      <text>选择小朋友</text>
+      <text class="close-btn" bindtap="closeChildModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="child-list">
+        <block wx:for="{{children}}" wx:key="id">
+          <view class="child-item {{userInfo.currentChildId === item.id ? 'active' : ''}}" bindtap="switchChild" data-id="{{item.id}}">
+            <view class="child-avatar">
+              <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="child-avatar-img"></image>
+              <text wx:else>{{item.gender === 'girl' ? '👧' : '👦'}}</text>
+            </view>
+            <view class="child-info">
+              <text class="child-name">{{item.name}}</text>
+              <text class="child-school">{{item.schoolStage || '未设置'}}</text>
+            </view>
+            <view class="child-actions">
+              <view class="child-edit" bindtap="openAddChildModal" data-child="{{item}}" catchtap="true">✏️</view>
+              <view class="child-delete" bindtap="deleteChild" data-child="{{item}}" catchtap="true">🗑️</view>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-confirm" bindtap="openAddChildModal">添加小朋友</button>
+    </view>
+  </view>
+</view>
+
+<!-- 添加/编辑小朋友弹窗 -->
+<view class="modal" wx:if="{{showAddChildModal}}">
+  <view class="modal-mask" bindtap="closeAddChildModal"></view>
+  <view class="modal-content add-child-content">
+    <view class="modal-header">
+      <text>{{editingChild ? '编辑小朋友' : '添加小朋友'}}</text>
+      <text class="close-btn" bindtap="closeAddChildModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">头像</text>
+        <view class="avatar-upload" bindtap="chooseAvatar">
+          <view class="preview-avatar">
+            <image wx:if="{{newChild.avatarUrl}}" src="{{newChild.avatarUrl}}" mode="aspectFill" class="preview-avatar-img"></image>
+            <text wx:else>👤</text>
+          </view>
+          <text class="upload-text">点击上传</text>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="form-label">姓名</text>
+        <input class="form-input" placeholder="请输入姓名" value="{{newChild.name}}" bindinput="onChildNameInput" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">性别</text>
+        <view class="gender-picker">
+          <view class="gender-option {{newChild.gender === 'boy' ? 'active' : ''}}" bindtap="selectChildGender" data-gender="boy">
+            <text>👦 男孩</text>
+          </view>
+          <view class="gender-option {{newChild.gender === 'girl' ? 'active' : ''}}" bindtap="selectChildGender" data-gender="girl">
+            <text>👧 女孩</text>
+          </view>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="form-label">出生年月</text>
+        <picker mode="date" value="{{newChild.birthDate}}" bindchange="onChildBirthDateChange">
+          <view class="date-picker">
+            <text>{{newChild.birthDate || '请选择'}}</text>
+            <text>›</text>
+          </view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">学龄阶段</text>
+        <picker range="{{['幼儿园', '小学一年级', '小学二年级', '小学三年级', '小学四年级', '小学五年级', '小学六年级', '初中', '高中']}}" value="{{newChild.schoolStage}}" bindchange="onChildSchoolStageChange">
+          <view class="date-picker">
+            <text>{{newChild.schoolStage || '请选择'}}</text>
+            <text>›</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closeAddChildModal">取消</button>
+      <button class="btn-confirm" bindtap="saveChild">保存</button>
     </view>
   </view>
 </view>

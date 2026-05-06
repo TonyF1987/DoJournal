@@ -3,7 +3,11 @@ const db = wx.cloud.database();
 
 Page({
   data: {
+    avatarUrl: '', // 默认头像
+    nickName: '', // 昵称
+    phoneNumber: '', // 手机号
     userInfo: null, // 用户信息
+    isLoggedIn: false, // 是否已登录
     isLoading: false // 加载状态
   },
 
@@ -20,38 +24,95 @@ Page({
   checkLoginStatus() {
     // 检查本地存储的用户信息
     const userInfo = app.globalData.userInfo;
-    if (userInfo) {
-      this.setData({ userInfo });
+    const isLoggedIn = app.globalData.isLoggedIn;
+    if (userInfo && isLoggedIn) {
+      this.setData({ 
+        userInfo,
+        isLoggedIn: true,
+        avatarUrl: userInfo.avatarUrl || '/images/default-avatar.png',
+        nickName: userInfo.nickName || '',
+        phoneNumber: userInfo.phoneNumber || ''
+      });
     }
+  },
+
+  // 选择头像
+  onChooseAvatar(e) {
+    const { avatarUrl } = e.detail;
+    this.setData({ avatarUrl });
+  },
+
+  // 输入昵称
+  onNicknameInput(e) {
+    this.setData({ nickName: e.detail.value });
+  },
+
+  // 获取手机号
+  onGetPhoneNumber(e) {
+    console.log('手机号授权:', e);
+    if (e.detail.code) {
+      // 调用云函数获取手机号
+      this.getPhoneNumber(e.detail.code);
+    } else {
+      wx.showToast({
+        title: '授权失败',
+        icon: 'none'
+      });
+    }
+  },
+
+  // 调用云函数获取手机号
+  getPhoneNumber(code) {
+    wx.cloud.callFunction({
+      name: 'getPhoneNumber',
+      data: { code },
+      success: (res) => {
+        console.log('获取手机号成功:', res);
+        if (res.result.phoneNumber) {
+          this.setData({ phoneNumber: res.result.phoneNumber });
+          wx.showToast({
+            title: '手机号绑定成功',
+            icon: 'success'
+          });
+        }
+      },
+      fail: (err) => {
+        console.error('获取手机号失败:', err);
+        wx.showToast({
+          title: '获取手机号失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+
+  // 清除手机号
+  clearPhoneNumber() {
+    this.setData({ phoneNumber: '' });
   },
 
   // 登录处理
   handleLogin() {
-    const that = this;
+    const { avatarUrl, nickName, phoneNumber } = this.data;
     
-    wx.getUserProfile({
-      desc: '用于完善用户资料',
-      success: (res) => {
-        console.log('获取用户信息成功:', res);
-        that.setData({
-          userInfo: res.userInfo,
-          isLoading: true
-        });
-        
-        app.globalData.userInfo = res.userInfo;
-        
-        // 调用云函数登录
-        that.callLoginFunction(res.userInfo);
-      },
-      fail: (err) => {
-        console.error('获取用户信息失败:', err);
-        wx.showToast({
-          title: '登录失败',
-          icon: 'none',
-          duration: 2000
-        });
-      }
-    });
+    if (!nickName.trim()) {
+      wx.showToast({
+        title: '请输入昵称',
+        icon: 'none'
+      });
+      return;
+    }
+
+    this.setData({ isLoading: true });
+
+    const userInfo = {
+      avatarUrl,
+      nickName,
+      phoneNumber
+    };
+
+    // 调用云函数登录
+    this.callLoginFunction(userInfo);
   },
 
   // 调用登录云函数
@@ -66,33 +127,36 @@ Page({
       success: (res) => {
         console.log('登录成功:', res);
         
-        if (res.result && res.result.success) {
-          // 更新全局数据
-          app.globalData.openid = res.result.openid;
-          app.globalData.userId = res.result.userId;
-          
-          // 显示成功提示
-          wx.showToast({
-            title: '登录成功',
-            icon: 'success',
-            duration: 1500
-          });
-          
-          // 延迟跳转到首页
-          setTimeout(() => {
-            wx.switchTab({
-              url: '/pages/index/index'
-            });
-          }, 1500);
-        } else {
-          wx.showToast({
-            title: '登录失败',
-            icon: 'none',
-            duration: 2000
-          });
-        }
+        const { openid, userId, isNewUser, userInfo: savedUserInfo } = res.result;
         
-        that.setData({ isLoading: false });
+        // 更新全局数据
+        app.globalData.openid = openid;
+        app.globalData.userId = userId;
+        app.globalData.isLoggedIn = true;
+        app.globalData.userInfo = savedUserInfo || userInfo;
+        
+        // 保存用户信息到本地存储
+        app.saveUserInfo(savedUserInfo || userInfo);
+        
+        // 显示成功提示
+        wx.showToast({
+          title: '登录成功',
+          icon: 'success',
+          duration: 1500
+        });
+        
+        // 延迟跳转到首页
+        setTimeout(() => {
+          wx.switchTab({
+            url: '/pages/index/index'
+          });
+        }, 1500);
+        
+        that.setData({ 
+          isLoading: false,
+          isLoggedIn: true,
+          userInfo: savedUserInfo || userInfo
+        });
       },
       fail: (err) => {
         console.error('登录失败:', err);
@@ -106,17 +170,6 @@ Page({
     });
   },
 
-  // 获取用户信息回调（已废弃，保留兼容性）
-  handleGetUserInfo(e) {
-    if (e.detail.userInfo) {
-      console.log('用户信息:', e.detail.userInfo);
-      this.setData({ userInfo: e.detail.userInfo });
-      app.globalData.userInfo = e.detail.userInfo;
-    } else {
-      console.log('用户拒绝授权');
-    }
-  },
-
   // 登出处理
   handleLogout() {
     wx.showModal({
@@ -128,8 +181,15 @@ Page({
           app.globalData.userInfo = null;
           app.globalData.openid = null;
           app.globalData.userId = null;
+          app.globalData.isLoggedIn = false;
           
-          this.setData({ userInfo: null });
+          this.setData({ 
+            userInfo: null,
+            isLoggedIn: false,
+            avatarUrl: '/images/default-avatar.png',
+            nickName: '',
+            phoneNumber: ''
+          });
           
           wx.showToast({
             title: '已登出',

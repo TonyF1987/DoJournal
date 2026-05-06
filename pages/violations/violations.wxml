@@ -1,0 +1,106 @@
+<view class="container">
+  <view class="page-header">
+    <text class="page-title">违规行为管理</text>
+    <text class="page-subtitle">记录违规行为，扣除相应积分，帮助孩子养成良好习惯</text>
+  </view>
+
+  <view class="quick-action-section">
+    <view class="quick-action-item" bindtap="showAddModal">
+      <text class="quick-icon">⚠️</text>
+      <text class="quick-title">快速扣分</text>
+      <text class="quick-desc">立即添加违规行为并扣分</text>
+    </view>
+  </view>
+
+  <view class="violations-list" wx:if="{{violations.length > 0}}">
+    <text class="section-title">常用违规行为</text>
+    <block wx:for="{{violations}}" wx:key="_id">
+      <view class="violation-item {{item.isCustom ? 'custom' : ''}}" bindtap="selectViolation" data-violation="{{item}}">
+        <view class="violation-icon">{{item.icon || '⚠️'}}</view>
+        <view class="violation-content">
+          <text class="violation-name">{{item.name}}</text>
+          <text class="violation-points">-{{item.points}}分</text>
+          <text class="violation-desc" wx:if="{{item.description}}">{{item.description}}</text>
+        </view>
+        <view class="violation-actions">
+          <text class="edit-btn" bindtap="showEditModal" data-violation="{{item}}" data-index="{{index}}">编辑</text>
+          <text class="delete-btn" bindtap="deleteViolation" data-id="{{item._id}}">删除</text>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view class="no-violations" wx:if="{{violations.length === 0}}">
+    <text class="no-icon">🚫</text>
+    <text class="no-title">暂无违规行为</text>
+    <text class="no-desc">点击"快速扣分"添加第一个违规行为</text>
+  </view>
+
+  <view class="history-section">
+    <view class="history-header" bindtap="toggleHistory">
+      <text class="history-title">扣分记录</text>
+      <text class="history-count">{{historyRecords.length}}条</text>
+      <text class="arrow">{{showHistory ? '↑' : '↓'}}</text>
+    </view>
+    <view class="history-list" wx:if="{{showHistory && historyRecords.length > 0}}">
+      <block wx:for="{{historyRecords}}" wx:key="_id">
+        <view class="history-item">
+          <view class="history-time">{{item.createTime}}</view>
+          <view class="history-content">
+            <text class="violation-name">{{item.violationName}}</text>
+            <text class="violation-points">-{{item.points}}分</text>
+          </view>
+          <text class="delete-record" bindtap="deleteHistoryRecord" data-id="{{item._id}}">删除</text>
+        </view>
+      </block>
+    </view>
+    <view class="no-history" wx:if="{{showHistory && historyRecords.length === 0}}">
+      <text class="no-history-icon">📋</text>
+      <text class="no-history-text">暂无扣分记录</text>
+    </view>
+  </view>
+</view>
+
+<!-- 添加/编辑违规行为弹窗 -->
+<view class="modal" wx:if="{{showModal}}">
+  <view class="modal-mask" bindtap="closeModal"></view>
+  <view class="modal-content violation-modal">
+    <view class="modal-header">
+      <text class="modal-title">{{editingViolation ? '编辑违规行为' : '添加违规行为'}}</text>
+      <text class="close-btn" bindtap="closeModal">×</text>
+    </view>
+    <view class="modal-body">
+      <form bindsubmit="submitViolation">
+        <view class="form-group">
+          <view class="form-label">违规行为名称 *</view>
+          <input class="form-input" type="text" placeholder="例如：迟到、不完成作业等" value="{{currentViolation.name}}" bindinput="onNameInput" />
+        </view>
+
+        <view class="form-group">
+          <view class="form-label">扣分数量（分） *</view>
+          <view class="points-selector">
+            <block wx:for="{{[5, 10, 20, 50]}}" wx:key="*this">
+              <view class="point-item {{currentViolation.points === item ? 'active' : ''}}" bindtap="selectPoints" data-points="{{item}}">
+                {{item}}
+              </view>
+            </block>
+          </view>
+          <view class="custom-points">
+            <text class="custom-label">或自定义扣分：</text>
+            <input class="custom-input" type="number" placeholder="输入分数" value="{{currentViolation.points}}" bindinput="onCustomPointsInput" />
+          </view>
+        </view>
+
+        <view class="form-group">
+          <view class="form-label">描述（可选）</view>
+          <textarea class="form-textarea" placeholder="添加违规行为的详细描述" value="{{currentViolation.description}}" bindinput="onDescriptionInput" />
+        </view>
+
+        <view class="modal-footer">
+          <button class="btn-cancel" bindtap="closeModal">取消</button>
+          <button class="btn-confirm" form-type="submit">{{editingViolation ? '保存' : '添加'}}</button>
+        </view>
+      </form>
+    </view>
+  </view>
+</view>

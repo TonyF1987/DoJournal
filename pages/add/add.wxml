@@ -357,7 +357,7 @@
         </view>
       </scroll-view>
       <view class="modal-footer">
-        <button class="btn-add-subject" bindtap="showAddSubjectModal">添加新科目</button>
+        <text class="empty-subjects" style="font-size: 24rpx; color: #999;">请前往首页添加科目</text>
       </view>
     </view>
   </view>

@@ -81,13 +81,54 @@ App({
     openid: null,
     userId: null,
     sharedMessage: null, // 存储从聊天转发的消息
-    isLoggedIn: false // 登录状态标记
+    isLoggedIn: false, // 登录状态标记
+    currentChildId: null, // 当前选中的小朋友ID
+    children: [] // 所有小朋友列表
   },
 
   // 保存用户信息到本地存储
   saveUserInfo(userInfo) {
     this.globalData.userInfo = userInfo;
+    this.globalData.currentChildId = userInfo.currentChildId;
+    this.globalData.children = userInfo.children || [];
     wx.setStorageSync('userInfo', JSON.stringify(userInfo));
+  },
+
+  // 从数据库重新加载用户信息
+  loadUserInfo(callback) {
+    wx.cloud.callFunction({
+      name: 'getUserInfo',
+      success: (res) => {
+        if (res.result && res.result.success) {
+          const userInfo = res.result.userInfo;
+          this.saveUserInfo(userInfo);
+          if (callback) {
+            callback(userInfo);
+          }
+        }
+      },
+      fail: (err) => {
+        console.error('加载用户信息失败', err);
+      }
+    });
+  },
+
+  // 获取当前选中的小朋友
+  getCurrentChild() {
+    if (!this.globalData.children || !this.globalData.currentChildId) {
+      return null;
+    }
+    return this.globalData.children.find(c => c.id === this.globalData.currentChildId);
+  },
+
+  // 切换小朋友
+  switchChild(childId) {
+    this.globalData.currentChildId = childId;
+    // 更新用户信息
+    if (this.globalData.userInfo) {
+      this.globalData.userInfo.currentChildId = childId;
+      this.saveUserInfo(this.globalData.userInfo);
+    }
   },
 
   // 清除用户信息（退出登录）
@@ -96,6 +137,8 @@ App({
     this.globalData.openid = null;
     this.globalData.userId = null;
     this.globalData.isLoggedIn = false;
+    this.globalData.currentChildId = null;
+    this.globalData.children = [];
     
     wx.removeStorageSync('userInfo');
     wx.removeStorageSync('openid');

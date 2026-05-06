@@ -6,10 +6,29 @@ Page({
     greeting: '',
     userInfo: {
       nickName: '小宝贝',
-      avatarUrl: '',
-      points: 0,
-      streak: 0
+      avatarUrl: ''
     },
+    currentChild: null,
+    showChildModal: false,
+    showAddChildModal: false,
+    editingChild: null,
+    newChild: {
+      name: '',
+      avatarUrl: '',
+      gender: '',
+      birthDate: '',
+      schoolStage: ''
+    },
+    // 家庭管理相关
+    showFamilyManageModal: false,
+    familyInfo: null,
+    showJoinFamilyModal: false,
+    showCreateFamilyModal: false,
+    showInviteCodeModal: false,
+    inviteCode: '',
+    familyName: '', // 新建家庭名称
+    inputInviteCode: '', // 输入的邀请码
+    familyMembers: [],
     pendingHomework: [],
     completedHomework: [],
     completedToday: 0,
@@ -87,42 +106,24 @@ Page({
 
   // 加载科目列表
   loadSubjects() {
-    db.collection('subjects')
-      .orderBy('sort', 'asc')
-      .orderBy('createTime', 'desc')
-      .get()
-      .then(async res => {
-        let subjects = res.data || [];
-        
-        // 检查是否有科目没有sort值，有的话初始化
-        const needInit = subjects.some(item => item.sort === undefined);
-        if (needInit) {
-          // 为每个科目分配sort值
-          const updatePromises = subjects.map((item, index) => {
-            if (item.sort === undefined) {
-              return db.collection('subjects').doc(item._id).update({
-                data: { sort: index + 1 }
-              });
-            }
-            return Promise.resolve();
-          });
-          
-          await Promise.all(updatePromises);
-          
-          // 重新加载科目
-          const newRes = await db.collection('subjects')
-            .orderBy('sort', 'asc')
-            .orderBy('createTime', 'desc')
-            .get();
-          subjects = newRes.data || [];
-        }
-        
-        this.setData({
-          subjects: subjects,
-          selectedSubject: subjects.length > 0 ? subjects[0].name : ''
-        });
-        this.updateSelectedDateHomework();
+    const currentChild = this.data.currentChild;
+    if (!currentChild) {
+      console.log('没有选择小朋友，不加载科目');
+      this.setData({ 
+        subjects: [],
+        selectedSubject: ''
       });
+      return;
+    }
+    
+    let subjects = currentChild.subjects || [];
+    // 按 sort 排序
+    subjects.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    this.setData({
+      subjects: subjects,
+      selectedSubject: subjects.length > 0 ? subjects[0].name : ''
+    });
+    this.updateSelectedDateHomework();
   },
 
   setGreeting() {
@@ -156,43 +157,45 @@ Page({
     }
 
     if (app.globalData.userInfo) {
+      const currentChild = this.getCurrentChild(app.globalData.userInfo);
       this.setData({
-        userInfo: {
-          ...app.globalData.userInfo,
-          points: 0,
-          streak: 0
-        }
+        userInfo: app.globalData.userInfo,
+        currentChild: currentChild
       });
     }
 
-    // 如果已登录，加载用户数据
+    // 如果已登录，通过云函数加载用户数据
     if (app.globalData.openid) {
-      db.collection('users').get().then(res => {
-        if (res.data.length > 0) {
-          this.setData({
-            userInfo: res.data[0]
-          });
-          app.globalData.userInfo = res.data[0];
-          
-          // 保存用户信息到本地存储
-          wx.setStorageSync('userInfo', JSON.stringify(res.data[0]));
-          
-          // 标记为已登录
-          app.globalData.isLoggedIn = true;
-        } else {
-          // 如果没有用户记录，可能需要重新登录
-          console.error('未找到用户记录');
-          app.clearUserInfo();
-          wx.navigateTo({
-            url: '/pages/login/login'
+      wx.cloud.callFunction({
+        name: 'getUserInfo',
+        success: (res) => {
+          if (res.result && res.result.success) {
+            const userInfo = res.result.userInfo;
+            const currentChild = this.getCurrentChild(userInfo);
+            this.setData({
+              userInfo: userInfo,
+              currentChild: currentChild
+            });
+            app.saveUserInfo(userInfo);
+            
+            // 标记为已登录
+            app.globalData.isLoggedIn = true;
+          } else {
+            // 如果没有用户记录，可能需要重新登录
+            console.error('未找到用户记录');
+            app.clearUserInfo();
+            wx.navigateTo({
+              url: '/pages/login/login'
+            });
+          }
+        },
+        fail: (err) => {
+          console.error('获取用户信息失败:', err);
+          wx.showToast({
+            title: '获取用户信息失败',
+            icon: 'none'
           });
         }
-      }).catch(err => {
-        console.error('获取用户信息失败:', err);
-        wx.showToast({
-          title: '获取用户信息失败',
-          icon: 'none'
-        });
       });
     } else {
       // 如果未登录，跳转到登录页面
@@ -203,35 +206,61 @@ Page({
     }
   },
 
+  getCurrentChild(userInfo) {
+    if (!userInfo.children || !userInfo.currentChildId) {
+      return null;
+    }
+    return userInfo.children.find(c => c.id === userInfo.currentChildId);
+  },
+
   loadHomework() {
-    // 加载所有作业（包括已完成和未完成）
-    db.collection('homework')
-      .orderBy('createTime', 'desc')
-      .limit(100)
-      .get()
-      .then(res => {
-        const allHomework = res.data.map(item => ({
-          ...item,
-          createTimeRaw: item.createTime,
-          createTime: this.formatDate(item.createTime),
-          checkInTime: this.formatDateTime(item.checkInTime),
-          recurringDaysText: item.recurring ? this.formatRecurringDays(item.recurringDays) : ''
-        }));
-        
-        // 分离已完成和未完成的作业
-        const pendingHomework = allHomework.filter(item => item.status === 'pending');
-        const completedHomework = allHomework.filter(item => item.status === 'completed');
-        
-        this.setData({
-          pendingHomework: pendingHomework,
-          completedHomework: completedHomework
-        });
-        
-        this.loadMonthCheckins();
-        
-        // 重新更新选中日期的作业列表，因为 pendingHomework 已更新
-        this.updateSelectedDateHomework();
+    const currentChild = this.data.currentChild;
+    if (!currentChild) {
+      console.log('没有选择小朋友，不加载作业');
+      this.setData({
+        pendingHomework: [],
+        completedHomework: []
       });
+      this.loadMonthCheckins();
+      this.updateSelectedDateHomework();
+      return;
+    }
+
+    // 通过云函数加载当前小朋友的作业（包括已完成和未完成）
+    wx.cloud.callFunction({
+      name: 'getHomeworks',
+      data: {
+        childId: currentChild.id
+      },
+      success: (res) => {
+        if (res.result && res.result.success) {
+          const allHomework = res.result.data.map(item => ({
+            ...item,
+            createTimeRaw: item.createTime,
+            createTime: this.formatDate(item.createTime),
+            checkInTime: this.formatDateTime(item.checkInTime),
+            recurringDaysText: item.recurring ? this.formatRecurringDays(item.recurringDays) : ''
+          }));
+          
+          // 分离已完成和未完成的作业
+          const pendingHomework = allHomework.filter(item => item.status === 'pending');
+          const completedHomework = allHomework.filter(item => item.status === 'completed');
+          
+          this.setData({
+            pendingHomework: pendingHomework,
+            completedHomework: completedHomework
+          });
+          
+          this.loadMonthCheckins();
+          
+          // 重新更新选中日期的作业列表，因为 pendingHomework 已更新
+          this.updateSelectedDateHomework();
+        }
+      },
+      fail: (err) => {
+        console.error('加载作业失败:', err);
+      }
+    });
   },
 
   loadMonthCheckins() {
@@ -239,6 +268,13 @@ Page({
     const month = this.data.currentMonth;
     const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
     const endDate = `${year}-${String(month + 1).padStart(2, '0')}-31`;
+    
+    const currentChild = this.data.currentChild;
+    if (!currentChild) {
+      this.setData({ monthCheckins: [] });
+      this.generateCalendarData();
+      return;
+    }
     
     const recurringHomework = this.data.pendingHomework.filter(item => item.recurring);
     const recurringIds = recurringHomework.map(item => item._id);
@@ -249,21 +285,29 @@ Page({
       return;
     }
     
-    db.collection('checkins')
-      .where({
-        homeworkId: db.command.in(recurringIds),
-        date: db.command.gte(startDate).and(db.command.lte(endDate))
-      })
-      .get()
-      .then(res => {
-        this.setData({ monthCheckins: res.data });
+    // 通过云函数获取打卡记录
+    wx.cloud.callFunction({
+      name: 'getCheckins',
+      data: {
+        childId: currentChild.id,
+        homeworkIds: recurringIds,
+        startDate: startDate,
+        endDate: endDate
+      },
+      success: (res) => {
+        if (res.result && res.result.success) {
+          this.setData({ monthCheckins: res.result.data });
+        } else {
+          this.setData({ monthCheckins: [] });
+        }
         this.generateCalendarData();
-      })
-      .catch(err => {
+      },
+      fail: (err) => {
         console.error('加载打卡记录失败:', err);
         this.setData({ monthCheckins: [] });
         this.generateCalendarData();
-      });
+      }
+    });
   },
 
   // 按科目分组作业
@@ -300,6 +344,12 @@ Page({
     const homeworkId = e.currentTarget.dataset.id;
     const status = e.currentTarget.dataset.status;
     const selectedDate = this.data.selectedDate;
+    const currentChild = this.data.currentChild;
+    
+    if (!currentChild) {
+      wx.showToast({ title: '请先选择小朋友', icon: 'none' });
+      return;
+    }
     
     if (status === 'completed') {
       wx.showLoading({ title: '取消中...' });
@@ -307,7 +357,8 @@ Page({
         name: 'cancelCheckin',
         data: {
           homeworkId: homeworkId,
-          date: selectedDate
+          date: selectedDate,
+          childId: currentChild.id
         },
         success: (res) => {
           wx.hideLoading();
@@ -315,6 +366,7 @@ Page({
             wx.showToast({ title: '已取消', icon: 'success' });
             this.loadUserInfo();
             this.loadHomework();
+            this.loadMonthCheckins();
           } else {
             wx.showToast({ title: res.result.errMsg || '取消失败', icon: 'none' });
           }
@@ -1126,13 +1178,23 @@ Page({
     let dateCheckins = [];
     
     if (recurringIds.length > 0) {
-      const checkinRes = await db.collection('checkins')
-        .where({
-          homeworkId: db.command.in(recurringIds),
-          date: selectedDate
-        })
-        .get();
-      dateCheckins = checkinRes.data;
+      const currentChild = this.data.currentChild;
+      try {
+        const res = await wx.cloud.callFunction({
+          name: 'getCheckins',
+          data: {
+            childId: currentChild.id,
+            homeworkIds: recurringIds,
+            startDate: selectedDate,
+            endDate: selectedDate
+          }
+        });
+        if (res.result && res.result.success) {
+          dateCheckins = res.result.data;
+        }
+      } catch (err) {
+        console.error('获取打卡记录失败:', err);
+      }
     }
     
     const checkedInMap = new Map();
@@ -1249,6 +1311,13 @@ Page({
     });
   },
 
+  // 跳转到违规行为管理页面
+  goToDeduction() {
+    wx.navigateTo({
+      url: '/pages/violations/violations'
+    });
+  },
+
   // 关闭科目管理弹窗
   closeSubjectManageModal() {
     this.setData({
@@ -1314,6 +1383,15 @@ Page({
 
   // 添加新科目
   addSubject() {
+    const currentChild = this.data.currentChild;
+    if (!currentChild) {
+      wx.showToast({
+        title: '请先选择小朋友',
+        icon: 'none'
+      });
+      return;
+    }
+    
     const name = this.data.newSubjectName.trim();
     if (!name) {
       wx.showToast({
@@ -1323,75 +1401,31 @@ Page({
       return;
     }
 
-    // 先获取当前最大的sort值
-    db.collection('subjects')
-      .orderBy('sort', 'desc')
-      .limit(1)
-      .get()
-      .then(res => {
-        let maxSort = 0;
-        if (res.data && res.data.length > 0) {
-          maxSort = res.data[0].sort || 0;
-        }
-
-        db.collection('subjects').add({
-          data: {
-            name: name,
-            color: this.getRandomColor(),
-            sort: maxSort + 1,
-            createTime: db.serverDate()
-          },
-          success: (res) => {
-            wx.showToast({
-              title: '添加成功',
-              icon: 'success'
-            });
-            this.setData({
-              showAddSubjectModal: false
-            });
-            this.loadSubjects();
-          },
-          fail: (err) => {
-            console.error('添加科目失败:', err);
-            wx.showToast({
-              title: '添加失败，请重试',
-              icon: 'none'
-            });
-          }
-        });
-      })
-      .catch(err => {
-        // 如果查询失败，默认sort=1
-        db.collection('subjects').add({
-          data: {
-            name: name,
-            color: this.getRandomColor(),
-            sort: 1,
-            createTime: db.serverDate()
-          },
-          success: (res) => {
-            wx.showToast({
-              title: '添加成功',
-              icon: 'success'
-            });
-            this.setData({
-              showAddSubjectModal: false
-            });
-            this.loadSubjects();
-          },
-          fail: (err) => {
-            console.error('添加科目失败:', err);
-            wx.showToast({
-              title: '添加失败，请重试',
-              icon: 'none'
-            });
-          }
-        });
-      });
+    const subjects = currentChild.subjects || [];
+    const maxSort = subjects.reduce((max, s) => Math.max(max, s.sort || 0), 0);
+    
+    const newSubject = {
+      id: Date.now().toString(),
+      name: name,
+      color: this.getRandomColor(),
+      sort: maxSort + 1
+    };
+    
+    subjects.push(newSubject);
+    this.updateChildSubjects(subjects, '添加成功');
   },
 
   // 更新科目
   updateSubject() {
+    const currentChild = this.data.currentChild;
+    if (!currentChild) {
+      wx.showToast({
+        title: '请先选择小朋友',
+        icon: 'none'
+      });
+      return;
+    }
+    
     const name = this.data.editingSubjectName.trim();
     const subject = this.data.editingSubject;
     
@@ -1403,32 +1437,26 @@ Page({
       return;
     }
 
-    db.collection('subjects').doc(subject._id).update({
-      data: {
-        name: name
-      },
-      success: (res) => {
-        wx.showToast({
-          title: '修改成功',
-          icon: 'success'
-        });
-        this.setData({
-          showEditSubjectModal: false
-        });
-        this.loadSubjects();
-      },
-      fail: (err) => {
-        console.error('修改科目失败:', err);
-        wx.showToast({
-          title: '修改失败，请重试',
-          icon: 'none'
-        });
-      }
-    });
+    const subjects = currentChild.subjects || [];
+    const index = subjects.findIndex(s => s.id === subject.id);
+    if (index !== -1) {
+      subjects[index] = { ...subjects[index], name: name };
+    }
+    
+    this.updateChildSubjects(subjects, '修改成功');
   },
 
   // 删除科目
   deleteSubject(e) {
+    const currentChild = this.data.currentChild;
+    if (!currentChild) {
+      wx.showToast({
+        title: '请先选择小朋友',
+        icon: 'none'
+      });
+      return;
+    }
+    
     const subject = e.currentTarget.dataset.subject;
     
     wx.showModal({
@@ -1438,32 +1466,28 @@ Page({
       confirmColor: '#FF5252',
       success: (res) => {
         if (res.confirm) {
-          db.collection('subjects').doc(subject._id).remove({
-            success: () => {
-              wx.showToast({
-                title: '删除成功',
-                icon: 'success'
-              });
-              this.loadSubjects();
-            },
-            fail: (err) => {
-              console.error('删除科目失败:', err);
-              wx.showToast({
-                title: '删除失败，请重试',
-                icon: 'none'
-              });
-            }
-          });
+          const subjects = currentChild.subjects || [];
+          const newSubjects = subjects.filter(s => s.id !== subject.id);
+          this.updateChildSubjects(newSubjects, '删除成功');
         }
       }
     });
   },
 
   // 上移科目
-  async moveSubjectUp(e) {
+  moveSubjectUp(e) {
+    const currentChild = this.data.currentChild;
+    if (!currentChild) {
+      wx.showToast({
+        title: '请先选择小朋友',
+        icon: 'none'
+      });
+      return;
+    }
+    
     const subject = e.currentTarget.dataset.subject;
     const index = e.currentTarget.dataset.index;
-    const subjects = this.data.subjects;
+    const subjects = [...currentChild.subjects || []];
     
     if (index === 0) {
       wx.showToast({
@@ -1473,42 +1497,29 @@ Page({
       return;
     }
 
-    const prevSubject = subjects[index - 1];
+    // 交换位置
+    [subjects[index], subjects[index - 1]] = [subjects[index - 1], subjects[index]];
     
-    // 确保两个科目都有sort值，没有的话先初始化
-    let currentSort = subject.sort !== undefined ? subject.sort : index;
-    let prevSort = prevSubject.sort !== undefined ? prevSubject.sort : (index - 1);
-
-    try {
-      // 交换两个科目的sort值
-      await Promise.all([
-        db.collection('subjects').doc(subject._id).update({
-          data: { sort: prevSort }
-        }),
-        db.collection('subjects').doc(prevSubject._id).update({
-          data: { sort: currentSort }
-        })
-      ]);
-      
-      wx.showToast({
-        title: '移动成功',
-        icon: 'success'
-      });
-      this.loadSubjects();
-    } catch (err) {
-      console.error('移动科目失败:', err);
-      wx.showToast({
-        title: '移动失败，请重试',
-        icon: 'none'
-      });
-    }
+    // 重新分配 sort
+    subjects.forEach((s, i) => s.sort = i + 1);
+    
+    this.updateChildSubjects(subjects, '移动成功');
   },
 
   // 下移科目
-  async moveSubjectDown(e) {
+  moveSubjectDown(e) {
+    const currentChild = this.data.currentChild;
+    if (!currentChild) {
+      wx.showToast({
+        title: '请先选择小朋友',
+        icon: 'none'
+      });
+      return;
+    }
+    
     const subject = e.currentTarget.dataset.subject;
     const index = e.currentTarget.dataset.index;
-    const subjects = this.data.subjects;
+    const subjects = [...currentChild.subjects || []];
     
     if (index === subjects.length - 1) {
       wx.showToast({
@@ -1518,35 +1529,65 @@ Page({
       return;
     }
 
-    const nextSubject = subjects[index + 1];
+    // 交换位置
+    [subjects[index], subjects[index + 1]] = [subjects[index + 1], subjects[index]];
     
-    // 确保两个科目都有sort值，没有的话先初始化
-    let currentSort = subject.sort !== undefined ? subject.sort : index;
-    let nextSort = nextSubject.sort !== undefined ? nextSubject.sort : (index + 1);
+    // 重新分配 sort
+    subjects.forEach((s, i) => s.sort = i + 1);
+    
+    this.updateChildSubjects(subjects, '移动成功');
+  },
 
-    try {
-      // 交换两个科目的sort值
-      await Promise.all([
-        db.collection('subjects').doc(subject._id).update({
-          data: { sort: nextSort }
-        }),
-        db.collection('subjects').doc(nextSubject._id).update({
-          data: { sort: currentSort }
-        })
-      ]);
-      
-      wx.showToast({
-        title: '移动成功',
-        icon: 'success'
-      });
-      this.loadSubjects();
-    } catch (err) {
-      console.error('移动科目失败:', err);
-      wx.showToast({
-        title: '移动失败，请重试',
-        icon: 'none'
-      });
-    }
+  // 更新当前小朋友的科目
+  updateChildSubjects(subjects, successMsg) {
+    const currentChild = this.data.currentChild;
+    const userInfo = this.data.userInfo;
+    
+    wx.showLoading({ title: '保存中...' });
+    
+    wx.cloud.callFunction({
+      name: 'manageSubjects',
+      data: {
+        action: 'updateSubjects',
+        data: {
+          childId: currentChild.id,
+          subjects: subjects
+        }
+      },
+      success: async res => {
+        wx.hideLoading();
+        if (res.result && res.result.success) {
+          wx.showToast({
+            title: successMsg,
+            icon: 'success'
+          });
+          
+          // 重新加载用户信息
+          await this.loadUserInfo();
+          
+          this.setData({
+            showAddSubjectModal: false,
+            showEditSubjectModal: false,
+            editingSubject: null
+          });
+          
+          this.loadSubjects();
+        } else {
+          wx.showToast({
+            title: res.result.errMsg || '保存失败，请重试',
+            icon: 'none'
+          });
+        }
+      },
+      fail: err => {
+        wx.hideLoading();
+        console.error('更新科目失败:', err);
+        wx.showToast({
+          title: '保存失败，请重试',
+          icon: 'none'
+        });
+      }
+    });
   },
 
   // 判断科目是否全部完成
@@ -1611,5 +1652,512 @@ Page({
     }
     
     return hasHomework && !hasPending;
+  },
+
+  // 打开小朋友选择弹窗
+  openChildModal() {
+    this.setData({ showChildModal: true });
+  },
+
+  // 关闭小朋友选择弹窗
+  closeChildModal() {
+    this.setData({ showChildModal: false });
+  },
+
+  // 切换小朋友
+  switchChild(e) {
+    const childId = e.currentTarget.dataset.id;
+    wx.showLoading({ title: '切换中...' });
+    
+    wx.cloud.callFunction({
+      name: 'manageChildren',
+      data: {
+        action: 'switch',
+        child: { id: childId }
+      },
+      success: async res => {
+        wx.hideLoading();
+        if (res.result.success) {
+          let userInfo = {
+            ...this.data.userInfo,
+            currentChildId: res.result.currentChildId
+          };
+          
+          // 判断数据源：如果是家庭模式，需要重新加载家庭数据
+          if (res.result.dataSource === 'family' || this.data.userInfo.familyId) {
+            try {
+              const familyRes = await db.collection('families').doc(this.data.userInfo.familyId).get();
+              if (familyRes.data) {
+                userInfo = {
+                  ...userInfo,
+                  children: familyRes.data.children || []
+                };
+              }
+            } catch (err) {
+              console.error('加载家庭数据失败:', err);
+            }
+          } else {
+            userInfo = {
+              ...userInfo,
+              children: res.result.children
+            };
+          }
+          
+          // 找出当前选中的小朋友
+          const currentChild = userInfo.children.find(c => c.id === childId);
+          
+          this.setData({ 
+            userInfo: userInfo,
+            currentChild: currentChild,
+            showChildModal: false
+          });
+          
+          app.saveUserInfo(userInfo);
+          
+          // 重新加载数据
+          this.loadSubjects();
+          this.loadHomework();
+          
+          wx.showToast({ title: '切换成功', icon: 'success' });
+        }
+      },
+      fail: err => {
+        wx.hideLoading();
+        console.error('切换小朋友失败:', err);
+        wx.showToast({ title: '切换失败', icon: 'none' });
+      }
+    });
+  },
+
+  // 打开添加/编辑小朋友弹窗
+  openAddChildModal(e) {
+    const child = e.currentTarget.dataset.child;
+    this.setData({
+      showAddChildModal: true,
+      editingChild: child || null,
+      newChild: child ? { ...child } : {
+        name: '',
+        avatarUrl: '',
+        gender: '',
+        birthDate: '',
+        schoolStage: ''
+      }
+    });
+  },
+
+  // 关闭添加/编辑小朋友弹窗
+  closeAddChildModal() {
+    this.setData({ 
+      showAddChildModal: false,
+      editingChild: null,
+      newChild: {
+        name: '',
+        avatarUrl: '',
+        gender: '',
+        birthDate: '',
+        schoolStage: ''
+      }
+    });
+  },
+
+  // 选择头像
+  chooseAvatar() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: res => {
+        const tempFilePath = res.tempFiles[0].tempFilePath;
+        // 上传头像到云存储
+        const filename = `avatar_${Date.now()}.jpg`;
+        wx.cloud.uploadFile({
+          cloudPath: filename,
+          filePath: tempFilePath,
+          success: uploadRes => {
+            this.setData({
+              'newChild.avatarUrl': uploadRes.fileID
+            });
+          },
+          fail: err => {
+            console.error('上传头像失败:', err);
+          }
+        });
+      }
+    });
+  },
+
+  // 保存小朋友
+  saveChild() {
+    const newChild = this.data.newChild;
+    if (!newChild.name.trim()) {
+      wx.showToast({ title: '请输入名字', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '保存中...' });
+    const action = this.data.editingChild ? 'update' : 'add';
+
+    wx.cloud.callFunction({
+      name: 'manageChildren',
+      data: {
+        action: action,
+        child: newChild
+      },
+      success: async res => {
+        wx.hideLoading();
+        if (res.result.success) {
+          // 重新加载用户信息
+          await this.loadUserInfo();
+          
+          this.setData({ 
+            showAddChildModal: false
+          });
+          
+          // 重新加载数据
+          this.loadSubjects();
+          this.loadHomework();
+          
+          wx.showToast({ title: '保存成功', icon: 'success' });
+        }
+      },
+      fail: err => {
+        wx.hideLoading();
+        console.error('保存小朋友失败:', err);
+        wx.showToast({ title: '保存失败', icon: 'none' });
+      }
+    });
+  },
+
+  // 删除小朋友
+  deleteChild(e) {
+    const child = e.currentTarget.dataset.child;
+    console.log('删除小朋友，child:', child);
+    
+    wx.showModal({
+      title: '确认删除',
+      content: `确定要删除"${child.name}"吗？`,
+      success: res => {
+        if (res.confirm) {
+          wx.showLoading({ title: '删除中...' });
+          wx.cloud.callFunction({
+            name: 'manageChildren',
+            data: {
+              action: 'delete',
+              child: { id: child.id }
+            },
+            success: async res => {
+              wx.hideLoading();
+              console.log('删除小朋友云函数返回:', res);
+              
+              if (res.result.success) {
+                // 重新加载用户信息
+                await this.loadUserInfo();
+                
+                // 重新加载数据
+                this.loadSubjects();
+                this.loadHomework();
+                
+                wx.showToast({ title: '删除成功', icon: 'success' });
+              } else {
+                console.log('删除失败，错误信息:', res.result.errMsg);
+                wx.showToast({ title: res.result.errMsg || '删除失败', icon: 'none', duration: 2000 });
+              }
+            },
+            fail: err => {
+              wx.hideLoading();
+              console.error('删除小朋友云函数调用失败:', err);
+              wx.showToast({ title: '删除失败', icon: 'none', duration: 2000 });
+            }
+          });
+        }
+      }
+    });
+  },
+
+  // 设置小朋友姓名
+  onChildNameInput(e) {
+    this.setData({ 'newChild.name': e.detail.value });
+  },
+
+  // 设置小朋友性别
+  selectChildGender(e) {
+    const gender = e.currentTarget.dataset.gender;
+    this.setData({ 'newChild.gender': gender });
+  },
+
+  // 设置小朋友出生日期
+  onChildBirthDateChange(e) {
+    this.setData({ 'newChild.birthDate': e.detail.value });
+  },
+
+  // 设置小朋友学龄阶段
+  onChildSchoolStageChange(e) {
+    const schoolStages = ['幼儿园', '小学一年级', '小学二年级', '小学三年级', '小学四年级', '小学五年级', '小学六年级', '初中', '高中'];
+    this.setData({ 'newChild.schoolStage': schoolStages[e.detail.value] });
+  },
+
+  // ==================== 家庭管理相关函数 ====================
+
+  // 打开家庭管理
+  openFamilyManage() {
+    if (this.data.userInfo.familyId) {
+      // 已在家庭中，加载家庭信息
+      this.loadFamilyInfo();
+    } else {
+      // 不在家庭中，显示选择界面
+      this.setData({
+        showFamilyManageModal: true
+      });
+    }
+  },
+
+  // 关闭家庭管理
+  closeFamilyManage() {
+    this.setData({
+      showFamilyManageModal: false,
+      showJoinFamilyModal: false,
+      showCreateFamilyModal: false,
+      showInviteCodeModal: false,
+      familyName: '',
+      inputInviteCode: ''
+    });
+  },
+
+  // 加载家庭信息
+  loadFamilyInfo() {
+    wx.cloud.callFunction({
+      name: 'manageFamily',
+      data: {
+        action: 'getFamilyInfo'
+      },
+      success: res => {
+        if (res.result.success) {
+          this.setData({
+            familyInfo: res.result.family,
+            familyMembers: res.result.family ? res.result.family.members : [],
+            showFamilyManageModal: true
+          });
+        } else {
+          this.setData({
+            showFamilyManageModal: true
+          });
+        }
+      },
+      fail: err => {
+        console.error('获取家庭信息失败:', err);
+        this.setData({
+          showFamilyManageModal: true
+        });
+      }
+    });
+  },
+
+  // 显示创建家庭弹窗
+  showCreateFamily() {
+    this.setData({
+      showCreateFamilyModal: true,
+      showFamilyManageModal: false,
+      familyName: ''
+    });
+  },
+
+  // 家庭名称输入
+  onFamilyNameInput(e) {
+    this.setData({ familyName: e.detail.value });
+  },
+
+  // 创建家庭
+  createFamily() {
+    console.log('开始创建家庭，familyName:', this.data.familyName);
+    
+    if (!this.data.familyName || !this.data.familyName.trim()) {
+      console.log('家庭名称为空');
+      wx.showToast({ title: '请输入家庭名称', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '创建中...' });
+
+    wx.cloud.callFunction({
+      name: 'manageFamily',
+      data: {
+        action: 'createFamily',
+        data: {
+          familyName: this.data.familyName
+        }
+      },
+      success: res => {
+        wx.hideLoading();
+        console.log('创建家庭云函数返回:', res);
+        
+        if (res.result && res.result.success) {
+          wx.showToast({ title: '家庭创建成功', icon: 'success' });
+          this.closeFamilyManage();
+          setTimeout(() => {
+            this.loadUserInfo();
+          }, 1000);
+        } else {
+          console.log('创建失败，错误信息:', res.result && res.result.errMsg);
+          wx.showToast({ title: res.result && res.result.errMsg || '创建失败', icon: 'none', duration: 2000 });
+        }
+      },
+      fail: err => {
+        wx.hideLoading();
+        console.error('创建家庭云函数调用失败:', err);
+        wx.showToast({ title: '云函数调用失败', icon: 'none', duration: 2000 });
+      }
+    });
+  },
+
+  // 显示加入家庭弹窗
+  showJoinFamily() {
+    this.setData({
+      showJoinFamilyModal: true,
+      showFamilyManageModal: false
+    });
+  },
+
+  // 输入邀请码
+  onInviteCodeInput(e) {
+    this.setData({
+      inputInviteCode: e.detail.value
+    });
+  },
+
+  // 验证邀请码并加入家庭
+  verifyInviteCode() {
+    if (!this.data.inputInviteCode.trim()) {
+      wx.showToast({ title: '请输入邀请码', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '验证中...' });
+
+    wx.cloud.callFunction({
+      name: 'manageFamily',
+      data: {
+        action: 'verifyInvitationCode',
+        data: {
+          code: this.data.inputInviteCode.trim()
+        }
+      },
+      success: res => {
+        if (res.result.success) {
+          // 验证成功，直接加入家庭
+          this.joinFamily(res.result.familyId);
+        } else {
+          wx.hideLoading();
+          wx.showToast({ title: res.result.errMsg || '邀请码无效或已过期', icon: 'none' });
+        }
+      },
+      fail: err => {
+        wx.hideLoading();
+        console.error('验证邀请码失败:', err);
+        wx.showToast({ title: '验证失败', icon: 'none' });
+      }
+    });
+  },
+
+  // 加入家庭
+  joinFamily(familyId) {
+    wx.cloud.callFunction({
+      name: 'manageFamily',
+      data: {
+        action: 'joinFamily',
+        data: {
+          familyId: familyId
+        }
+      },
+      success: res => {
+        wx.hideLoading();
+        if (res.result.success) {
+          wx.showToast({ title: '加入家庭成功', icon: 'success' });
+          this.closeFamilyManage();
+          // 重新加载用户信息
+          this.loadUserInfo();
+        } else {
+          wx.showToast({ title: res.result.errMsg || '加入失败', icon: 'none' });
+        }
+      },
+      fail: err => {
+        wx.hideLoading();
+        console.error('加入家庭失败:', err);
+        wx.showToast({ title: '加入失败', icon: 'none' });
+      }
+    });
+  },
+
+  // 生成邀请码
+  generateInviteCode() {
+    wx.showLoading({ title: '生成中...' });
+
+    wx.cloud.callFunction({
+      name: 'manageFamily',
+      data: {
+        action: 'generateInvitationCode'
+      },
+      success: res => {
+        wx.hideLoading();
+        if (res.result.success) {
+          this.setData({
+            inviteCode: res.result.code,
+            showInviteCodeModal: true
+          });
+        } else {
+          wx.showToast({ title: res.result.errMsg || '生成失败', icon: 'none' });
+        }
+      },
+      fail: err => {
+        wx.hideLoading();
+        console.error('生成邀请码失败:', err);
+        wx.showToast({ title: '生成失败', icon: 'none' });
+      }
+    });
+  },
+
+  // 复制邀请码
+  copyInviteCode() {
+    wx.setClipboardData({
+      data: this.data.inviteCode,
+      success: () => {
+        wx.showToast({ title: '已复制', icon: 'success' });
+      }
+    });
+  },
+
+  // 退出家庭
+  leaveFamily() {
+    wx.showModal({
+      title: '确认退出',
+      content: '退出家庭后，您将不再能查看和管理家庭数据',
+      success: (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '退出中...' });
+          
+          wx.cloud.callFunction({
+            name: 'manageFamily',
+            data: {
+              action: 'leaveFamily'
+            },
+            success: res => {
+              wx.hideLoading();
+              if (res.result.success) {
+                wx.showToast({ title: '已退出家庭', icon: 'success' });
+                this.closeFamilyManage();
+                // 重新加载用户信息
+                this.loadUserInfo();
+              } else {
+                wx.showToast({ title: res.result.errMsg || '退出失败', icon: 'none' });
+              }
+            },
+            fail: err => {
+              wx.hideLoading();
+              console.error('退出家庭失败:', err);
+              wx.showToast({ title: '退出失败', icon: 'none' });
+            }
+          });
+        }
+      }
+    });
   }
 });

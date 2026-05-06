@@ -8,25 +8,56 @@
 
   <!-- 登录区域 -->
   <view class="login-section">
-    <!-- 用户信息预览 -->
-    <view class="user-preview" wx:if="{{userInfo}}">
-      <image class="user-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
-      <view class="user-name">{{userInfo.nickName}}</view>
+    <!-- 用户信息填写 -->
+    <view class="user-form" wx:if="{{!isLoggedIn}}">
+      <!-- 头像选择 -->
+      <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+        <view class="avatar-img">{{avatarUrl ? '👤' : '👤'}}</view>
+        <view class="avatar-hint">选择头像</view>
+      </button>
+      
+      <!-- 昵称输入 -->
+      <view class="nickname-wrapper">
+        <input 
+          type="nickname" 
+          class="nickname-input" 
+          placeholder="请输入昵称" 
+          value="{{nickName}}"
+          bindinput="onNicknameInput"
+        />
+      </view>
+      
+      <!-- 手机号授权 -->
+      <view class="phone-wrapper" wx:if="{{!phoneNumber}}">
+        <button class="phone-btn" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
+          <text class="phone-icon">📱</text>
+          <text>{{phoneNumber ? phoneNumber : '授权手机号'}}</text>
+        </button>
+        <view class="phone-hint">授权手机号（可选）</view>
+      </view>
+      <view class="phone-display" wx:if="{{phoneNumber}}">
+        <text class="phone-icon">📱</text>
+        <text class="phone-text">{{phoneNumber}}</text>
+        <view class="phone-change" bindtap="clearPhoneNumber">更换</view>
+      </view>
+
+      <!-- 登录按钮 -->
+      <button class="login-btn" bindtap="handleLogin" disabled="{{!nickName || isLoading}}">
+        {{isLoading ? '登录中...' : '进入小程序'}}
+      </button>
     </view>
 
-    <!-- 登录按钮 -->
-    <button 
-      class="login-btn {{userInfo ? 'btn-logged' : 'btn-login'}}" 
-      open-type="{{userInfo ? 'getUserInfo' : 'getUserProfile'}}"
-      bindgetuserinfo="handleGetUserInfo"
-      bindtap="{{userInfo ? 'handleLogout' : 'handleLogin'}}"
-    >
-      {{userInfo ? '已登录' : '登录'}}
-    </button>
+    <!-- 已登录状态 -->
+    <view class="user-preview" wx:if="{{isLoggedIn}}">
+      <view class="user-avatar">👤</view>
+      <view class="user-name">{{userInfo.nickName}}</view>
+      <view class="user-phone" wx:if="{{userInfo.phoneNumber}}">{{userInfo.phoneNumber}}</view>
+      <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+    </view>
 
     <!-- 登录说明 -->
     <view class="login-description">
-      点击登录获取完整功能体验
+      填写信息后即可使用完整功能
     </view>
   </view>
 

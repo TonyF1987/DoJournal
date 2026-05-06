@@ -1,19 +1,33 @@
 <view class="container">
   <!-- 顶部区域 -->
   <view class="top-header">
-    <view class="header-content">
-        <view class="user-info">
-          <text class="user-name">{{userInfo.nickName || '小宝贝'}}</text>
-          <text class="header-slogan">坚持每天完成作业，养成学习好习惯</text>
+    <!-- 当前小朋友 -->
+    <view class="child-info-section" bindtap="openChildModal">
+      <view class="child-card">
+        <view class="child-card-avatar">
+          <image wx:if="{{currentChild && currentChild.avatarUrl}}" src="{{currentChild.avatarUrl}}" mode="aspectFill" class="child-avatar-img"></image>
+          <text wx:else>👦</text>
+        </view>
+        <view class="child-card-detail">
+          <view class="child-card-header">
+            <text class="child-card-name">{{currentChild ? currentChild.name : '请选择小朋友'}}</text>
+            <text class="child-card-switch">切换 ›</text>
+          </view>
+          <view class="child-card-meta">
+            <text class="child-card-school">{{currentChild ? (currentChild.schoolStage || '未设置学龄') : '点击添加小朋友'}}</text>
+          </view>
         </view>
       </view>
+    </view>
+
+    <!-- 统计数据 -->
     <view class="header-stats">
       <view class="stat-item">
-        <text class="stat-value">{{userInfo.points}}</text>
+        <text class="stat-value">{{currentChild ? currentChild.points : 0}}</text>
         <text class="stat-label">积分</text>
       </view>
       <view class="stat-item">
-        <text class="stat-value">🔥 {{userInfo.streak}}</text>
+        <text class="stat-value">🔥 {{currentChild ? currentChild.streak : 0}}</text>
         <text class="stat-label">连续打卡</text>
       </view>
       <view class="stat-item">
@@ -167,6 +181,109 @@
     <!-- 底部确认按钮 -->
     <view class="copy-calendar-footer">
       <button class="copy-confirm-btn" bindtap="confirmSelectedDate">确认</button>
+    </view>
+  </view>
+</view>
+
+<!-- 小朋友选择弹窗 -->
+<view class="modal" wx:if="{{showChildModal}}">
+  <view class="modal-mask" bindtap="closeChildModal"></view>
+  <view class="modal-content child-list-modal">
+    <view class="modal-header">
+      <text>我的小朋友</text>
+      <text class="close-btn" bindtap="closeChildModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="child-list">
+        <block wx:for="{{userInfo.children}}" wx:key="id">
+          <view class="child-item {{userInfo.currentChildId === item.id ? 'active' : ''}}">
+            <view class="child-select-area" bindtap="switchChild" data-id="{{item.id}}">
+              <view class="child-avatar-wrapper">
+                <view class="child-avatar">
+                  <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="child-avatar-img"></image>
+                  <text wx:else>{{item.gender === 'girl' ? '👧' : '👦'}}</text>
+                </view>
+                <view class="child-avatar-badge" wx:if="{{userInfo.currentChildId === item.id}}">当前</view>
+              </view>
+              <view class="child-info">
+                <view class="child-name-row">
+                  <text class="child-name">{{item.name}}</text>
+                  <text class="child-gender" wx:if="{{item.gender === 'boy'}}">👦</text>
+                  <text class="child-gender" wx:elif="{{item.gender === 'girl'}}">👧</text>
+                </view>
+                <view class="child-meta">
+                  <text class="child-school">{{item.schoolStage || '未设置学龄'}}</text>
+                  <text class="child-points">{{item.points || 0}}积分</text>
+                </view>
+              </view>
+            </view>
+            <view class="child-actions">
+              <view class="child-edit" catchtap="openAddChildModal" data-child="{{item}}">✏️</view>
+              <view class="child-delete" catchtap="deleteChild" data-child="{{item}}">🗑️</view>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-confirm" bindtap="openAddChildModal">➕ 添加小朋友</button>
+    </view>
+  </view>
+</view>
+
+<!-- 添加/编辑小朋友弹窗 -->
+<view class="modal" wx:if="{{showAddChildModal}}">
+  <view class="modal-mask" bindtap="closeAddChildModal"></view>
+  <view class="modal-content add-child-modal">
+    <view class="modal-header">
+      <text>{{editingChild ? '编辑小朋友' : '添加小朋友'}}</text>
+      <text class="close-btn" bindtap="closeAddChildModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">头像</text>
+        <view class="avatar-upload" bindtap="chooseAvatar">
+          <image class="preview-avatar" src="{{newChild.avatarUrl || '/images/avatar.png'}}" mode="aspectFill"></image>
+          <text class="upload-text">点击上传</text>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="form-label">姓名</text>
+        <input class="form-input" placeholder="请输入姓名" value="{{newChild.name}}" bindinput="onChildNameInput" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">性别</text>
+        <view class="gender-picker">
+          <view class="gender-option {{newChild.gender === 'boy' ? 'active' : ''}}" bindtap="selectChildGender" data-gender="boy">
+            <text>👦 男孩</text>
+          </view>
+          <view class="gender-option {{newChild.gender === 'girl' ? 'active' : ''}}" bindtap="selectChildGender" data-gender="girl">
+            <text>👧 女孩</text>
+          </view>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="form-label">出生年月</text>
+        <picker mode="date" value="{{newChild.birthDate}}" bindchange="onChildBirthDateChange">
+          <view class="date-picker">
+            <text>{{newChild.birthDate || '请选择'}}</text>
+            <text>›</text>
+          </view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">学龄阶段</text>
+        <picker range="{{['幼儿园', '小学一年级', '小学二年级', '小学三年级', '小学四年级', '小学五年级', '小学六年级', '初中', '高中']}}" value="{{newChild.schoolStage}}" bindchange="onChildSchoolStageChange">
+          <view class="date-picker">
+            <text>{{newChild.schoolStage || '请选择'}}</text>
+            <text>›</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closeAddChildModal">取消</button>
+      <button class="btn-confirm" bindtap="saveChild">保存</button>
     </view>
   </view>
 </view>
@@ -363,6 +480,127 @@
     <view class="checkin-popup-footer">
       <button class="checkin-btn-quick" bindtap="quickCheckin">快速打卡</button>
       <button class="checkin-btn-submit" bindtap="submitCheckinWithProof" wx:if="{{checkinProofImage}}">提交打卡</button>
+    </view>
+  </view>
+</view>
+
+<!-- 家庭管理弹窗 -->
+<view class="modal" wx:if="{{showFamilyManageModal}}">
+  <view class="modal-mask" bindtap="closeFamilyManage"></view>
+  <view class="modal-content family-modal">
+    <view class="modal-header">
+      <text>{{familyInfo ? '家庭管理' : '创建/加入家庭'}}</text>
+      <text class="close-btn" bindtap="closeFamilyManage">×</text>
+    </view>
+    <view class="modal-body">
+      <!-- 已在家庭中 -->
+      <view wx:if="{{familyInfo}}">
+        <view class="family-info-card">
+          <text class="family-name">{{familyInfo.name}}</text>
+          <text class="family-desc">成员：{{familyMembers.length}}人</text>
+        </view>
+        
+        <view class="family-section">
+          <view class="section-title">家庭成员</view>
+          <view class="member-list">
+            <block wx:for="{{familyMembers}}" wx:key="openid">
+              <view class="member-item">
+                <view class="member-avatar">👤</view>
+                <view class="member-info">
+                  <text class="member-name">{{item.nickName}}</text>
+                  <text class="member-role">{{item.role === 'creator' ? '创建者' : item.role === 'admin' ? '管理员' : '成员'}}</text>
+                </view>
+              </view>
+            </block>
+          </view>
+        </view>
+        
+        <view class="family-actions">
+          <button class="btn-confirm" bindtap="generateInviteCode">生成邀请码</button>
+          <button class="btn-danger" bindtap="leaveFamily">退出家庭</button>
+        </view>
+      </view>
+      
+      <!-- 不在家庭中 -->
+      <view wx:else>
+        <view class="family-empty-state">
+          <text class="empty-icon">👨‍👩‍👧‍👦</text>
+          <text class="empty-text">您还没有加入任何家庭</text>
+        </view>
+        
+        <view class="family-actions">
+          <button class="btn-confirm" bindtap="showCreateFamily">创建家庭</button>
+          <button class="btn-cancel" bindtap="showJoinFamily">加入已有家庭</button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 创建家庭弹窗 -->
+<view class="modal" wx:if="{{showCreateFamilyModal}}">
+  <view class="modal-mask" bindtap="closeFamilyManage"></view>
+  <view class="modal-content create-family-modal">
+    <view class="modal-header">
+      <text>创建家庭</text>
+      <text class="close-btn" bindtap="closeFamilyManage">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">家庭名称 *</text>
+        <input class="form-input" placeholder="例如：小明一家" value="{{familyName}}" bindinput="onFamilyNameInput" />
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closeFamilyManage">取消</button>
+      <button class="btn-confirm" bindtap="createFamily">创建</button>
+    </view>
+  </view>
+</view>
+
+<!-- 加入家庭弹窗 -->
+<view class="modal" wx:if="{{showJoinFamilyModal}}">
+  <view class="modal-mask" bindtap="closeFamilyManage"></view>
+  <view class="modal-content join-family-modal">
+    <view class="modal-header">
+      <text>加入家庭</text>
+      <text class="close-btn" bindtap="closeFamilyManage">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">邀请码 *</text>
+        <input class="form-input" placeholder="请输入6位邀请码" value="{{inputInviteCode}}" bindinput="onInviteCodeInput" maxlength="6" />
+      </view>
+      <view class="join-tip">
+        <text>请向家庭成员索取邀请码</text>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closeFamilyManage">取消</button>
+      <button class="btn-confirm" bindtap="verifyInviteCode">加入</button>
+    </view>
+  </view>
+</view>
+
+<!-- 邀请码显示弹窗 -->
+<view class="modal" wx:if="{{showInviteCodeModal}}">
+  <view class="modal-mask" bindtap="closeFamilyManage"></view>
+  <view class="modal-content invite-modal">
+    <view class="modal-header">
+      <text>邀请码</text>
+      <text class="close-btn" bindtap="closeFamilyManage">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="invite-code-card">
+        <text class="invite-code">{{inviteCode}}</text>
+      </view>
+      <view class="invite-tip">
+        <text>请将此邀请码分享给家庭成员</text>
+        <text class="invite-tip-small">邀请码7天内有效</text>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-confirm" bindtap="copyInviteCode">复制邀请码</button>
     </view>
   </view>
 </view>

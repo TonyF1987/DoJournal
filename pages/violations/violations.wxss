@@ -1,0 +1,458 @@
+/* 违规行为管理页面样式 */
+page {
+  background: linear-gradient(180deg, #f0f7f0 0%, #f5f5f5 100%);
+  min-height: 100vh;
+}
+
+.container {
+  padding: 24rpx;
+  padding-bottom: 60rpx;
+}
+
+/* 页面头部 - 与导航栏自然衔接 */
+.page-header {
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  padding: 30rpx 24rpx 40rpx;
+  margin: -24rpx -24rpx 32rpx;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.page-subtitle {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  display: block;
+}
+
+/* 快速操作区域 */
+.quick-action-section {
+  margin-bottom: 30rpx;
+}
+
+.quick-action-item {
+  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 2rpx solid rgba(76, 175, 80, 0.1);
+}
+
+.quick-icon {
+  font-size: 64rpx;
+  margin-bottom: 15rpx;
+}
+
+.quick-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.quick-desc {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 违规行为列表 */
+.section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.violations-list {
+  margin-bottom: 30rpx;
+}
+
+.violation-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.violation-item.custom {
+  border-left: 4rpx solid #4CAF50;
+}
+
+.violation-icon {
+  font-size: 40rpx;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.violation-content {
+  flex: 1;
+  margin-right: 20rpx;
+}
+
+.violation-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6rpx;
+  display: block;
+}
+
+.violation-points {
+  font-size: 28rpx;
+  color: #ff8a65;
+  font-weight: bold;
+  margin-bottom: 6rpx;
+  display: block;
+  background: rgba(255, 138, 101, 0.12);
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  width: fit-content;
+}
+
+.violation-desc {
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+}
+
+.violation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.edit-btn {
+  font-size: 24rpx;
+  color: #4CAF50;
+  padding: 8rpx 16rpx;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 8rpx;
+  text-align: center;
+}
+
+.delete-btn {
+  font-size: 24rpx;
+  color: #ff8a65;
+  padding: 8rpx 16rpx;
+  background: rgba(255, 138, 101, 0.12);
+  border-radius: 8rpx;
+  text-align: center;
+}
+
+/* 无违规行为状态 */
+.no-violations {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 60rpx 40rpx;
+  text-align: center;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.no-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.no-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+  display: block;
+}
+
+.no-desc {
+  font-size: 26rpx;
+  color: #999;
+  display: block;
+}
+
+/* 扣分记录 */
+.history-section {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.history-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.history-count {
+  font-size: 24rpx;
+  color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+.arrow {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.history-list {
+  margin-top: 20rpx;
+  max-height: 400rpx;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f8f8f8;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-time {
+  font-size: 24rpx;
+  color: #999;
+  width: 160rpx;
+  flex-shrink: 0;
+}
+
+.history-content {
+  flex: 1;
+  margin: 0 16rpx;
+}
+
+.history-content .violation-name {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.history-content .violation-points {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #ff8a65;
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+
+.delete-record {
+  font-size: 24rpx;
+  color: #999;
+  padding: 8rpx 12rpx;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+}
+
+.no-history {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.no-history-icon {
+  font-size: 60rpx;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.no-history-text {
+  font-size: 26rpx;
+  color: #999;
+  display: block;
+}
+
+/* 弹窗通用样式 - 参考添加作业页面 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.close-btn {
+  font-size: 48rpx;
+  color: #999;
+  line-height: 1;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20rpx 30rpx;
+}
+
+.modal-footer {
+  padding: 20rpx 30rpx 30rpx;
+  border-top: 1rpx solid #f0f0f0;
+  display: flex;
+  gap: 20rpx;
+}
+
+/* 表单样式 - 参考添加作业页面 */
+.form-group {
+  margin-bottom: 30rpx;
+}
+
+.form-label {
+  font-size: 28rpx;
+  font-weight: bold;
+  margin-bottom: 16rpx;
+  color: #333;
+  display: block;
+  line-height: 1.4;
+}
+
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  line-height: 88rpx;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 20rpx 24rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  min-height: 180rpx;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+
+/* 积分选择器 - 参考添加作业页面 */
+.points-selector {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-bottom: 16rpx;
+}
+
+.point-item {
+  flex: 1;
+  min-width: 100rpx;
+  padding: 20rpx 16rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.point-item.active {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: #fff;
+  font-weight: bold;
+}
+
+.custom-points {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.custom-label {
+  font-size: 26rpx;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.custom-input {
+  flex: 1;
+  height: 80rpx;
+  padding: 0 16rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  background: #f5f5f5;
+}
+
+/* 弹窗底部按钮 - 参考添加作业页面 */
+.btn-cancel {
+  flex: 1;
+  padding: 24rpx;
+  background: #f5f5f5;
+  color: #666;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  border: none;
+  margin-right: 10rpx;
+}
+
+.btn-confirm {
+  flex: 1;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  border: none;
+  margin-left: 10rpx;
+  font-weight: bold;
+}

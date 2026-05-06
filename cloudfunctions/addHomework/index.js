@@ -6,7 +6,18 @@ const db = cloud.database();
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { title, content, type, recurring, recurringDays, images, points, subject, date } = event;
+  const { title, content, type, recurring, recurringDays, images, points, subject, date, childId } = event;
+
+  // 获取用户信息，获取当前小朋友ID
+  let currentChildId = childId;
+  if (!currentChildId) {
+    const userRes = await db.collection('users').where({
+      _openid: wxContext.OPENID
+    }).get();
+    if (userRes.data.length > 0) {
+      currentChildId = userRes.data[0].currentChildId;
+    }
+  }
 
   // 解析日期
   let homeworkDate;
@@ -23,6 +34,7 @@ exports.main = async (event, context) => {
   const res = await db.collection('homework').add({
     data: {
       _openid: wxContext.OPENID,
+      childId: currentChildId || '', // 小朋友ID
       title: title,
       content: content,
       type: type, // 'manual' 或 'import'
