@@ -72,21 +72,17 @@ Page({
   },
 
   onLoad() {
-    // 检查登录状态
-    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
-      console.log('用户未登录，跳转到登录页面');
-      wx.navigateTo({
-        url: '/pages/login/login'
-      });
-      return;
-    }
+    this.initDate();
+    this.checkLoginAndLoad();
+  },
 
-    this.setGreeting();
-    this.loadUserInfo();
-    this.loadSubjects();
-    this.loadHomework();
-    
-    // 默认选中今天
+  onShow() {
+    // 确保显示今天日期
+    this.initDate();
+    this.checkLoginAndLoad();
+  },
+
+  initDate() {
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const formattedToday = `${today.getMonth() + 1}月${today.getDate()}日`;
@@ -98,7 +94,16 @@ Page({
     });
   },
 
-  onShow() {
+  checkLoginAndLoad() {
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      console.log('用户未登录，跳转到登录页面');
+      wx.navigateTo({
+        url: '/pages/login/login'
+      });
+      return;
+    }
+
+    this.setGreeting();
     this.loadUserInfo();
     this.loadSubjects();
     this.loadHomework();
@@ -246,11 +251,21 @@ Page({
           const pendingHomework = allHomework.filter(item => item.status === 'pending');
           const completedHomework = allHomework.filter(item => item.status === 'completed');
           
+          // 计算今日完成的作业数量
+          const today = new Date();
+          const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+          const completedTodayCount = allHomework.filter(item => 
+            item.homeworkDate === todayStr && item.status === 'completed'
+          ).length;
+          
           this.setData({
             pendingHomework: pendingHomework,
-            completedHomework: completedHomework
+            completedHomework: completedHomework,
+            completedToday: completedTodayCount
           });
           
+          // 同时刷新用户信息（特别是连续打卡数据）
+          this.loadUserInfo();
           this.loadMonthCheckins();
           
           // 重新更新选中日期的作业列表，因为 pendingHomework 已更新
@@ -272,16 +287,16 @@ Page({
     const currentChild = this.data.currentChild;
     if (!currentChild) {
       this.setData({ monthCheckins: [] });
-      this.generateCalendarData();
+      this.generateCalendarData([]);
       return;
     }
     
-    const recurringHomework = this.data.pendingHomework.filter(item => item.recurring);
-    const recurringIds = recurringHomework.map(item => item._id);
+    const allHomework = [...(this.data.pendingHomework || []), ...(this.data.completedHomework || [])];
+    const allHomeworkIds = allHomework.map(item => item._id);
     
-    if (recurringIds.length === 0) {
+    if (allHomeworkIds.length === 0) {
       this.setData({ monthCheckins: [] });
-      this.generateCalendarData();
+      this.generateCalendarData([]);
       return;
     }
     
@@ -290,22 +305,19 @@ Page({
       name: 'getCheckins',
       data: {
         childId: currentChild.id,
-        homeworkIds: recurringIds,
+        homeworkIds: allHomeworkIds,
         startDate: startDate,
         endDate: endDate
       },
       success: (res) => {
-        if (res.result && res.result.success) {
-          this.setData({ monthCheckins: res.result.data });
-        } else {
-          this.setData({ monthCheckins: [] });
-        }
-        this.generateCalendarData();
+        const checkins = res.result && res.result.success ? res.result.data : [];
+        this.setData({ monthCheckins: checkins });
+        this.generateCalendarData(checkins);
       },
       fail: (err) => {
         console.error('加载打卡记录失败:', err);
         this.setData({ monthCheckins: [] });
-        this.generateCalendarData();
+        this.generateCalendarData([]);
       }
     });
   },
@@ -919,7 +931,7 @@ Page({
   },
 
   // 生成日历数据
-  generateCalendarData() {
+  generateCalendarData(checkins = []) {
     const today = new Date();
     const year = this.data.currentYear;
     const month = this.data.currentMonth;
@@ -935,7 +947,7 @@ Page({
     const daysInMonth = lastDay.getDate();
     
     let calendarData = [];
-    const dateHomeworkStats = this.generateDateHomeworkStats();
+    const dateHomeworkStats = this.generateDateHomeworkStats(checkins);
     
     // 添加上月的占位
     for (let i = 0; i < firstDayOfWeek; i++) {
@@ -1057,7 +1069,7 @@ Page({
   },
 
   // 生成每天作业统计
-  generateDateHomeworkStats() {
+  generateDateHomeworkStats(checkins = []) {
     const stats = {};
     const pendingHomework = this.data.pendingHomework || [];
     const completedHomework = this.data.completedHomework || [];
@@ -1069,9 +1081,17 @@ Page({
       pendingCount: pendingHomework.length,
       completedCount: completedHomework.length,
       allHomeworkCount: allHomework.length,
+      checkinCount: checkins.length,
       year,
       month,
       sampleDates: allHomework.slice(0, 3).map(h => ({ date: h.homeworkDate, status: h.status }))
+    });
+
+    // 创建打卡记录的映射表，key 为 homeworkId_date
+    const checkinMap = {};
+    checkins.forEach(checkin => {
+      const key = `${checkin.homeworkId}_${checkin.date}`;
+      checkinMap[key] = true;
     });
 
     for (let day = 1; day <= 31; day++) {
@@ -1086,10 +1106,18 @@ Page({
       allHomework.forEach(item => {
         if (item.homeworkDate === dateStr) {
           total++;
-          if (item.status === 'pending') {
-            pending++;
-          } else {
+          
+          // 检查是否有对应的打卡记录
+          const checkinKey = `${item._id}_${dateStr}`;
+          const hasCheckin = !!checkinMap[checkinKey];
+          
+          // 判断是否完成：
+          // 1. 如果有打卡记录，就算完成
+          // 2. 否则看 status 字段
+          if (hasCheckin || item.status === 'completed') {
             completed++;
+          } else {
+            pending++;
           }
         }
       });
