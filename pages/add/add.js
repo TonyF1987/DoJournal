@@ -227,17 +227,15 @@ Page({
       return;
     }
     
-    // 通过云函数获取该科目当前小朋友的所有未完成作业
+    // 通过云函数获取该科目当前小朋友的所有作业（不限制状态）
     wx.cloud.callFunction({
       name: 'getHomeworks',
       data: {
         childId: childId,
-        subject: subject,
-        status: 'pending'
+        subject: subject
+        // 不传递 status 参数，获取所有状态的作业
       },
-      success: (res) => {
-        wx.hideLoading();
-        
+      success: async (res) => {
         if (res.result && res.result.success) {
           let homeworkList = res.result.data || [];
           
@@ -246,6 +244,45 @@ Page({
             homeworkList = homeworkList.filter(item => {
               return item.homeworkDate === selectedDate;
             });
+            
+            // 获取这些作业的打卡记录
+            if (homeworkList.length > 0) {
+              const homeworkIds = homeworkList.map(item => item._id);
+              try {
+                const checkinRes = await wx.cloud.callFunction({
+                  name: 'getCheckins',
+                  data: {
+                    childId: childId,
+                    homeworkIds: homeworkIds,
+                    startDate: selectedDate,
+                    endDate: selectedDate
+                  }
+                });
+                
+                if (checkinRes.result && checkinRes.result.success) {
+                  const checkins = checkinRes.result.data;
+                  const checkinMap = {};
+                  checkins.forEach(c => {
+                    checkinMap[c.homeworkId] = c;
+                  });
+                  
+                  // 更新作业状态
+                  homeworkList = homeworkList.map(item => {
+                    if (checkinMap[item._id]) {
+                      const checkin = checkinMap[item._id];
+                      return {
+                        ...item,
+                        status: 'completed',
+                        checkInTime: this.formatDateTime(checkin.createTime)
+                      };
+                    }
+                    return item;
+                  });
+                }
+              } catch (err) {
+                console.error('获取打卡记录失败:', err);
+              }
+            }
           } else {
             // 没有选中日期时，正常去重显示
             const seenBatchIds = new Set();
@@ -275,6 +312,7 @@ Page({
         } else {
           this.setData({ subjectHomeworkList: [] });
         }
+        wx.hideLoading();
       },
       fail: (err) => {
         wx.hideLoading();
@@ -302,6 +340,25 @@ Page({
     }
     if (isNaN(d.getTime())) return '';
     return `创建于${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  },
+
+  formatDateTime(date) {
+    if (!date) return '';
+    // 处理云数据库返回的日期格式
+    let d;
+    if (typeof date === 'object' && date.getFullYear) {
+      // 已经是 Date 对象
+      d = date;
+    } else if (typeof date === 'string') {
+      d = new Date(date);
+    } else if (date._seconds) {
+      // 云数据库时间戳格式
+      d = new Date(date._seconds * 1000);
+    } else {
+      d = new Date(date);
+    }
+    if (isNaN(d.getTime())) return '';
+    return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   },
 
   formatRecurringDays(days) {
@@ -355,52 +412,74 @@ Page({
     const homework = e.currentTarget.dataset.homework;
     const that = this;
     
-    if (homework.recurring || homework.recurringBatchId) {
-      // 这是周期作业（主作业或其中一天）
-      wx.showActionSheet({
-        itemList: ['仅删除当天作业', '删除所有周期作业'],
-        itemColor: '#FF5252',
-        success(res) {
-          if (res.tapIndex === 0) {
-            wx.showModal({
-              title: '确认删除',
-              content: '这是周期作业，删除将清除周期设置，并删除当前作业，是否继续？',
-              confirmText: '继续',
-              confirmColor: '#FF5252',
-              success(modalRes) {
-                if (modalRes.confirm) {
-                  that.doDeleteHomeworkFromList(homework, 'single-convert');
-                }
-              }
-            });
-          } else if (res.tapIndex === 1) {
-            wx.showModal({
-              title: '确认删除所有',
-              content: '确定要删除所有周期作业吗？此操作不可恢复。',
-              confirmText: '确定删除',
-              confirmColor: '#FF5252',
-              success(modalRes) {
-                if (modalRes.confirm) {
-                  that.doDeleteHomeworkFromList(homework, 'all');
-                }
-              }
-            });
-          }
+    // 先检查作业是否已打卡，传递预加载的作业数据
+    wx.showLoading({ title: '检查中...' });
+    this.checkHomeworkHasCheckin(homework._id, homework.homeworkDate, homework.recurring, homework)
+      .then(hasCheckin => {
+        wx.hideLoading();
+        
+        if (hasCheckin) {
+          wx.showModal({
+            title: '无法删除',
+            content: '该作业已打卡，如需删除请先取消打卡',
+            showCancel: false
+          });
+          return;
         }
-      });
-    } else {
-      wx.showModal({
-        title: '删除作业',
-        content: '确定要删除这个作业吗？',
-        confirmText: '确定删除',
-        confirmColor: '#FF5252',
-        success(res) {
-          if (res.confirm) {
-            that.doDeleteHomeworkFromList(homework, 'single');
-          }
+        
+        // 未打卡，继续删除流程
+        if (homework.recurring || homework.recurringBatchId) {
+          // 这是周期作业（主作业或其中一天）
+          wx.showActionSheet({
+            itemList: ['仅删除当天作业', '删除所有周期作业'],
+            itemColor: '#FF5252',
+            success(res) {
+              if (res.tapIndex === 0) {
+                wx.showModal({
+                  title: '确认删除',
+                  content: '这是周期作业，删除将清除周期设置，并删除当前作业，是否继续？',
+                  confirmText: '继续',
+                  confirmColor: '#FF5252',
+                  success(modalRes) {
+                    if (modalRes.confirm) {
+                      that.doDeleteHomeworkFromList(homework, 'single-convert');
+                    }
+                  }
+                });
+              } else if (res.tapIndex === 1) {
+                wx.showModal({
+                  title: '确认删除所有',
+                  content: '确定要删除所有周期作业吗？此操作不可恢复。',
+                  confirmText: '确定删除',
+                  confirmColor: '#FF5252',
+                  success(modalRes) {
+                    if (modalRes.confirm) {
+                      that.doDeleteHomeworkFromList(homework, 'all');
+                    }
+                  }
+                });
+              }
+            }
+          });
+        } else {
+          wx.showModal({
+            title: '删除作业',
+            content: '确定要删除这个作业吗？',
+            confirmText: '确定删除',
+            confirmColor: '#FF5252',
+            success(res) {
+              if (res.confirm) {
+                that.doDeleteHomeworkFromList(homework, 'single');
+              }
+            }
+          });
         }
+      })
+      .catch(err => {
+        wx.hideLoading();
+        console.error('检查打卡状态失败:', err);
+        wx.showToast({ title: '检查失败', icon: 'none' });
       });
-    }
   },
 
   doDeleteHomeworkFromList(homework, deleteMode = 'single') {
@@ -1231,47 +1310,116 @@ Page({
     return colors[Math.floor(Math.random() * colors.length)];
   },
 
+  // 检查作业是否已打卡
+  async checkHomeworkHasCheckin(homeworkId, homeworkDate, isRecurring, preloadedHomework) {
+    // 如果有预加载的作业数据，优先使用
+    if (preloadedHomework) {
+      if (preloadedHomework.status === 'completed') {
+        return true;
+      }
+      if (preloadedHomework.checkInTime) {
+        return true;
+      }
+    }
+    
+    const currentChild = app.getCurrentChild ? app.getCurrentChild() : null;
+    if (!currentChild) return false;
+    
+    if (isRecurring) {
+      // 周期作业：如果有指定日期，检查该日期的打卡记录；否则检查是否有任何打卡记录
+      try {
+        const res = await wx.cloud.callFunction({
+          name: 'getCheckins',
+          data: {
+            childId: currentChild.id,
+            homeworkIds: [homeworkId],
+            startDate: homeworkDate || '1970-01-01',
+            endDate: homeworkDate || '2999-12-31'
+          }
+        });
+        return res.result && res.result.success && res.result.data.length > 0;
+      } catch (err) {
+        console.error('检查打卡记录失败:', err);
+        return false;
+      }
+    } else {
+      // 普通作业：检查 status
+      try {
+        const res = await wx.cloud.callFunction({
+          name: 'getHomework',
+          data: { homeworkId }
+        });
+        return res.result && res.result.success && res.result.data.status === 'completed';
+      } catch (err) {
+        console.error('检查作业状态失败:', err);
+        return false;
+      }
+    }
+  },
+
   deleteHomework() {
     const that = this;
     
-    if (this.data.recurring) {
-      // 使用 actionSheet 让用户选择
-      wx.showActionSheet({
-        itemList: ['仅删除当天作业', '删除所有周期作业'],
-        itemColor: '#FF5252',
-        success(res) {
-          if (res.tapIndex === 0) {
-            // 仅删除当天
-            that.doDeleteHomework('single');
-          } else if (res.tapIndex === 1) {
-            // 删除所有周期作业，再次确认
-            wx.showModal({
-              title: '确认删除所有',
-              content: '确定要删除所有周期作业吗？此操作不可恢复。',
-              confirmText: '确定删除',
-              confirmColor: '#FF5252',
-              success(modalRes) {
-                if (modalRes.confirm) {
-                  that.doDeleteHomework('all');
-                }
+    // 先检查作业是否已打卡
+    wx.showLoading({ title: '检查中...' });
+    this.checkHomeworkHasCheckin(this.data.homeworkId, this.data.selectedDate, this.data.recurring)
+      .then(hasCheckin => {
+        wx.hideLoading();
+        
+        if (hasCheckin) {
+          wx.showModal({
+            title: '无法删除',
+            content: '该作业已打卡，如需删除请先取消打卡',
+            showCancel: false
+          });
+          return;
+        }
+        
+        // 未打卡，继续删除流程
+        if (this.data.recurring) {
+          // 使用 actionSheet 让用户选择
+          wx.showActionSheet({
+            itemList: ['仅删除当天作业', '删除所有周期作业'],
+            itemColor: '#FF5252',
+            success(res) {
+              if (res.tapIndex === 0) {
+                // 仅删除当天
+                that.doDeleteHomework('single');
+              } else if (res.tapIndex === 1) {
+                // 删除所有周期作业，再次确认
+                wx.showModal({
+                  title: '确认删除所有',
+                  content: '确定要删除所有周期作业吗？此操作不可恢复。',
+                  confirmText: '确定删除',
+                  confirmColor: '#FF5252',
+                  success(modalRes) {
+                    if (modalRes.confirm) {
+                      that.doDeleteHomework('all');
+                    }
+                  }
+                });
               }
-            });
-          }
+            }
+          });
+        } else {
+          wx.showModal({
+            title: '删除作业',
+            content: '确定要删除这个作业吗？删除后无法恢复。',
+            confirmText: '确定删除',
+            confirmColor: '#FF5252',
+            success(res) {
+              if (res.confirm) {
+                that.doDeleteHomework('single');
+              }
+            }
+          });
         }
+      })
+      .catch(err => {
+        wx.hideLoading();
+        console.error('检查打卡状态失败:', err);
+        wx.showToast({ title: '检查失败', icon: 'none' });
       });
-    } else {
-      wx.showModal({
-        title: '删除作业',
-        content: '确定要删除这个作业吗？删除后无法恢复。',
-        confirmText: '确定删除',
-        confirmColor: '#FF5252',
-        success(res) {
-          if (res.confirm) {
-            that.doDeleteHomework('single');
-          }
-        }
-      });
-    }
   },
 
   doDeleteHomework(deleteMode = 'single') {

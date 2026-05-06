@@ -42,6 +42,79 @@ exports.main = async (event, context) => {
       homeworkDate: homework.homeworkDate
     });
 
+    // 辅助函数：检查单个作业是否已打卡
+    const checkSingleHomeworkHasCheckin = async (hw) => {
+      if (hw.recurring) {
+        const checkinRes = await db.collection('checkins').where({
+          homeworkId: hw._id,
+          _openid: wxContext.OPENID
+        }).limit(1).get();
+        return checkinRes.data.length > 0;
+      } else {
+        return hw.status === 'completed';
+      }
+    };
+
+    // 检查作业是否已打卡
+    let hasCheckin = false;
+    if (deleteMode === 'all' || deleteMode === 'single-convert') {
+      // 批量删除模式：先找到所有相关作业，然后检查其中是否有任何一个已打卡
+      let allHomework = [];
+      
+      if (homework.recurringBatchId) {
+        const query = {
+          _openid: wxContext.OPENID,
+          recurringBatchId: homework.recurringBatchId
+        };
+        const allHomeworkRes = await db.collection('homework').where(query).get();
+        allHomework = allHomeworkRes.data;
+      } else if (homework.recurring) {
+        const query = {
+          _openid: wxContext.OPENID,
+          childId: homework.childId || '',
+          title: homework.title,
+          subject: homework.subject || '',
+          content: homework.content,
+          recurringDays: homework.recurringDays || []
+        };
+        
+        if (homework.recurringEndType) {
+          query.recurringEndType = homework.recurringEndType;
+        }
+        if (homework.recurringEndDate) {
+          query.recurringEndDate = homework.recurringEndDate;
+        }
+        if (homework.recurringEndTimes) {
+          query.recurringEndTimes = homework.recurringEndTimes;
+        }
+
+        const allHomeworkRes = await db.collection('homework').where(query).get();
+        allHomework = allHomeworkRes.data;
+      } else {
+        // 不是周期作业，只检查当前作业
+        allHomework = [homework];
+      }
+      
+      // 检查其中是否有任何一个已打卡
+      for (const hw of allHomework) {
+        const hwHasCheckin = await checkSingleHomeworkHasCheckin(hw);
+        if (hwHasCheckin) {
+          hasCheckin = true;
+          break;
+        }
+      }
+    } else {
+      // 单个删除模式：只检查当前作业
+      hasCheckin = await checkSingleHomeworkHasCheckin(homework);
+    }
+
+    if (hasCheckin) {
+      return {
+        success: false,
+        errMsg: '该作业已打卡，如需删除请先取消打卡'
+      };
+    }
+
     if (deleteMode === 'all') {
       console.log('执行删除所有周期作业');
       
