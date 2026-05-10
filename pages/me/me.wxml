@@ -115,7 +115,7 @@
 
   <!-- 版本信息 -->
   <view class="version-info">
-    <text class="version-text">作业打卡 v1.0.0</text>
+    <text class="version-text">作业打卡 v1.0.1</text>
   </view>
 </view>
 
