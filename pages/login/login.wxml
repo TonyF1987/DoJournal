@@ -60,14 +60,23 @@
 
     <view class="input-group">
       <input
+        wx:if="{{showPassword}}"
         class="form-input"
-        type="{{showPassword ? 'text' : 'password'}}"
+        type="text"
+        placeholder="请输入密码"
+        value="{{password}}"
+        bindinput="onPasswordInput"
+      />
+      <input
+        wx:if="{{!showPassword}}"
+        class="form-input"
+        type="password"
         placeholder="请输入密码"
         value="{{password}}"
         bindinput="onPasswordInput"
       />
       <view class="password-eye" bindtap="togglePassword">
-        <text>{{showPassword ? '👁️' : '👁️‍🗨️'}}</text>
+        <text>{{showPassword ? '🔓' : '🔒'}}</text>
       </view>
     </view>
 
