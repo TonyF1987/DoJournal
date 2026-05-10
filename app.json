@@ -1,12 +1,14 @@
 {
   "pages": [
-    "pages/login/login",
     "pages/index/index",
+    "pages/login/login",
     "pages/rewards/rewards",
     "pages/me/me",
     "pages/add/add",
     "pages/checkin/checkin",
-    "pages/share/share"
+    "pages/share/share",
+    "pages/service-agreement/service-agreement",
+    "pages/privacy-policy/privacy-policy"
   ],
   "window": {
     "backgroundTextStyle": "light",

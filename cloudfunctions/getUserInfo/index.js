@@ -32,18 +32,41 @@ exports.main = async (event, context) => {
 
       let userInfo = updatedUser.data[0];
       
-      // 如果用户有家庭，加载家庭数据
-      if (userInfo.familyId) {
+      // 如果用户有家庭，同时更新家庭中的成员信息
+      if (userInfo && userInfo.familyId) {
         try {
+          // 获取家庭信息
           const familyRes = await db.collection('families').doc(userInfo.familyId).get();
+          
           if (familyRes.data) {
+            // 更新家庭中的成员信息
+            const updatedMembers = familyRes.data.members.map(member => {
+              if (member.openid === wxContext.OPENID) {
+                return {
+                  ...member,
+                  nickName: event.nickName || member.nickName,
+                  avatarUrl: event.avatarUrl || member.avatarUrl
+                };
+              }
+              return member;
+            });
+            
+            // 更新家庭
+            await db.collection('families').doc(userInfo.familyId).update({
+              data: {
+                members: updatedMembers,
+                updateTime: db.serverDate()
+              }
+            });
+            
+            // 加载家庭数据
             userInfo = {
               ...userInfo,
               children: familyRes.data.children || []
             };
           }
         } catch (err) {
-          console.error('加载家庭数据失败:', err);
+          console.error('更新家庭成员信息失败:', err);
         }
       }
 
@@ -58,7 +81,7 @@ exports.main = async (event, context) => {
       _openid: wxContext.OPENID
     }).get();
 
-    if (userRes.data.length === 0) {
+    if (!userRes.data || userRes.data.length === 0) {
       return {
         success: false,
         errMsg: '用户不存在'
@@ -68,7 +91,7 @@ exports.main = async (event, context) => {
     let userInfo = userRes.data[0];
 
     // 如果用户有家庭，加载家庭数据
-    if (userInfo.familyId) {
+    if (userInfo && userInfo.familyId) {
       try {
         const familyRes = await db.collection('families').doc(userInfo.familyId).get();
         if (familyRes.data) {

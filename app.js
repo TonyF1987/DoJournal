@@ -30,15 +30,24 @@ App({
     // 检查是否已经有用户信息
     const userInfo = wx.getStorageSync('userInfo');
     if (userInfo) {
-      this.globalData.userInfo = JSON.parse(userInfo);
+      try {
+        const parsedUserInfo = JSON.parse(userInfo);
+        this.globalData.userInfo = parsedUserInfo;
+        this.globalData.currentChildId = parsedUserInfo.currentChildId;
+        this.globalData.children = parsedUserInfo.children || [];
+      } catch (e) {
+        console.error('解析用户信息失败', e);
+      }
     }
 
     // 检查是否已经登录
     const openid = wx.getStorageSync('openid');
     const userId = wx.getStorageSync('userId');
-    if (openid && userId) {
+    const isLoggedIn = wx.getStorageSync('isLoggedIn');
+    if (openid && userId && isLoggedIn) {
       this.globalData.openid = openid;
       this.globalData.userId = userId;
+      this.globalData.isLoggedIn = true;
     }
   },
 
@@ -51,10 +60,12 @@ App({
         const { openid, userId, isNewUser } = res.result;
         this.globalData.openid = openid;
         this.globalData.userId = userId;
+        this.globalData.isLoggedIn = true;
         
         // 保存到本地存储
         wx.setStorageSync('openid', openid);
         wx.setStorageSync('userId', userId);
+        wx.setStorageSync('isLoggedIn', true);
         
         console.log('登录成功:', res.result);
         
@@ -91,7 +102,14 @@ App({
     this.globalData.userInfo = userInfo;
     this.globalData.currentChildId = userInfo.currentChildId;
     this.globalData.children = userInfo.children || [];
+    this.globalData.isLoggedIn = true;
+    this.globalData.openid = userInfo._openid;
+    this.globalData.userId = userInfo._id;
+    
     wx.setStorageSync('userInfo', JSON.stringify(userInfo));
+    wx.setStorageSync('openid', userInfo._openid);
+    wx.setStorageSync('userId', userInfo._id);
+    wx.setStorageSync('isLoggedIn', true);
   },
 
   // 从数据库重新加载用户信息
@@ -143,5 +161,6 @@ App({
     wx.removeStorageSync('userInfo');
     wx.removeStorageSync('openid');
     wx.removeStorageSync('userId');
+    wx.removeStorageSync('isLoggedIn');
   },
 });

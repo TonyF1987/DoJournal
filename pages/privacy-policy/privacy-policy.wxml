@@ -1,0 +1,77 @@
+<view class="container">
+  <view class="content">
+    <view class="section">
+      <view class="title">隐私政策</view>
+      <view class="subtitle">最后更新日期：2026年5月10日</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">1. 引言</view>
+      <view class="text">作业打卡小程序（以下简称"本应用"）非常重视用户的隐私保护。本隐私政策将说明我们如何收集、使用、存储和保护您的信息。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">2. 信息收集</view>
+      <view class="text">2.1 用户注册信息：您可以选择提供手机号或自定义账号进行注册。我们不会强制要求您提供手机号码。</view>
+      <view class="text">2.2 用户资料：您可以选择提供昵称、头像等个人信息。</view>
+      <view class="text">2.3 作业数据：我们会存储您添加的作业内容、打卡记录等数据。</view>
+      <view class="text">2.4 家庭数据：如果您使用家庭功能，我们会存储家庭信息和家庭成员关系。</view>
+      <view class="text">2.5 设备信息：我们可能会收集您的设备型号、操作系统版本等信息，用于优化应用体验。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">3. 信息使用</view>
+      <view class="text">3.1 提供服务：我们使用您的信息来提供作业管理、打卡记录、家庭管理等核心功能。</view>
+      <view class="text">3.2 优化服务：我们使用收集的信息来改进和优化本应用的功能和用户体验。</view>
+      <view class="text">3.3 安全保障：我们使用信息来保障账号安全和应用安全。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">4. 信息存储</view>
+      <view class="text">4.1 我们会将您的信息存储在微信小程序云开发服务器上。</view>
+      <view class="text">4.2 我们会采取合理的安全措施来保护您的信息，但无法保证100%的安全。</view>
+      <view class="text">4.3 您的信息存储期限为您使用本应用期间，如您注销账号，我们会删除您的信息。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">5. 信息共享</view>
+      <view class="text">5.1 我们不会将您的个人信息出售或出租给任何第三方。</view>
+      <view class="text">5.2 在以下情况下，我们可能会分享您的信息：</view>
+      <view class="text">（1）获得您的明确同意；</view>
+      <view class="text">（2）根据法律法规或政府主管部门的要求；</view>
+      <view class="text">（3）为维护本应用的合法权益。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">6. 信息保护</view>
+      <view class="text">6.1 我们采用加密技术保护您的密码等敏感信息。</view>
+      <view class="text">6.2 我们会定期对服务器进行安全检查和维护。</view>
+      <view class="text">6.3 尽管我们采取了上述措施，但仍无法保证您的信息绝对安全。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">7. 您的权利</view>
+      <view class="text">7.1 访问权：您可以随时访问和查看您的个人信息。</view>
+      <view class="text">7.2 更正权：您可以随时更正和更新您的个人信息。</view>
+      <view class="text">7.3 删除权：您可以注销账号并删除您的个人信息。</view>
+      <view class="text">7.4 撤回同意：您可以撤回对信息使用的同意。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">8. 儿童隐私</view>
+      <view class="text">8.1 本应用可以供未成年人使用，但应由监护人陪同使用。</view>
+      <view class="text">8.2 如您是未成年人，请在监护人的指导下阅读和使用本应用。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">9. 政策更新</view>
+      <view class="text">9.1 我们可能会不时更新本隐私政策。</view>
+      <view class="text">9.2 更新后的政策会在本应用上公布，您继续使用即表示同意更新后的政策。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">10. 联系我们</view>
+      <view class="text">如您对本隐私政策有任何疑问，请通过本应用内的反馈功能与我们联系。</view>
+    </view>
+  </view>
+</view>

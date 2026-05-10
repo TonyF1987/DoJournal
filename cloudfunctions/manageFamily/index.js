@@ -367,9 +367,39 @@ async function getFamilyInfo(wxContext, data) {
     return { success: true, family: null, message: '家庭不存在' };
   }
 
+  const family = familyRes.data;
+
+  // 从用户表中获取所有成员的最新昵称和头像
+  const memberOpenids = family.members.map(m => m.openid);
+  const usersRes = await db.collection('users').where({
+    _openid: _.in(memberOpenids)
+  }).get();
+
+  // 创建用户信息映射
+  const userMap = {};
+  usersRes.data.forEach(u => {
+    userMap[u._openid] = u;
+  });
+
+  // 更新家庭成员信息，使用最新的昵称和头像
+  const updatedMembers = family.members.map(member => {
+    const userData = userMap[member.openid];
+    if (userData) {
+      return {
+        ...member,
+        nickName: userData.nickName || member.nickName,
+        avatarUrl: userData.avatarUrl || member.avatarUrl
+      };
+    }
+    return member;
+  });
+
   return {
     success: true,
-    family: familyRes.data
+    family: {
+      ...family,
+      members: updatedMembers
+    }
   };
 }
 

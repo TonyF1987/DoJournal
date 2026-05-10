@@ -49,12 +49,18 @@ Page({
     pageSize: 10,
     currentPage: 0,
     hasMore: true,
-    isLoading: false
+    isLoading: false,
+    showDemoBanner: false
   },
 
   onLoad() {
-    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
-      wx.navigateTo({ url: '/pages/login/login' });
+    // 检查是否显示演示数据提示
+    const shouldShowDemo = !app.globalData.isLoggedIn && !app.globalData.openid;
+    this.setData({ showDemoBanner: shouldShowDemo });
+
+    // 如果未登录，设置演示数据
+    if (shouldShowDemo) {
+      this.setDemoData();
       return;
     }
     this.loadUserInfo();
@@ -64,8 +70,75 @@ Page({
   },
 
   onShow() {
+    // 检查是否显示演示数据提示
+    const shouldShowDemo = !app.globalData.isLoggedIn && !app.globalData.openid;
+    this.setData({ showDemoBanner: shouldShowDemo });
+
+    // 如果未登录，设置演示数据
+    if (shouldShowDemo) {
+      this.setDemoData();
+      return;
+    }
     this.loadUserInfo();
     this.loadPointRecords();
+  },
+
+  setDemoData() {
+    // 演示小朋友
+    const demoChildren = [
+      {
+        id: 'demo-child-1',
+        name: '小宝贝',
+        avatarUrl: '',
+        gender: 'male',
+        birthDate: '2019-01-01',
+        schoolStage: '幼儿园',
+        points: 128,
+        rewards: [
+          { id: 'demo-reward-1', name: '看30分钟电视', points: 20, icon: '📺', description: '获得看电视的权限' },
+          { id: 'demo-reward-2', name: '吃一颗糖', points: 5, icon: '🍬', description: '获得一颗糖' },
+          { id: 'demo-reward-3', name: '玩15分钟游戏', points: 15, icon: '🎮', description: '获得玩游戏的时间' }
+        ],
+        violations: [
+          { id: 'demo-violation-1', name: '作业错误太多', points: 5, icon: '⚠️', description: '扣除5积分' },
+          { id: 'demo-violation-2', name: '看电视超时', points: 10, icon: '🚫', description: '扣除10积分' }
+        ]
+      }
+    ];
+
+    this.setData({
+      children: demoChildren,
+      currentChild: demoChildren[0],
+      rewards: demoChildren[0].rewards,
+      violations: demoChildren[0].violations
+    });
+  },
+
+  checkLoginAndPrompt() {
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      wx.showModal({
+        title: '需要登录',
+        content: '此功能需要登录后使用',
+        confirmText: '去登录',
+        cancelText: '继续浏览',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            });
+          }
+        }
+      });
+      return false;
+    }
+    return true;
+  },
+
+  // 跳转到登录页面
+  goToLoginPage() {
+    wx.navigateTo({
+      url: '/pages/login/login'
+    });
   },
 
   loadUserInfo() {
@@ -347,6 +420,7 @@ Page({
   },
 
   showAddModal(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const type = e.currentTarget.dataset.type;
     this.setData({
       showAddModal: true,
@@ -358,6 +432,7 @@ Page({
   },
 
   editReward(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const item = e.currentTarget.dataset.item;
     const type = e.currentTarget.dataset.type;
     this.setData({
@@ -370,6 +445,7 @@ Page({
   },
 
   deleteReward(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const item = e.currentTarget.dataset.item;
     const type = e.currentTarget.dataset.type;
     const currentChild = this.data.currentChild;
@@ -462,6 +538,7 @@ Page({
   },
 
   saveItem() {
+    if (!this.checkLoginAndPrompt()) return;
     const { currentModalType, currentItem, editingItem, currentChild } = this.data;
 
     if (!currentChild) {
@@ -525,6 +602,7 @@ Page({
   },
 
   exchangeReward(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const rewardId = e.currentTarget.dataset.id;
     const points = Number(e.currentTarget.dataset.points);
     const currentChild = this.data.currentChild;
@@ -583,6 +661,7 @@ Page({
   },
 
   executePunishment(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const violation = e.currentTarget.dataset.item;
 
     wx.showModal({
@@ -634,7 +713,17 @@ Page({
 
   formatDateTime(date) {
     if (!date) return '';
-    const d = new Date(date);
+    let d;
+    if (typeof date === 'object' && date.getFullYear) {
+      d = date;
+    } else if (typeof date === 'string') {
+      d = new Date(date);
+    } else if (date._seconds) {
+      d = new Date(date._seconds * 1000);
+    } else {
+      d = new Date(date);
+    }
+    if (isNaN(d.getTime())) return '';
     const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -645,7 +734,17 @@ Page({
 
   formatDateOnly(date) {
     if (!date) return '';
-    const d = new Date(date);
+    let d;
+    if (typeof date === 'object' && date.getFullYear) {
+      d = date;
+    } else if (typeof date === 'string') {
+      d = new Date(date);
+    } else if (date._seconds) {
+      d = new Date(date._seconds * 1000);
+    } else {
+      d = new Date(date);
+    }
+    if (isNaN(d.getTime())) return '';
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -662,6 +761,7 @@ Page({
 
   // 打开小朋友选择弹窗
   openChildModal() {
+    if (!this.checkLoginAndPrompt()) return;
     this.setData({ showChildModal: true });
   },
 
@@ -672,6 +772,7 @@ Page({
 
   // 切换小朋友
   switchChild(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const childId = e.currentTarget.dataset.id;
     wx.showLoading({ title: '切换中...' });
     
@@ -712,6 +813,7 @@ Page({
 
   // 打开添加/编辑小朋友弹窗
   openAddChildModal(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const child = e.currentTarget.dataset.child;
     this.setData({
       showAddChildModal: true,
@@ -769,6 +871,7 @@ Page({
 
   // 保存小朋友
   saveChild() {
+    if (!this.checkLoginAndPrompt()) return;
     const newChild = this.data.newChild;
     if (!newChild.name.trim()) {
       wx.showToast({ title: '请输入名字', icon: 'none' });
@@ -811,6 +914,7 @@ Page({
 
   // 删除小朋友
   deleteChild(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const child = e.currentTarget.dataset.child;
     wx.showModal({
       title: '确认删除',

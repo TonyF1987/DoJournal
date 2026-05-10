@@ -19,6 +19,7 @@ Page({
       birthDate: '',
       schoolStage: ''
     },
+    showDemoBanner: false,
     // 家庭管理相关
     showFamilyManageModal: false,
     familyInfo: null,
@@ -73,6 +74,10 @@ Page({
 
   onLoad() {
     this.initDate();
+    // 将 app 对象同步到 data 中，以便 wxml 访问
+    this.setData({
+      app: app
+    });
     this.checkLoginAndLoad();
   },
 
@@ -95,18 +100,285 @@ Page({
   },
 
   checkLoginAndLoad() {
-    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
-      console.log('用户未登录，跳转到登录页面');
-      wx.navigateTo({
-        url: '/pages/login/login'
-      });
+    console.log('checkLoginAndLoad - app.globalData:', app.globalData);
+    
+    // 检查是否显示演示数据提示
+    const shouldShowDemo = !app.globalData.isLoggedIn && !app.globalData.openid;
+    this.setData({ showDemoBanner: shouldShowDemo });
+
+    // 如果用户未登录，不强制跳转，允许先浏览
+    // 只有在需要使用功能时再提示登录
+    if (shouldShowDemo) {
+      console.log('用户未登录，允许浏览模式');
+      this.setGreeting();
+      // 设置一些演示数据让用户可以体验
+      this.setDemoData();
       return;
     }
 
+    console.log('用户已登录，加载真实数据');
+    // 清理演示数据
+    this.clearDemoData();
     this.setGreeting();
     this.loadUserInfo();
     this.loadSubjects();
     this.loadHomework();
+  },
+
+  // 设置演示数据
+  setDemoData() {
+    const today = new Date();
+    const selectedDate = this.data.selectedDate || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    // 根据当前选择的小孩生成对应的演示数据
+    const currentChild = this.data.currentChild;
+    let demoChildren;
+
+    if (!currentChild) {
+      // 首次初始化
+      demoChildren = [
+        {
+          id: 'demo-child-1',
+          name: '小宝贝',
+          avatarUrl: '',
+          gender: 'male',
+          birthDate: '2019-01-01',
+          schoolStage: '幼儿园',
+          isDemo: true
+        },
+        {
+          id: 'demo-child-2',
+          name: '小乖乖',
+          avatarUrl: '',
+          gender: 'female',
+          birthDate: '2020-06-15',
+          schoolStage: '幼儿园',
+          isDemo: true
+        }
+      ];
+    } else {
+      // 已选择小孩
+      demoChildren = this.data.children;
+    }
+
+    const activeChild = this.data.currentChild || demoChildren[0];
+
+    // 根据小孩生成不同的演示作业
+    const isFirstChild = activeChild.id === 'demo-child-1';
+    const now = new Date();
+    const demoHomework = isFirstChild ? [
+      {
+        _id: 'demo-hw-1',
+        title: '朗读课文30分钟',
+        content: '阅读语文课本第5-10页',
+        subject: '语文',
+        status: 'completed',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        checkInTime: now.toISOString(),
+        points: 5,
+        actualPoints: 5
+      },
+      {
+        _id: 'demo-hw-2',
+        title: '口算练习20道',
+        content: '练习加减法运算',
+        subject: '数学',
+        status: 'pending',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        points: 3
+      },
+      {
+        _id: 'demo-hw-3',
+        title: '背诵单词10个',
+        content: '学习新单词并背诵',
+        subject: '英语',
+        status: 'pending',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        points: 4
+      },
+      {
+        _id: 'demo-hw-4',
+        title: '课外阅读',
+        content: '阅读绘本故事书',
+        subject: '阅读',
+        status: 'completed',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        checkInTime: now.toISOString(),
+        points: 3,
+        actualPoints: 3
+      }
+    ] : [
+      {
+        _id: 'demo-hw-5',
+        title: '数学应用题',
+        content: '完成练习册的应用题',
+        subject: '数学',
+        status: 'pending',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        points: 4
+      },
+      {
+        _id: 'demo-hw-6',
+        title: '背古诗一首',
+        content: '背诵唐诗一首',
+        subject: '语文',
+        status: 'completed',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        checkInTime: now.toISOString(),
+        points: 2,
+        actualPoints: 2
+      },
+      {
+        _id: 'demo-hw-7',
+        title: '英语听力练习',
+        content: '听英语录音20分钟',
+        subject: '英语',
+        status: 'completed',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        checkInTime: now.toISOString(),
+        points: 3,
+        actualPoints: 3
+      }
+    ];
+
+    // 演示科目
+    const demoSubjects = [
+      { id: 'demo-1', name: '语文', color: '#FF6B6B', sort: 1 },
+      { id: 'demo-2', name: '数学', color: '#4ECDC4', sort: 2 },
+      { id: 'demo-3', name: '英语', color: '#45B7D1', sort: 3 },
+      { id: 'demo-4', name: '阅读', color: '#FFA07A', sort: 4 }
+    ];
+
+    // 演示日历数据
+    const demoCalendarData = this.generateDemoCalendarForDate(demoHomework, selectedDate);
+
+    this.setData({
+      children: demoChildren,
+      currentChild: activeChild,
+      subjects: demoSubjects,
+      selectedSubject: demoSubjects.length > 0 ? demoSubjects[0].name : '',
+      pendingHomework: demoHomework.filter(h => h.status === 'pending'),
+      completedHomework: demoHomework.filter(h => h.status === 'completed'),
+      subjectHomework: demoHomework.filter(h => h.subject === demoSubjects[0].name),
+      selectedDateHomework: demoHomework,
+      calendarData: demoCalendarData,
+      completedToday: demoHomework.filter(h => h.status === 'completed').length
+    });
+  },
+
+  // 生成演示日历数据（基于作业）
+  generateDemoCalendarForDate(demoHomework, referenceDate) {
+    const today = new Date();
+    const year = this.data.currentYear || today.getFullYear();
+    const month = this.data.currentMonth !== undefined ? this.data.currentMonth : today.getMonth();
+    const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
+
+    // 获取当月第一天
+    const firstDay = new Date(year, month, 1);
+    // 获取当月最后一天
+    const lastDay = new Date(year, month + 1, 0);
+    // 获取当月第一天是星期几
+    const firstDayOfWeek = firstDay.getDay();
+    // 获取当月的天数
+    const daysInMonth = lastDay.getDate();
+
+    let calendarData = [];
+
+    // 添加上月的占位
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      calendarData.push({ day: '', isCurrentMonth: false, hasHomework: false });
+    }
+
+    // 添加当月的日期
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isToday = isCurrentMonth && day === today.getDate();
+      const isSelected = this.data.selectedDate === dateStr;
+
+      // 基于作业数据计算当天的状态
+      const dateHomework = demoHomework.filter(h => h.homeworkDate === dateStr);
+      const totalCount = dateHomework.length;
+      const pendingCount = dateHomework.filter(h => h.status === 'pending').length;
+      const completedCount = dateHomework.filter(h => h.status === 'completed').length;
+      const allCompleted = totalCount > 0 && pendingCount === 0;
+
+      // 如果不是当前选择日期，随机生成一些演示数据
+      let hasHomework = totalCount > 0;
+      let hasPending = pendingCount > 0;
+      let hasCompleted = completedCount > 0;
+      let homeworkCount = totalCount;
+
+      if (dateStr !== referenceDate && totalCount === 0) {
+        hasHomework = day % 3 === 0 || day % 5 === 0;
+        hasPending = hasHomework && day % 5 !== 0;
+        hasCompleted = hasHomework && day % 5 === 0;
+        homeworkCount = hasHomework ? 2 : 0;
+      }
+
+      calendarData.push({
+        day: day,
+        dateStr: dateStr,
+        isCurrentMonth: true,
+        hasHomework: hasHomework,
+        hasPendingHomework: hasPending,
+        hasCompletedHomework: hasCompleted,
+        allCompleted: allCompleted || (hasHomework && hasCompleted && !hasPending),
+        homeworkCount: homeworkCount,
+        isToday: isToday,
+        isSelected: isSelected
+      });
+    }
+
+    return calendarData;
+  },
+
+  // 生成演示日历数据（原有方法保持兼容）
+  generateDemoCalendar() {
+    const today = new Date();
+    const selectedDate = this.data.selectedDate || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    // 生成一个临时的演示作业用于日历
+    const tempHomework = [
+      {
+        _id: 'temp-1',
+        title: '临时作业1',
+        subject: '语文',
+        status: 'completed',
+        homeworkDate: selectedDate
+      },
+      {
+        _id: 'temp-2',
+        title: '临时作业2',
+        subject: '数学',
+        status: 'pending',
+        homeworkDate: selectedDate
+      }
+    ];
+
+    return this.generateDemoCalendarForDate(tempHomework, selectedDate);
+  },
+
+  // 清理演示数据
+  clearDemoData() {
+    this.setData({
+      children: [],
+      currentChild: null,
+      subjects: [],
+      selectedSubject: '',
+      pendingHomework: [],
+      completedHomework: [],
+      subjectHomework: [],
+      selectedDateHomework: [],
+      calendarData: [],
+      completedToday: 0
+    });
   },
 
   // 加载科目列表
@@ -157,7 +429,12 @@ Page({
     if (!app.globalData.userInfo) {
       const userInfo = wx.getStorageSync('userInfo');
       if (userInfo) {
-        app.globalData.userInfo = JSON.parse(userInfo);
+        try {
+          const parsedUserInfo = JSON.parse(userInfo);
+          app.globalData.userInfo = parsedUserInfo;
+        } catch (e) {
+          console.error('解析用户信息失败', e);
+        }
       }
     }
 
@@ -165,7 +442,7 @@ Page({
       const currentChild = this.getCurrentChild(app.globalData.userInfo);
       this.setData({
         userInfo: app.globalData.userInfo,
-        currentChild: currentChild
+        currentChild: currentChild || null
       });
     }
 
@@ -179,43 +456,195 @@ Page({
             const currentChild = this.getCurrentChild(userInfo);
             this.setData({
               userInfo: userInfo,
-              currentChild: currentChild
+              currentChild: currentChild || null
             });
             app.saveUserInfo(userInfo);
-            
-            // 标记为已登录
-            app.globalData.isLoggedIn = true;
+
+            // 检查用户状态并给出引导
+            this.checkUserStatusAndGuide(userInfo);
           } else {
             // 如果没有用户记录，可能需要重新登录
             console.error('未找到用户记录');
             app.clearUserInfo();
-            wx.navigateTo({
-              url: '/pages/login/login'
-            });
           }
         },
         fail: (err) => {
           console.error('获取用户信息失败:', err);
+          // 只显示提示，不强制跳转
           wx.showToast({
             title: '获取用户信息失败',
-            icon: 'none'
+            icon: 'none',
+            duration: 2000
           });
         }
       });
-    } else {
-      // 如果未登录，跳转到登录页面
-      console.log('用户未登录，跳转到登录页面');
-      wx.navigateTo({
-        url: '/pages/login/login'
-      });
+    } else if (app.globalData.isLoggedIn) {
+      // 如果标记为已登录但没有 openid，尝试从本地存储获取
+      const openid = wx.getStorageSync('openid');
+      if (openid) {
+        app.globalData.openid = openid;
+        // 重新加载用户信息
+        this.loadUserInfo();
+      }
     }
   },
 
+  // 检查前置条件，按顺序引导：家庭→小朋友→科目
+  checkPreconditions(callback) {
+    const userInfo = this.data.userInfo;
+    
+    // 检查是否有家庭
+    if (!userInfo.familyId) {
+      wx.showModal({
+        title: '第一步：创建家庭',
+        content: '需要创建或加入家庭才能继续操作，是否现在创建？',
+        confirmText: '创建家庭',
+        confirmColor: '#FF6B35',
+        cancelText: '稍后',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            wx.switchTab({ 
+              url: '/pages/me/me',
+              success: () => {
+                setTimeout(() => {
+                  const pages = getCurrentPages();
+                  const currentPage = pages[pages.length - 1];
+                  if (currentPage && currentPage.showCreateFamilyModal) {
+                    currentPage.showCreateFamilyModal();
+                  }
+                }, 500);
+              }
+            });
+          }
+        }
+      });
+      return false;
+    }
+    
+    // 检查是否有小朋友
+    if (!userInfo.children || userInfo.children.length === 0) {
+      wx.showModal({
+        title: '第二步：添加小朋友',
+        content: '需要添加小朋友才能继续操作，是否现在添加？',
+        confirmText: '添加',
+        confirmColor: '#FF6B35',
+        cancelText: '稍后',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            this.openAddChildModal();
+          }
+        }
+      });
+      return false;
+    }
+    
+    // 检查当前选中的小朋友是否有科目
+    const currentChild = this.data.currentChild;
+    if (!currentChild || (!currentChild.subjects || currentChild.subjects.length === 0)) {
+      wx.showModal({
+        title: '第三步：添加科目',
+        content: '需要添加科目才能继续操作，是否现在添加？',
+        confirmText: '添加',
+        confirmColor: '#FF6B35',
+        cancelText: '稍后',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            this.goToAddSubject();
+          }
+        }
+      });
+      return false;
+    }
+    
+    // 所有前置条件都满足
+    if (callback) {
+      callback();
+    }
+    return true;
+  },
+
+  // 检查用户状态并给出引导
+  checkUserStatusAndGuide(userInfo) {
+    console.log('checkUserStatusAndGuide - userInfo:', userInfo);
+    console.log('checkUserStatusAndGuide - familyId:', userInfo.familyId);
+    console.log('checkUserStatusAndGuide - children:', userInfo.children);
+    console.log('checkUserStatusAndGuide - currentChild:', this.data.currentChild);
+    
+    // 等待页面加载完成后再显示引导
+    setTimeout(() => {
+      // 检测是否有家庭
+      if (!userInfo.familyId) {
+        console.log('显示第一步：创建家庭');
+        wx.showModal({
+          title: '第一步：创建家庭',
+          content: '需要创建或加入家庭才能管理小朋友，是否现在创建？',
+          confirmText: '创建家庭',
+          confirmColor: '#FF6B35',
+          cancelText: '稍后',
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              wx.switchTab({ 
+                url: '/pages/me/me',
+                success: () => {
+                  // 延迟触发家庭创建，让用户先看到"我的"页面
+                  setTimeout(() => {
+                    const pages = getCurrentPages();
+                    const currentPage = pages[pages.length - 1];
+                    if (currentPage && currentPage.showCreateFamilyModal) {
+                      currentPage.showCreateFamilyModal();
+                    }
+                  }, 500);
+                }
+              });
+            }
+          }
+        });
+      } else if (!userInfo.children || userInfo.children.length === 0) {
+        // 有家庭但没有小朋友
+        console.log('显示第二步：添加小朋友');
+        wx.showModal({
+          title: '第二步：添加小朋友',
+          content: '需要添加小朋友才能记录作业，是否现在添加？',
+          confirmText: '添加',
+          confirmColor: '#FF6B35',
+          cancelText: '稍后',
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              this.openAddChildModal();
+            }
+          }
+        });
+      } else {
+        // 检查当前选中的小朋友是否有科目
+        const currentChild = this.getCurrentChild(userInfo);
+        console.log('checkUserStatusAndGuide - currentChild subjects:', currentChild?.subjects);
+        if (currentChild && (!currentChild.subjects || currentChild.subjects.length === 0)) {
+          console.log('显示第三步：添加科目');
+          wx.showModal({
+            title: '第三步：添加科目',
+            content: '需要添加科目才能记录作业，是否现在添加？',
+            confirmText: '添加',
+            confirmColor: '#FF6B35',
+            cancelText: '稍后',
+            success: (modalRes) => {
+              if (modalRes.confirm) {
+                this.goToAddSubject();
+              }
+            }
+          });
+        }
+      }
+    }, 800);
+  },
+
   getCurrentChild(userInfo) {
+    if (!userInfo) {
+      return null;
+    }
     if (!userInfo.children || !userInfo.currentChildId) {
       return null;
     }
-    return userInfo.children.find(c => c.id === userInfo.currentChildId);
+    return userInfo.children.find(c => c.id === userInfo.currentChildId) || null;
   },
 
   loadHomework() {
@@ -355,6 +784,46 @@ Page({
     });
   },
 
+  // 检查是否已登录，未登录则提示
+  checkLoginAndPrompt() {
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      wx.showModal({
+        title: '需要登录',
+        content: '此功能需要登录后使用',
+        confirmText: '去登录',
+        cancelText: '继续浏览',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            });
+          }
+        }
+      });
+      return false;
+    }
+    return true;
+  },
+
+  // 跳转到登录页面
+  goToLoginPage() {
+    wx.navigateTo({
+      url: '/pages/login/login'
+    });
+  },
+
+  // 跳转到我的页面
+  goToMyPage() {
+    wx.switchTab({
+      url: '/pages/me/me'
+    });
+  },
+
+  // 跳转到添加科目
+  goToAddSubject() {
+    this.showAddSubjectModal();
+  },
+
   // 按科目分组作业
   groupHomeworkBySubject(homeworkList) {
     const grouped = {};
@@ -378,6 +847,7 @@ Page({
   },
 
   goToCheckIn(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const homeworkId = e.currentTarget.dataset.id;
     const selectedDate = this.data.selectedDate;
     wx.navigateTo({
@@ -386,52 +856,61 @@ Page({
   },
 
   toggleCheckIn(e) {
-    const homeworkId = e.currentTarget.dataset.id;
-    const status = e.currentTarget.dataset.status;
-    const selectedDate = this.data.selectedDate;
-    const currentChild = this.data.currentChild;
+    if (!this.checkLoginAndPrompt()) return;
     
-    if (!currentChild) {
-      wx.showToast({ title: '请先选择小朋友', icon: 'none' });
-      return;
-    }
+    // 检查前置条件
+    if (!this.checkPreconditions(() => {
+      // 前置条件满足后才执行打卡
+      const homeworkId = e.currentTarget.dataset.id;
+      const status = e.currentTarget.dataset.status;
+      const selectedDate = this.data.selectedDate;
+      const currentChild = this.data.currentChild;
+      
+      if (!currentChild) {
+        wx.showToast({ title: '请先选择小朋友', icon: 'none' });
+        return;
+      }
     
-    if (status === 'completed') {
-      wx.showLoading({ title: '取消中...' });
-      wx.cloud.callFunction({
-        name: 'cancelCheckin',
-        data: {
-          homeworkId: homeworkId,
-          date: selectedDate,
-          childId: currentChild.id
-        },
-        success: (res) => {
-          wx.hideLoading();
-          if (res.result && res.result.success) {
-            wx.showToast({ title: '已取消', icon: 'success' });
-            this.loadUserInfo();
-            this.loadHomework();
-            this.loadMonthCheckins();
-          } else {
-            wx.showToast({ title: res.result.errMsg || '取消失败', icon: 'none' });
+      if (status === 'completed') {
+        wx.showLoading({ title: '取消中...' });
+        wx.cloud.callFunction({
+          name: 'cancelCheckin',
+          data: {
+            homeworkId: homeworkId,
+            date: selectedDate,
+            childId: currentChild.id
+          },
+          success: (res) => {
+            wx.hideLoading();
+            if (res.result && res.result.success) {
+              wx.showToast({ title: '已取消', icon: 'success' });
+              this.loadUserInfo();
+              this.loadHomework();
+              this.loadMonthCheckins();
+            } else {
+              wx.showToast({ title: res.result.errMsg || '取消失败', icon: 'none' });
+            }
+          },
+          fail: (err) => {
+            wx.hideLoading();
+            console.error('取消打卡失败:', err);
+            wx.showToast({ title: '取消失败', icon: 'none' });
           }
-        },
-        fail: (err) => {
-          wx.hideLoading();
-          console.error('取消打卡失败:', err);
-          wx.showToast({ title: '取消失败', icon: 'none' });
-        }
-      });
-    } else {
-      const homework = this.data.subjectHomework.find(h => h._id === homeworkId);
-      this.setData({
-        showCheckinModal: true,
-        checkinHomework: homework,
-        checkinProofImage: '',
-        checkinComment: '',
-        checkinRating: 3,
-        checkinRatingPercent: 100
-      });
+        });
+      } else {
+        const homework = this.data.subjectHomework.find(h => h._id === homeworkId);
+        this.setData({
+          showCheckinModal: true,
+          checkinHomework: homework,
+          checkinProofImage: '',
+          checkinComment: '',
+          checkinRating: 3,
+          checkinRatingPercent: 100
+        });
+      }
+    })) {
+      // checkPreconditions 返回 false 时说明缺少前置条件，已经显示了引导
+      return;
     }
   },
 
@@ -553,6 +1032,7 @@ Page({
   },
 
   goToEdit(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const homeworkId = e.currentTarget.dataset.id;
     const selectedDate = this.data.selectedDate;
     console.log('编辑作业，ID:', homeworkId);
@@ -578,26 +1058,36 @@ Page({
   },
 
   goToAdd() {
-    const selectedSubject = this.data.selectedSubject;
-    const selectedDate = this.data.selectedDate;
-    let url = '/pages/add/add';
-    const params = [];
-    if (selectedSubject) {
-      params.push(`subject=${encodeURIComponent(selectedSubject)}`);
+    if (!this.checkLoginAndPrompt()) return;
+    
+    // 检查前置条件
+    if (!this.checkPreconditions(() => {
+      // 前置条件满足后才执行跳转
+      const selectedSubject = this.data.selectedSubject;
+      const selectedDate = this.data.selectedDate;
+      let url = '/pages/add/add';
+      const params = [];
+      if (selectedSubject) {
+        params.push(`subject=${encodeURIComponent(selectedSubject)}`);
+      }
+      if (selectedDate) {
+        params.push(`date=${selectedDate}`);
+      }
+      if (params.length > 0) {
+        url += '?' + params.join('&');
+      }
+      wx.navigateTo({
+        url: url
+      });
+    })) {
+      // checkPreconditions 返回 false 时说明缺少前置条件，已经显示了引导
+      return;
     }
-    if (selectedDate) {
-      params.push(`date=${selectedDate}`);
-    }
-    if (params.length > 0) {
-      url += '?' + params.join('&');
-    }
-    wx.navigateTo({
-      url: url
-    });
   },
 
   // 复制当天作业
   copyHomework() {
+    if (!this.checkLoginAndPrompt()) return;
     const selectedDate = this.data.selectedDate;
     const allSubjects = this.data.subjects || [];
     
@@ -846,6 +1336,7 @@ Page({
     const sourceDate = this.data.copySourceDate;
     const targetDate = this.data.copySelectedDate;
     const selectedSubjects = this.data.copySelectedSubjects;
+    const currentChild = this.data.currentChild;
 
     if (!targetDate) {
       wx.showToast({ title: '请选择目标日期', icon: 'none' });
@@ -862,6 +1353,11 @@ Page({
       return;
     }
 
+    if (!currentChild) {
+      wx.showToast({ title: '请先选择小朋友', icon: 'none' });
+      return;
+    }
+
     // 逐个复制选中的科目
     wx.showLoading({ title: '复制中...' });
     
@@ -872,7 +1368,8 @@ Page({
           data: {
             sourceDate: sourceDate,
             targetDate: targetDate,
-            subject: subject
+            subject: subject,
+            childId: currentChild.id
           },
           success: resolve,
           fail: reject
@@ -914,6 +1411,13 @@ Page({
 
   // 处理复制
   handleCopyResult(sourceDate, targetDate, subject) {
+    const currentChild = this.data.currentChild;
+    
+    if (!currentChild) {
+      wx.showToast({ title: '请先选择小朋友', icon: 'none' });
+      return;
+    }
+    
     wx.showLoading({ title: '复制中...' });
     
     wx.cloud.callFunction({
@@ -921,7 +1425,8 @@ Page({
       data: {
         sourceDate: sourceDate,
         targetDate: targetDate,
-        subject: subject
+        subject: subject,
+        childId: currentChild.id
       },
       success: (res) => {
         wx.hideLoading();
@@ -971,7 +1476,19 @@ Page({
 
   formatDateTime(date) {
     if (!date) return '';
-    const d = new Date(date);
+    let d;
+    if (typeof date === 'object' && date.getFullYear) {
+      // 已经是 Date 对象
+      d = date;
+    } else if (typeof date === 'string') {
+      d = new Date(date);
+    } else if (date._seconds) {
+      // 云数据库时间戳格式
+      d = new Date(date._seconds * 1000);
+    } else {
+      d = new Date(date);
+    }
+    if (isNaN(d.getTime())) return '';
     return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   },
 
@@ -1069,7 +1586,16 @@ Page({
       currentYear,
       currentMonth
     });
-    this.loadMonthCheckins();
+
+    // 检查是否登录
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      // 未登录，更新演示日历数据
+      const demoCalendarData = this.generateDemoCalendar();
+      this.setData({ calendarData: demoCalendarData });
+    } else {
+      // 已登录，加载打卡记录
+      this.loadMonthCheckins();
+    }
   },
 
   // 下一个月
@@ -1084,7 +1610,16 @@ Page({
       currentYear,
       currentMonth
     });
-    this.loadMonthCheckins();
+
+    // 检查是否登录
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      // 未登录，更新演示日历数据
+      const demoCalendarData = this.generateDemoCalendar();
+      this.setData({ calendarData: demoCalendarData });
+    } else {
+      // 已登录，加载打卡记录
+      this.loadMonthCheckins();
+    }
   },
 
   // 切换日历展开/收起
@@ -1118,8 +1653,17 @@ Page({
         currentMonth: selectedMonth
       });
       
-      // 重新加载该月的打卡记录
-      this.loadMonthCheckins();
+      // 检查是否登录
+      if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+        // 未登录，更新演示数据
+        const demoCalendarData = this.generateDemoCalendar();
+        this.setData({ calendarData: demoCalendarData });
+        // 更新选中日期的作业
+        this.updateDemoSelectedDateHomework(dateItem.dateStr);
+      } else {
+        // 已登录，加载打卡记录
+        this.loadMonthCheckins();
+      }
     } else {
       // 月份相同，只更新选中日期
       this.setData({
@@ -1127,9 +1671,125 @@ Page({
         formattedSelectedDate: formattedDate
       });
       
-      // 重新生成日历数据更新选中状态
-      this.generateCalendarData();
+      // 检查是否登录
+      if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+        // 未登录，更新演示日历数据
+        const demoCalendarData = this.generateDemoCalendar();
+        this.setData({ calendarData: demoCalendarData });
+        // 更新选中日期的作业
+        this.updateDemoSelectedDateHomework(dateItem.dateStr);
+      } else {
+        this.generateCalendarData(this.data.monthCheckins);
+      }
     }
+  },
+
+  // 更新演示数据中选中日期的作业
+  updateDemoSelectedDateHomework(selectedDate) {
+    const now = new Date();
+    const currentChild = this.data.currentChild;
+    const isFirstChild = !currentChild || currentChild.id === 'demo-child-1';
+
+    // 生成与选中日期相关的演示作业
+    const demoHomework = isFirstChild ? [
+      {
+        _id: 'demo-hw-1',
+        title: '朗读课文30分钟',
+        content: '阅读语文课本第5-10页',
+        subject: '语文',
+        status: 'completed',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        checkInTime: now.toISOString(),
+        points: 5,
+        actualPoints: 5
+      },
+      {
+        _id: 'demo-hw-2',
+        title: '口算练习20道',
+        content: '练习加减法运算',
+        subject: '数学',
+        status: 'pending',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        points: 3
+      },
+      {
+        _id: 'demo-hw-3',
+        title: '背诵单词10个',
+        content: '学习新单词并背诵',
+        subject: '英语',
+        status: 'pending',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        points: 4
+      },
+      {
+        _id: 'demo-hw-4',
+        title: '课外阅读',
+        content: '阅读绘本故事书',
+        subject: '阅读',
+        status: 'completed',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        checkInTime: now.toISOString(),
+        points: 3,
+        actualPoints: 3
+      }
+    ] : [
+      {
+        _id: 'demo-hw-5',
+        title: '数学应用题',
+        content: '完成练习册的应用题',
+        subject: '数学',
+        status: 'pending',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        points: 4
+      },
+      {
+        _id: 'demo-hw-6',
+        title: '背古诗一首',
+        content: '背诵唐诗一首',
+        subject: '语文',
+        status: 'completed',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        checkInTime: now.toISOString(),
+        points: 2,
+        actualPoints: 2
+      },
+      {
+        _id: 'demo-hw-7',
+        title: '英语听力练习',
+        content: '听英语录音20分钟',
+        subject: '英语',
+        status: 'completed',
+        homeworkDate: selectedDate,
+        createTime: now.toISOString(),
+        checkInTime: now.toISOString(),
+        points: 3,
+        actualPoints: 3
+      }
+    ];
+
+    // 根据选中科目筛选作业
+    let subjectHomework = demoHomework;
+    if (this.data.selectedSubject) {
+      subjectHomework = demoHomework.filter(h => h.subject === this.data.selectedSubject);
+    }
+
+    // 生成基于新日期的日历数据
+    const demoCalendarData = this.generateDemoCalendarForDate(demoHomework, selectedDate);
+
+    this.setData({
+      pendingHomework: demoHomework.filter(h => h.status === 'pending'),
+      completedHomework: demoHomework.filter(h => h.status === 'completed'),
+      subjectHomework: subjectHomework,
+      selectedDateHomework: demoHomework,
+      calendarData: demoCalendarData,
+      completedToday: demoHomework.filter(h => h.status === 'completed').length
+    });
   },
 
   // 生成每天作业统计
@@ -1327,7 +1987,15 @@ Page({
     this.setData({
       selectedSubject: subject
     });
-    this.updateSubjectHomework();
+
+    // 检查是否登录
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      // 未登录，更新演示数据
+      this.updateDemoSelectedDateHomework(this.data.selectedDate);
+    } else {
+      // 已登录，正常更新
+      this.updateSubjectHomework();
+    }
   },
 
   // 更新当前科目的作业列表
@@ -1375,6 +2043,7 @@ Page({
 
   // 跳转到违规行为管理页面
   goToDeduction() {
+    if (!this.checkLoginAndPrompt()) return;
     wx.navigateTo({
       url: '/pages/violations/violations'
     });
@@ -1389,6 +2058,7 @@ Page({
 
   // 显示添加科目弹窗
   showAddSubjectModal() {
+    if (!this.checkLoginAndPrompt()) return;
     this.setData({
       showAddSubjectModal: true,
       newSubjectName: ''
@@ -1404,6 +2074,7 @@ Page({
 
   // 显示编辑科目弹窗
   showEditSubjectModal(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const subject = e.currentTarget.dataset.subject;
     this.setData({
       showEditSubjectModal: true,
@@ -1718,6 +2389,7 @@ Page({
 
   // 打开小朋友选择弹窗
   openChildModal() {
+    // 未登录时直接打开，无需检查
     this.setData({ showChildModal: true });
   },
 
@@ -1729,6 +2401,25 @@ Page({
   // 切换小朋友
   switchChild(e) {
     const childId = e.currentTarget.dataset.id;
+
+    // 检查是否登录
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      // 未登录，切换演示小孩
+      const selectedChild = this.data.children.find(c => c.id === childId);
+      if (selectedChild) {
+        this.setData({
+          currentChild: selectedChild,
+          showChildModal: false
+        });
+        // 更新演示数据
+        this.setDemoData();
+      }
+      return;
+    }
+
+    // 已登录，正常切换
+    if (!this.checkLoginAndPrompt()) return;
+    
     wx.showLoading({ title: '切换中...' });
     
     wx.cloud.callFunction({
@@ -1793,7 +2484,25 @@ Page({
 
   // 打开添加/编辑小朋友弹窗
   openAddChildModal(e) {
-    const child = e.currentTarget.dataset.child;
+    if (!this.checkLoginAndPrompt()) return;
+
+    // 检查是否有家庭
+    if (!this.data.userInfo || !this.data.userInfo.familyId) {
+      wx.showModal({
+        title: '提示',
+        content: '需要先创建或加入家庭才能添加小朋友，是否现在创建？',
+        confirmText: '创建家庭',
+        cancelText: '稍后',
+        success: (res) => {
+          if (res.confirm) {
+            this.openFamilyManage();
+          }
+        }
+      });
+      return;
+    }
+
+    const child = e && e.currentTarget && e.currentTarget.dataset ? e.currentTarget.dataset.child : null;
     this.setData({
       showAddChildModal: true,
       editingChild: child || null,
@@ -1892,6 +2601,7 @@ Page({
 
   // 删除小朋友
   deleteChild(e) {
+    if (!this.checkLoginAndPrompt()) return;
     const child = e.currentTarget.dataset.child;
     console.log('删除小朋友，child:', child);
     
@@ -1962,6 +2672,7 @@ Page({
 
   // 打开家庭管理
   openFamilyManage() {
+    if (!this.checkLoginAndPrompt()) return;
     if (this.data.userInfo.familyId) {
       // 已在家庭中，加载家庭信息
       this.loadFamilyInfo();

@@ -15,19 +15,28 @@ Page({
     inputInviteCode: '',
     inviteCode: '',
     showEditProfile: false,
-    editUserInfo: {}
+    editUserInfo: {},
+    showSettingsModal: false,
+    showHelpModal: false,
+    settings: {
+      dailyReminder: true,
+      darkMode: false
+    }
   },
 
   onLoad() {
-    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
-      wx.navigateTo({ url: '/pages/login/login' });
-      return;
-    }
     this.loadUserInfo();
   },
 
   onShow() {
     this.loadUserInfo();
+  },
+
+  // 跳转到登录页面
+  goToLogin() {
+    wx.navigateTo({ 
+      url: '/pages/login/login' 
+    });
   },
 
   loadUserInfo() {
@@ -42,8 +51,10 @@ Page({
       wx.cloud.callFunction({
         name: 'getUserInfo',
         success: (res) => {
+          console.log('getUserInfo 返回:', res.result);
           if (res.result && res.result.success) {
             const userData = res.result.userInfo;
+            console.log('用户数据:', userData);
             const currentChild = this.getCurrentChild(userData);
             this.setData({
               userInfo: userData,
@@ -64,11 +75,45 @@ Page({
     return userInfo.children.find(c => c.id === userInfo.currentChildId);
   },
 
+  checkLoginAndPrompt() {
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      wx.showModal({
+        title: '需要登录',
+        content: '此功能需要登录后使用',
+        confirmText: '去登录',
+        cancelText: '继续浏览',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            });
+          }
+        }
+      });
+      return false;
+    }
+    return true;
+  },
+
+  goToHomework() {
+    wx.switchTab({
+      url: '/pages/index/index'
+    });
+  },
+
+  goToRewards() {
+    wx.switchTab({
+      url: '/pages/rewards/rewards'
+    });
+  },
+
   navigateTo(page) {
+    // 页面跳转属于浏览功能，无需登录
     wx.navigateTo({ url: page });
   },
 
   openFamilyManage() {
+    if (!this.checkLoginAndPrompt()) return;
     if (this.data.userInfo.familyId) {
       this.loadFamilyInfo();
     } else {
@@ -110,6 +155,7 @@ Page({
   },
 
   showCreateFamilyModal() {
+    if (!this.checkLoginAndPrompt()) return;
     this.setData({
       showCreateFamily: true,
       showFamilyManage: false,
@@ -122,6 +168,7 @@ Page({
   },
 
   createFamily() {
+    if (!this.checkLoginAndPrompt()) return;
     if (!this.data.familyName || !this.data.familyName.trim()) {
       wx.showToast({ title: '请输入家庭名称', icon: 'none' });
       return;
@@ -156,6 +203,7 @@ Page({
   },
 
   showJoinFamilyModal() {
+    if (!this.checkLoginAndPrompt()) return;
     this.setData({
       showJoinFamily: true,
       showFamilyManage: false
@@ -167,6 +215,7 @@ Page({
   },
 
   verifyInviteCode() {
+    if (!this.checkLoginAndPrompt()) return;
     if (!this.data.inputInviteCode.trim()) {
       wx.showToast({ title: '请输入邀请码', icon: 'none' });
       return;
@@ -222,6 +271,7 @@ Page({
   },
 
   generateInviteCode() {
+    if (!this.checkLoginAndPrompt()) return;
     wx.showLoading({ title: '生成中...' });
 
     wx.cloud.callFunction({
@@ -256,6 +306,7 @@ Page({
   },
 
   leaveFamily() {
+    if (!this.checkLoginAndPrompt()) return;
     wx.showModal({
       title: '确认退出',
       content: '退出家庭后，您将不再能查看和管理家庭数据',
@@ -288,6 +339,7 @@ Page({
   },
 
   openEditProfile() {
+    if (!this.checkLoginAndPrompt()) return;
     this.setData({
       showEditProfile: true,
       editUserInfo: {
@@ -356,6 +408,7 @@ Page({
   },
 
   saveProfile() {
+    if (!this.checkLoginAndPrompt()) return;
     const { editUserInfo } = this.data;
     
     if (!editUserInfo.nickName || !editUserInfo.nickName.trim()) {
@@ -407,6 +460,104 @@ Page({
           });
         }
       }
+    });
+  },
+
+  deleteAccount() {
+    wx.showModal({
+      title: '确认注销',
+      content: '注销账号将永久删除您的所有数据，此操作不可恢复！确定要注销吗？',
+      confirmText: '确认注销',
+      confirmColor: '#FF5252',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          this.doDeleteAccount();
+        }
+      }
+    });
+  },
+
+  async doDeleteAccount() {
+    wx.showLoading({ title: '注销中...' });
+    
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'deleteAccount'
+      });
+      
+      wx.hideLoading();
+      
+      if (res.result && res.result.success) {
+        wx.showToast({
+          title: '注销成功',
+          icon: 'success'
+        });
+        
+        app.globalData.userInfo = null;
+        app.globalData.openid = null;
+        app.globalData.isLoggedIn = false;
+        wx.removeStorageSync('userInfo');
+        wx.removeStorageSync('openid');
+        
+        setTimeout(() => {
+          wx.reLaunch({
+            url: '/pages/login/login'
+          });
+        }, 1500);
+      } else {
+        wx.showToast({
+          title: res.result?.errMsg || '注销失败',
+          icon: 'none'
+        });
+      }
+    } catch (err) {
+      wx.hideLoading();
+      console.error('注销失败:', err);
+      wx.showToast({
+        title: '注销失败',
+        icon: 'none'
+      });
+    }
+  },
+
+  showSettings() {
+    this.setData({ showSettingsModal: true });
+  },
+
+  closeSettings() {
+    this.setData({ showSettingsModal: false });
+  },
+
+  showHelp() {
+    this.setData({ showHelpModal: true });
+  },
+
+  closeHelp() {
+    this.setData({ showHelpModal: false });
+  },
+
+  toggleReminder() {
+    this.setData({
+      'settings.dailyReminder': !this.data.settings.dailyReminder
+    });
+  },
+
+  toggleDarkMode() {
+    this.setData({
+      'settings.darkMode': !this.data.settings.darkMode
+    });
+  },
+
+  viewServiceAgreement() {
+    wx.navigateTo({
+      url: '/pages/service-agreement/service-agreement'
+    });
+  },
+
+  viewPrivacyPolicy() {
+    wx.navigateTo({
+      url: '/pages/privacy-policy/privacy-policy'
     });
   }
 });

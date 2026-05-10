@@ -1,91 +1,90 @@
 <view class="container">
-  <!-- 顶部装饰 -->
-  <view class="top-decoration">
-    <view class="main-icon">📚</view>
-    <view class="main-title">作业打卡</view>
-    <view class="main-subtitle">坚持每天完成作业，养成学习好习惯</view>
+  <!-- 顶部导航 -->
+  <view class="nav-bar">
+    <view class="back-btn" bindtap="goToHome">
+      <text class="back-icon">‹</text>
+    </view>
+    <text class="nav-title">登录</text>
+    <view class="nav-right"></view>
   </view>
 
-  <!-- 登录区域 -->
-  <view class="login-section">
-    <!-- 用户信息填写 -->
-    <view class="user-form" wx:if="{{!isLoggedIn}}">
-      <!-- 头像选择 -->
-      <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-        <image class="avatar-img" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill"></image>
-        <text wx:else class="avatar-placeholder">👤</text>
-        <view class="avatar-hint">点击选择头像</view>
-      </button>
-      
-      <!-- 昵称输入 -->
-      <view class="nickname-wrapper">
-        <input 
-          type="nickname" 
-          class="nickname-input" 
-          placeholder="请输入昵称" 
-          value="{{nickName}}"
-          bindinput="onNicknameInput"
-        />
-      </view>
-      
-      <!-- 手机号授权 -->
-      <view class="phone-wrapper" wx:if="{{!phoneNumber}}">
-        <button class="phone-btn" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
-          <text class="phone-icon">📱</text>
-          <text>{{phoneNumber ? phoneNumber : '授权手机号'}}</text>
-        </button>
-        <view class="phone-hint">授权手机号（可选）</view>
-      </view>
-      <view class="phone-display" wx:if="{{phoneNumber}}">
-        <text class="phone-icon">📱</text>
-        <text class="phone-text">{{phoneNumber}}</text>
-        <view class="phone-change" bindtap="clearPhoneNumber">更换</view>
-      </view>
-
-      <!-- 登录按钮 -->
-      <button class="login-btn" bindtap="handleLogin" disabled="{{!nickName || isLoading}}">
-        {{isLoading ? '登录中...' : '进入小程序'}}
-      </button>
+  <!-- 品牌区域 -->
+  <view class="brand-section">
+    <view class="logo-box">
+      <text class="logo-icon">📚</text>
     </view>
+    <text class="app-name">作业打卡</text>
+  </view>
 
-    <!-- 已登录状态 -->
-    <view class="user-preview" wx:if="{{isLoggedIn}}">
-      <view class="user-avatar">👤</view>
-      <view class="user-name">{{userInfo.nickName}}</view>
-      <view class="user-phone" wx:if="{{userInfo.phoneNumber}}">{{userInfo.phoneNumber}}</view>
-      <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+  <!-- 用户头像和昵称 -->
+  <view class="user-info-section">
+    <!-- 头像和昵称显示 -->
+    <view class="user-info-display">
+      <image class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" wx:if="{{avatarUrl}}"></image>
+      <view class="avatar-placeholder" wx:else>
+        <text class="placeholder-icon">👤</text>
+      </view>
+      <text class="nickname-text" wx:if="{{nickName}}">{{nickName}}</text>
+      <text class="nickname-placeholder" wx:else>点击下方按钮获取用户信息</text>
     </view>
-
-    <!-- 登录说明 -->
-    <view class="login-description">
-      填写信息后即可使用完整功能
+    <!-- 获取用户信息按钮（同时也是头像选择按钮） -->
+    <button class="get-user-info-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <text>{{avatarUrl && nickName ? '重新获取' : '获取用户信息'}}</text>
+    </button>
+    <!-- 昵称输入框 -->
+    <view class="nickname-input-wrapper">
+      <input
+        class="nickname-input"
+        type="nickname"
+        placeholder="昵称将自动填充"
+        value="{{nickName}}"
+        bindinput="onNicknameInput"
+        maxlength="20"
+        focus="{{nicknameFocus}}"
+      />
     </view>
   </view>
 
-  <!-- 功能特点 -->
-  <view class="features-section">
-    <view class="feature-item">
-      <view class="feature-icon">✅</view>
-      <view class="feature-content">
-        <view class="feature-title">作业管理</view>
-        <view class="feature-description">添加、查看、管理每日作业</view>
+  <!-- 表单区域 -->
+  <view class="form-section">
+    <view class="input-group">
+      <input
+        class="form-input"
+        type="text"
+        placeholder="请输入手机号或账号"
+        value="{{phoneNumber}}"
+        bindinput="onPhoneInput"
+        maxlength="50"
+      />
+    </view>
+
+    <view class="input-group">
+      <input
+        class="form-input"
+        type="{{showPassword ? 'text' : 'password'}}"
+        placeholder="请输入密码"
+        value="{{password}}"
+        bindinput="onPasswordInput"
+      />
+      <view class="password-eye" bindtap="togglePassword">
+        <text>{{showPassword ? '👁️' : '👁️‍🗨️'}}</text>
       </view>
     </view>
-    
-    <view class="feature-item">
-      <view class="feature-icon">🔥</view>
-      <view class="feature-content">
-        <view class="feature-title">连续打卡</view>
-        <view class="feature-description">记录每日作业完成情况</view>
-      </view>
+
+    <!-- 协议 -->
+    <view class="agreement-section">
+      <text class="text-mini">请阅读</text>
+      <text class="text-link" bindtap="goToServiceAgreement">《服务协议》</text>
+      <text class="text-mini">和</text>
+      <text class="text-link" bindtap="goToPrivacyPolicy">《隐私政策》</text>
     </view>
-    
-    <view class="feature-item">
-      <view class="feature-icon">🎁</view>
-      <view class="feature-content">
-        <view class="feature-title">积分奖励</view>
-        <view class="feature-description">完成作业获得积分奖励</view>
-      </view>
-    </view>
+
+    <!-- 提交按钮 -->
+    <button class="btn-submit {{!canSubmitValue ? 'disabled' : ''}}" bindtap="handleSubmit" disabled="{{!canSubmitValue}}">
+      <text>{{isLoading ? '处理中...' : '登录/注册'}}</text>
+    </button>
   </view>
+
+  <!-- 底部占位 -->
+  <view class="bottom-space"></view>
 </view>

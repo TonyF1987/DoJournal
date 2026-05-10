@@ -1,10 +1,23 @@
 <view class="container">
-  <view class="header-gradient">
-    <view class="user-card" bindtap="openEditProfile">
+  <!-- 顶部区域 -->
+  <view class="top-section">
+    <!-- 未登录状态 -->
+    <view class="login-prompt" wx:if="{{!userInfo || !userInfo._id}}" bindtap="goToLogin">
+      <view class="login-icon-wrapper">
+        <text class="login-icon">👤</text>
+      </view>
+      <view class="login-text">
+        <text class="login-title">点击登录</text>
+        <text class="login-desc">登录更精彩</text>
+      </view>
+      <view class="login-arrow">›</view>
+    </view>
+
+    <!-- 已登录状态 -->
+    <view class="user-card" wx:else bindtap="openEditProfile">
       <view class="user-avatar">
         <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" mode="aspectFill" class="user-avatar-img" />
         <text wx:else>👤</text>
-        <view class="edit-icon">✏️</view>
       </view>
       <view class="user-info">
         <text class="user-name">{{userInfo.nickName || '微信用户'}}</text>
@@ -14,77 +27,95 @@
     </view>
   </view>
 
-  <view class="content-area">
-    <view class="menu-section">
-      <view class="menu-item" bindtap="openFamilyManage">
-        <view class="menu-icon-wrapper">
-          <text class="menu-icon">{{userInfo.familyId ? '👨‍👩‍👧‍👦' : '🏠'}}</text>
-        </view>
-        <view class="menu-content">
-          <text class="menu-title">家庭管理</text>
-          <text class="menu-desc">{{userInfo.familyId ? (familyInfo ? familyInfo.name + ' · ' + familyMembers.length + '人' : '家庭') : '创建/加入家庭'}}</text>
-        </view>
-        <text class="menu-arrow">›</text>
+  <!-- 菜单区域 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="openFamilyManage">
+      <view class="menu-icon-wrapper">
+        <text class="menu-icon">{{userInfo.familyId ? '👨‍👩‍👧‍👦' : '🏠'}}</text>
       </view>
-
-      <view class="menu-divider"></view>
-
-      <view class="menu-item" bindtap="navigateTo" data-url="/pages/index/index">
-        <view class="menu-icon-wrapper">
-          <text class="menu-icon">📝</text>
-        </view>
-        <view class="menu-content">
-          <text class="menu-title">作业打卡</text>
-          <text class="menu-desc">查看和管理作业</text>
-        </view>
-        <text class="menu-arrow">›</text>
+      <view class="menu-content">
+        <text class="menu-title">家庭管理</text>
+        <text class="menu-desc">{{userInfo.familyId ? (familyInfo ? familyInfo.name + ' · ' + familyMembers.length + '人' : '家庭') : '创建/加入家庭'}}</text>
       </view>
-
-      <view class="menu-item" bindtap="navigateTo" data-url="/pages/rewards/rewards">
-        <view class="menu-icon-wrapper">
-          <text class="menu-icon">🎁</text>
-        </view>
-        <view class="menu-content">
-          <text class="menu-title">积分管理</text>
-          <text class="menu-desc">查看积分和兑换奖励</text>
-        </view>
-        <text class="menu-arrow">›</text>
+      <view class="menu-hint" wx:if="{{userInfo._id && !userInfo.familyId}}">
+        <text class="hint-dot"></text>
+        <text class="hint-text">需要创建</text>
       </view>
-
-      <view class="menu-divider"></view>
-
-      <view class="menu-item">
-        <view class="menu-icon-wrapper">
-          <text class="menu-icon">⚙️</text>
-        </view>
-        <view class="menu-content">
-          <text class="menu-title">设置</text>
-          <text class="menu-desc">应用设置</text>
-        </view>
-        <text class="menu-arrow">›</text>
-      </view>
-
-      <view class="menu-item">
-        <view class="menu-icon-wrapper">
-          <text class="menu-icon">❓</text>
-        </view>
-        <view class="menu-content">
-          <text class="menu-title">帮助与反馈</text>
-          <text class="menu-desc">使用帮助</text>
-        </view>
-        <text class="menu-arrow">›</text>
-      </view>
+      <text class="menu-arrow">›</text>
     </view>
 
-    <view class="logout-section">
-      <view class="logout-btn" bindtap="logout">
-        <text>退出登录</text>
+    <view class="menu-divider"></view>
+
+    <view class="menu-item" bindtap="goToHomework">
+      <view class="menu-icon-wrapper">
+        <text class="menu-icon">📝</text>
       </view>
+      <view class="menu-content">
+        <text class="menu-title">作业打卡</text>
+        <text class="menu-desc">查看和管理作业</text>
+      </view>
+      <text class="menu-arrow">›</text>
     </view>
 
-    <view class="version-info">
-      <text class="version-text">作业打卡 v1.0.0</text>
+    <view class="menu-item" bindtap="goToRewards">
+      <view class="menu-icon-wrapper">
+        <text class="menu-icon">🎁</text>
+      </view>
+      <view class="menu-content">
+        <text class="menu-title">积分管理</text>
+        <text class="menu-desc">查看积分和兑换奖励</text>
+      </view>
+      <text class="menu-arrow">›</text>
     </view>
+
+    <view class="menu-divider"></view>
+
+    <view class="menu-item menu-item-danger" bindtap="deleteAccount">
+      <view class="menu-icon-wrapper">
+        <text class="menu-icon">🗑️</text>
+      </view>
+      <view class="menu-content">
+        <text class="menu-title menu-title-danger">注销账号</text>
+        <text class="menu-desc menu-desc-danger">永久删除账号数据</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-divider"></view>
+
+    <view class="menu-item" bindtap="showSettings">
+      <view class="menu-icon-wrapper">
+        <text class="menu-icon">⚙️</text>
+      </view>
+      <view class="menu-content">
+        <text class="menu-title">设置</text>
+        <text class="menu-desc">应用设置</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-item" bindtap="showHelp">
+      <view class="menu-icon-wrapper">
+        <text class="menu-icon">❓</text>
+      </view>
+      <view class="menu-content">
+        <text class="menu-title">帮助与反馈</text>
+        <text class="menu-desc">使用帮助</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 退出登录按钮（只有已登录才显示） -->
+  <view class="logout-section" wx:if="{{userInfo && userInfo._id}}">
+    <view class="logout-btn" bindtap="logout">
+      <text>退出登录</text>
+    </view>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text class="version-text">作业打卡 v1.0.0</text>
   </view>
 </view>
 
@@ -111,6 +142,83 @@
     <view class="modal-footer">
       <button class="btn-cancel" bindtap="closeEditProfile">取消</button>
       <button class="btn-confirm" bindtap="saveProfile">保存</button>
+    </view>
+  </view>
+</view>
+
+<!-- 设置弹窗 -->
+<view class="modal" wx:if="{{showSettingsModal}}" bindtap="closeSettings">
+  <view class="modal-mask"></view>
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text>设置</text>
+      <text class="close-btn" bindtap="closeSettings">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="settings-list">
+        <view class="settings-item">
+          <view class="settings-item-left">
+          <text class="settings-icon">🔔</text>
+          <text class="settings-title">打卡提醒</text>
+          </view>
+          <switch class="settings-switch" checked="{{settings.dailyReminder}}" bindtap="toggleReminder" />
+        </view>
+        <view class="settings-item">
+          <view class="settings-item-left">
+          <text class="settings-icon">🌙</text>
+          <text class="settings-title">深色模式</text>
+          </view>
+          <switch class="settings-switch" checked="{{settings.darkMode}}" bindtap="toggleDarkMode" />
+        </view>
+        <view class="settings-item" bindtap="viewServiceAgreement">
+          <text class="settings-icon">📄</text>
+          <text class="settings-title">服务协议</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="settings-item" bindtap="viewPrivacyPolicy">
+          <text class="settings-icon">🔒</text>
+          <text class="settings-title">隐私政策</text>
+          <text class="menu-arrow">›</text>
+        </view>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-confirm" bindtap="closeSettings">确定</button>
+    </view>
+  </view>
+</view>
+
+<!-- 帮助与反馈弹窗 -->
+<view class="modal" wx:if="{{showHelpModal}}" bindtap="closeHelp">
+  <view class="modal-mask"></view>
+  <view class="modal-content help-modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text>帮助与反馈</text>
+      <text class="close-btn" bindtap="closeHelp">×</text>
+    </view>
+    <view class="modal-body help-body">
+      <view class="help-section">
+        <view class="help-title">📖 快速入门</view>
+        <view class="help-item">• 先创建或加入家庭</view>
+        <view class="help-item">• 添加小朋友信息</view>
+        <view class="help-item">• 添加作业科目</view>
+        <view class="help-item">• 开始打卡记录</view>
+      </view>
+      <view class="help-section">
+        <view class="help-title">💡 使用技巧</view>
+        <view class="help-item">• 周期作业可重复使用</view>
+        <view class="help-item">• 积分可兑换奖励</view>
+        <view class="help-item">• 邀请家人一起使用</view>
+      </view>
+      <view class="help-section">
+        <view class="help-title">📮 问题反馈</view>
+        <view class="help-item">• 使用中如有问题</view>
+        <view class="help-item">• 请联系开发者反馈</view>
+        <view class="help-item">• 开发者微信：fzx888888</view>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-confirm" bindtap="closeHelp">我知道了</button>
     </view>
   </view>
 </view>

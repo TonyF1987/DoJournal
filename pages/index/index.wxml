@@ -1,4 +1,18 @@
 <view class="container">
+  <!-- 演示数据提示 -->
+  <view class="demo-banner" wx:if="{{showDemoBanner}}">
+    <text class="demo-icon">🎯</text>
+    <text class="demo-text">当前为演示数据，登录后使用真实数据</text>
+    <view class="demo-login-btn" bindtap="goToLoginPage">立即登录</view>
+  </view>
+
+  <!-- 登录后引导提示 - 没有家庭 -->
+  <view class="guide-banner" wx:if="{{app.globalData.isLoggedIn && userInfo && !userInfo.familyId}}">
+    <text class="guide-icon">👨‍👩‍👧‍👦</text>
+    <text class="guide-text">第一步：创建或加入家庭</text>
+    <view class="guide-btn" bindtap="goToMyPage">去设置</view>
+  </view>
+
   <!-- 顶部区域 -->
   <view class="top-header">
     <!-- 当前小朋友 -->

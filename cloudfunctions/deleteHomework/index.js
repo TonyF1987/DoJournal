@@ -45,11 +45,19 @@ exports.main = async (event, context) => {
     // 辅助函数：检查单个作业是否已打卡
     const checkSingleHomeworkHasCheckin = async (hw) => {
       if (hw.recurring) {
-        const checkinRes = await db.collection('checkins').where({
-          homeworkId: hw._id,
-          _openid: wxContext.OPENID
-        }).limit(1).get();
-        return checkinRes.data.length > 0;
+        // 周期作业：检查是否有指定日期的打卡记录
+        // 如果有 homeworkDate，则只检查该日期
+        if (hw.homeworkDate) {
+          const checkinRes = await db.collection('checkins').where({
+            homeworkId: hw._id,
+            checkinDate: hw.homeworkDate,
+            _openid: wxContext.OPENID
+          }).limit(1).get();
+          return checkinRes.data.length > 0;
+        } else {
+          // 没有 homeworkDate，不检查（不阻止删除）
+          return false;
+        }
       } else {
         return hw.status === 'completed';
       }
@@ -57,8 +65,8 @@ exports.main = async (event, context) => {
 
     // 检查作业是否已打卡
     let hasCheckin = false;
-    if (deleteMode === 'all' || deleteMode === 'single-convert') {
-      // 批量删除模式：先找到所有相关作业，然后检查其中是否有任何一个已打卡
+    if (deleteMode === 'all') {
+      // 删除所有模式：检查所有相关作业是否有任何一个已打卡
       let allHomework = [];
       
       if (homework.recurringBatchId) {
@@ -95,7 +103,7 @@ exports.main = async (event, context) => {
         allHomework = [homework];
       }
       
-      // 检查其中是否有任何一个已打卡
+      // 检查其中是否有任何一个已打卡（每个作业只检查它自己的日期）
       for (const hw of allHomework) {
         const hwHasCheckin = await checkSingleHomeworkHasCheckin(hw);
         if (hwHasCheckin) {
@@ -104,7 +112,7 @@ exports.main = async (event, context) => {
         }
       }
     } else {
-      // 单个删除模式：只检查当前作业
+      // 单个删除模式（single 或 single-convert）：只检查当前作业的指定日期
       hasCheckin = await checkSingleHomeworkHasCheckin(homework);
     }
 

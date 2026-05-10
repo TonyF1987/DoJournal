@@ -6,10 +6,44 @@ page {
 
 .container {
   min-height: 100vh;
+  padding: 24rpx;
   padding-bottom: 40rpx;
   box-sizing: border-box;
   max-width: 100%;
   overflow-x: hidden;
+}
+
+/* 演示数据提示条 */
+.demo-banner {
+  background: linear-gradient(135deg, #FFB347, #FFCC33);
+  margin: -24rpx -24rpx 24rpx;
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.demo-icon {
+  font-size: 36rpx;
+}
+
+.demo-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.demo-login-btn {
+  background: #fff;
+  color: #4CAF50;
+  padding: 12rpx 28rpx;
+  border-radius: 40rpx;
+  font-size: 26rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
 .header-gradient {

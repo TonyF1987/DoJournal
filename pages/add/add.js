@@ -1326,20 +1326,25 @@ Page({
     if (!currentChild) return false;
     
     if (isRecurring) {
-      // 周期作业：如果有指定日期，检查该日期的打卡记录；否则检查是否有任何打卡记录
-      try {
-        const res = await wx.cloud.callFunction({
-          name: 'getCheckins',
-          data: {
-            childId: currentChild.id,
-            homeworkIds: [homeworkId],
-            startDate: homeworkDate || '1970-01-01',
-            endDate: homeworkDate || '2999-12-31'
-          }
-        });
-        return res.result && res.result.success && res.result.data.length > 0;
-      } catch (err) {
-        console.error('检查打卡记录失败:', err);
+      // 周期作业：只检查指定日期的打卡记录（如果有）
+      if (homeworkDate) {
+        try {
+          const res = await wx.cloud.callFunction({
+            name: 'getCheckins',
+            data: {
+              childId: currentChild.id,
+              homeworkIds: [homeworkId],
+              startDate: homeworkDate,
+              endDate: homeworkDate
+            }
+          });
+          return res.result && res.result.success && res.result.data.length > 0;
+        } catch (err) {
+          console.error('检查打卡记录失败:', err);
+          return false;
+        }
+      } else {
+        // 没有指定日期，返回 false（不阻止删除）
         return false;
       }
     } else {

@@ -1,0 +1,52 @@
+<view class="container">
+  <view class="content">
+    <view class="section">
+      <view class="title">服务协议</view>
+      <view class="subtitle">最后更新日期：2026年5月10日</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">1. 服务说明</view>
+      <view class="text">作业打卡小程序（以下简称"本应用"）是一款帮助用户记录和管理作业完成情况的工具应用。本应用提供作业添加、打卡记录、家庭管理等功能。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">2. 用户注册与账号</view>
+      <view class="text">2.1 用户可以选择使用手机号或自定义账号注册本应用。</view>
+      <view class="text">2.2 本应用不强制要求用户提供手机号码，用户可以选择使用自定义账号注册。</view>
+      <view class="text">2.3 用户应妥善保管账号和密码，因保管不善造成的损失由用户自行承担。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">3. 用户行为规范</view>
+      <view class="text">3.1 用户在使用本应用时，应遵守相关法律法规，不得利用本应用从事任何违法活动。</view>
+      <view class="text">3.2 用户不得发布虚假信息，不得侵犯他人合法权益。</view>
+      <view class="text">3.3 用户不得恶意攻击、干扰本应用的正常运行。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">4. 知识产权</view>
+      <view class="text">4.1 本应用的所有内容（包括但不限于文字、图片、软件、程序等）的知识产权归本应用开发者所有。</view>
+      <view class="text">4.2 未经授权，用户不得复制、传播、展示、镜像、上载、下载本应用的内容。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">5. 免责声明</view>
+      <view class="text">5.1 本应用按"现状"提供服务，不保证服务一定能满足用户的要求。</view>
+      <view class="text">5.2 因不可抗力（包括但不限于自然灾害、网络故障、监管政策调整等）导致的服务中断或数据损失，本应用不承担责任。</view>
+      <view class="text">5.3 用户应自行备份重要数据，本应用不对数据丢失承担责任。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">6. 协议修改</view>
+      <view class="text">6.1 本应用有权根据需要修改本协议，修改后的协议一旦公布即代替原协议。</view>
+      <view class="text">6.2 用户继续使用本应用即视为同意修改后的协议。</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">7. 争议解决</view>
+      <view class="text">7.1 本协议的订立、执行和解释及争议的解决均适用中华人民共和国法律。</view>
+      <view class="text">7.2 如发生争议，双方应友好协商解决；协商不成的，任何一方均可向本应用所在地人民法院提起诉讼。</view>
+    </view>
+  </view>
+</view>

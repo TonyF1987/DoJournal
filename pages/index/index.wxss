@@ -12,6 +12,71 @@ page {
   overflow-x: hidden;
 }
 
+/* 演示数据提示条 */
+.demo-banner {
+  background: linear-gradient(135deg, #FFB347, #FFCC33);
+  margin: -24rpx -24rpx 0;
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.demo-icon {
+  font-size: 36rpx;
+}
+
+.demo-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.demo-login-btn {
+  background: #fff;
+  color: #4CAF50;
+  padding: 12rpx 28rpx;
+  border-radius: 40rpx;
+  font-size: 26rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 登录后引导提示条 */
+.guide-banner {
+  background: linear-gradient(135deg, #66BB6A, #4CAF50);
+  margin: -24rpx -24rpx 24rpx;
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.guide-icon {
+  font-size: 36rpx;
+}
+
+.guide-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 500;
+}
+
+.guide-btn {
+  background: #fff;
+  color: #4CAF50;
+  padding: 12rpx 28rpx;
+  border-radius: 40rpx;
+  font-size: 26rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
 /* 顶部区域 */
 .top-header {
   background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
