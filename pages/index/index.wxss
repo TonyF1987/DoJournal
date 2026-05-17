@@ -45,6 +45,10 @@ page {
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
+.readonly-banner {
+  background: linear-gradient(135deg, #FF9800, #FFB74D);
+}
+
 /* 登录后引导提示条 */
 .guide-banner {
   background: linear-gradient(135deg, #66BB6A, #4CAF50);

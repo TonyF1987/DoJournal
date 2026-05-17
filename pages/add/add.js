@@ -48,7 +48,8 @@ Page({
     recurringEndType: 'times', // 结束类型: date(截止日期), times(重复次数)
     recurringEndDate: '', // 截止日期
     recurringEndTimes: 8, // 重复次数(默认8次)
-    showDatePicker: false
+    showDatePicker: false,
+    isReadOnly: false
   },
 
   onLoad(options) {
@@ -65,6 +66,9 @@ Page({
       });
       return;
     }
+
+    // 检查只读权限
+    this.checkReadOnlyPermission();
 
     if (options.id) {
       const selectedDate = options.date || '';
@@ -104,6 +108,33 @@ Page({
     if (app.globalData && app.globalData.sharedMessage) {
       this.handleSharedMessage(app.globalData.sharedMessage);
       app.globalData.sharedMessage = null;
+    }
+  },
+
+  checkReadOnlyPermission() {
+    // 加载用户信息，检查是否有只读权限
+    if (app.globalData.openid) {
+      const currentAccount = app.globalData.userInfo?.account || '';
+      wx.cloud.callFunction({
+        name: 'getUserInfo',
+        data: {
+          account: currentAccount
+        },
+        success: (res) => {
+          if (res.result && res.result.success) {
+            const userInfo = res.result.userInfo;
+            let isReadOnly = false;
+            if (userInfo.familyId && userInfo.familyMembers) {
+              const currentMember = userInfo.familyMembers.find(m => 
+                m.openid === app.globalData.openid && 
+                (m.account || '') === currentAccount
+              );
+              isReadOnly = currentMember && currentMember.readOnly === true;
+            }
+            this.setData({ isReadOnly: isReadOnly });
+          }
+        }
+      });
     }
   },
 
@@ -404,8 +435,10 @@ Page({
       recurringEndDate: homework.recurringEndDate || '',
       recurringEndTimes: homework.recurringEndTimes || 4,
       points: homework.points || 10,
+      selectedSubject: homework.subject || '',
       showAddForm: true
     });
+    this.updateCanSubmit();
   },
 
   deleteHomeworkFromList(e) {
@@ -489,7 +522,8 @@ Page({
       name: 'deleteHomework',
       data: {
         homeworkId: homework._id,
-        deleteMode: deleteMode
+        deleteMode: deleteMode,
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();
@@ -817,6 +851,18 @@ Page({
               } else if (res.result && res.result.errMsg) {
                 console.error('OCR识别失败:', res.result.errMsg);
                 
+                // 只读权限错误处理
+                if (res.result.errCode === -4) {
+                  wx.showModal({
+                    title: '权限限制',
+                    content: res.result.errMsg || '您只有只读权限，无法使用OCR功能',
+                    confirmText: '知道了',
+                    showCancel: false
+                  });
+                  resolve('');
+                  return;
+                }
+                
                 let title = '服务错误';
                 let content = res.result.notice || 'OCR服务暂时不可用，您可以手动输入作业内容';
                 
@@ -945,18 +991,21 @@ Page({
   selectPoints(e) {
     const points = parseInt(e.currentTarget.dataset.points);
     this.setData({ points: points });
+    this.updateCanSubmit();
   },
 
   increasePoints() {
     let points = this.data.points + 5;
     if (points > 1000) points = 1000;
     this.setData({ points: points });
+    this.updateCanSubmit();
   },
 
   decreasePoints() {
     let points = this.data.points - 5;
     if (points < 1) points = 1;
     this.setData({ points: points });
+    this.updateCanSubmit();
   },
 
   onCustomPointsInput(e) {
@@ -964,6 +1013,7 @@ Page({
     if (value < 1) value = 1;
     if (value > 1000) value = 1000;
     this.setData({ points: value });
+    this.updateCanSubmit();
   },
 
   submitHomework(e) {
@@ -1005,7 +1055,8 @@ Page({
         recurringEndTimes: this.data.recurring && this.data.recurringEndType === 'times' ? this.data.recurringEndTimes : 0,
         images: images,
         points: this.data.points,
-        subject: this.data.selectedSubject
+        subject: this.data.selectedSubject,
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();
@@ -1054,26 +1105,34 @@ Page({
         points: this.data.points,
         subject: this.data.selectedSubject,
         date: date,
-        childId: childId
+        childId: childId,
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();
-        const count = res.result.count || 1;
-        wx.showToast({
-          title: `添加成功，共${count}个作业`,
-          icon: 'success',
-          duration: 2000
-        });
-
-        if (this.data.isSubjectMode) {
-          this.setData({
-            showAddForm: false
+        if (res.result && res.result.success) {
+          const count = res.result.count || 1;
+          wx.showToast({
+            title: `添加成功，共${count}个作业`,
+            icon: 'success',
+            duration: 2000
           });
-          this.loadSubjectHomework(this.data.selectedSubject);
+
+          if (this.data.isSubjectMode) {
+            this.setData({
+              showAddForm: false
+            });
+            this.loadSubjectHomework(this.data.selectedSubject);
+          } else {
+            setTimeout(() => {
+              wx.navigateBack();
+            }, 2000);
+          }
         } else {
-          setTimeout(() => {
-            wx.navigateBack();
-          }, 2000);
+          wx.showToast({
+            title: (res.result && res.result.errMsg) || '添加失败',
+            icon: 'none'
+          });
         }
       },
       fail: (err) => {
@@ -1109,7 +1168,8 @@ Page({
         recurringEndTimes: this.data.recurring && this.data.recurringEndType === 'times' ? this.data.recurringEndTimes : 0,
         images: images,
         points: this.data.points,
-        subject: this.data.selectedSubject
+        subject: this.data.selectedSubject,
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();
@@ -1143,7 +1203,18 @@ Page({
   },
 
   canSubmit() {
-    const { content, recurring, recurringDays, selectedSubject } = this.data;
+    const { content, recurring, recurringDays, selectedSubject, isEdit, editingHomework } = this.data;
+    // 编辑模式：只要有科目和内容就允许提交（即使内容没有变化）
+    if (isEdit || editingHomework) {
+      if (!selectedSubject) {
+        return false;
+      }
+      if (recurring && recurringDays.length === 0) {
+        return false;
+      }
+      return true;
+    }
+    // 添加模式：需要内容和科目
     if (!selectedSubject || !content) {
       return false;
     }
@@ -1269,7 +1340,8 @@ Page({
         data: {
           childId: currentChild.id,
           subjects: subjects
-        }
+        },
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         if (res.result && res.result.success) {
@@ -1436,7 +1508,8 @@ Page({
       name: 'deleteHomework',
       data: {
         homeworkId: this.data.homeworkId,
-        deleteMode: deleteMode
+        deleteMode: deleteMode,
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();

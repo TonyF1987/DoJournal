@@ -6,6 +6,12 @@
     <view class="demo-login-btn" bindtap="goToLoginPage">立即登录</view>
   </view>
 
+  <!-- 只读权限提示 -->
+  <view class="demo-banner readonly-banner" wx:if="{{isReadOnly}}">
+    <text class="demo-icon">👀</text>
+    <text class="demo-text">您只有只读权限，只能查看数据</text>
+  </view>
+
   <!-- 登录后引导提示 - 没有家庭 -->
   <view class="guide-banner" wx:if="{{app.globalData.isLoggedIn && userInfo && !userInfo.familyId}}">
     <text class="guide-icon">👨‍👩‍👧‍👦</text>

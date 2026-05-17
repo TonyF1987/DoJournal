@@ -49,7 +49,7 @@ async function findUserByIdentifier(identifier) {
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { action, phoneNumber, code, password } = event;
+  const { action, phoneNumber, code, password, account, nickName, avatarUrl } = event;
 
   try {
     if (action === 'checkUser') {
@@ -59,6 +59,18 @@ exports.main = async (event, context) => {
       return {
         success: true,
         isRegistered: !!user
+      };
+    }
+
+    if (action === 'getAccountsByOpenid') {
+      // 获取该 openid 下的所有账号
+      const usersRes = await db.collection('users').where({
+        _openid: wxContext.OPENID
+      }).get();
+
+      return {
+        success: true,
+        accounts: usersRes.data
       };
     }
 
@@ -99,10 +111,10 @@ exports.main = async (event, context) => {
       const hashedPassword = password ? hashPassword(password) : '';
 
       // 如果有微信授权的信息，使用微信的昵称
-      const nickName = event.nickName || '微信用户';
-      const avatarUrl = event.avatarUrl || '';
+      const registerNickName = nickName || '微信用户';
+      const registerAvatarUrl = avatarUrl || '';
       
-      console.log('注册用户信息:', { nickName, avatarUrl });
+      console.log('注册用户信息:', { nickName: registerNickName, avatarUrl: registerAvatarUrl });
 
       // 判断是手机号还是账号
       const isPhone = /^1[3-9]\d{9}$/.test(phoneNumber);
@@ -114,8 +126,8 @@ exports.main = async (event, context) => {
           phoneNumber: isPhone ? phoneNumber : '',
           account: isPhone ? '' : phoneNumber,
           password: hashedPassword,
-          nickName: nickName,
-          avatarUrl: avatarUrl,
+          nickName: registerNickName,
+          avatarUrl: registerAvatarUrl,
           unionId: wxContext.UNIONID || '',
           children: [],
           currentChildId: '',
@@ -173,8 +185,8 @@ exports.main = async (event, context) => {
     if (action === 'loginByPassword') {
       // 密码登录（支持手机号或账号）
       console.log('登录参数:', { 
-        nickName: event.nickName, 
-        avatarUrl: event.avatarUrl 
+        nickName: nickName, 
+        avatarUrl: avatarUrl 
       });
       
       const user = await findUserByIdentifier(phoneNumber);
@@ -199,11 +211,11 @@ exports.main = async (event, context) => {
         _openid: wxContext.OPENID,
         updateTime: db.serverDate()
       };
-      if (event.nickName) {
-        updateData.nickName = event.nickName;
+      if (nickName) {
+        updateData.nickName = nickName;
       }
-      if (event.avatarUrl) {
-        updateData.avatarUrl = event.avatarUrl;
+      if (avatarUrl) {
+        updateData.avatarUrl = avatarUrl;
       }
       
       console.log('更新用户信息:', updateData);
@@ -218,17 +230,17 @@ exports.main = async (event, context) => {
       
       const updatedUser = updatedUserRes.data;
       
-      // 如果用户有家庭，同时更新家庭中的成员信息
-      if (updatedUser && updatedUser.familyId && (event.nickName || event.avatarUrl)) {
+      // 如果用户有家庭，同时更新家庭中的成员信息（使用 openid + account 联合判断）
+      if (updatedUser && updatedUser.familyId && (nickName || avatarUrl)) {
         try {
           const familyRes = await db.collection('families').doc(updatedUser.familyId).get();
           if (familyRes.data) {
             const updatedMembers = familyRes.data.members.map(member => {
-              if (member.openid === wxContext.OPENID) {
+              if (member.openid === wxContext.OPENID && member.account === (updatedUser.account || '')) {
                 return {
                   ...member,
-                  nickName: event.nickName || member.nickName,
-                  avatarUrl: event.avatarUrl || member.avatarUrl
+                  nickName: nickName || member.nickName,
+                  avatarUrl: avatarUrl || member.avatarUrl
                 };
               }
               return member;
@@ -254,22 +266,31 @@ exports.main = async (event, context) => {
     }
 
     if (action === 'setPassword') {
-      // 设置密码
-      const userRes = await db.collection('users').where({
+      // 设置密码（支持同一个 openid 的多个账号）
+      const usersRes = await db.collection('users').where({
         _openid: wxContext.OPENID
       }).get();
 
-      if (userRes.data.length === 0) {
+      if (usersRes.data.length === 0) {
         return {
           success: false,
           errMsg: '用户不存在'
         };
       }
 
+      // 找到对应账号的用户
+      let targetUser;
+      if (account) {
+        targetUser = usersRes.data.find(u => (u.account || '') === account);
+      }
+      if (!targetUser) {
+        targetUser = usersRes.data[0];
+      }
+
       // 对密码进行哈希处理
       const hashedPassword = password ? hashPassword(password) : '';
 
-      await db.collection('users').doc(userRes.data[0]._id).update({
+      await db.collection('users').doc(targetUser._id).update({
         data: {
           password: hashedPassword,
           updateTime: db.serverDate()
@@ -283,30 +304,39 @@ exports.main = async (event, context) => {
     }
 
     if (action === 'updateProfile') {
-      // 更新用户资料（昵称、头像）
-      const userRes = await db.collection('users').where({
+      // 更新用户资料（昵称、头像）（支持同一个 openid 的多个账号）
+      const usersRes = await db.collection('users').where({
         _openid: wxContext.OPENID
       }).get();
 
-      if (userRes.data.length === 0) {
+      if (usersRes.data.length === 0) {
         return {
           success: false,
           errMsg: '用户不存在'
         };
       }
 
+      // 找到对应账号的用户
+      let targetUser;
+      if (account) {
+        targetUser = usersRes.data.find(u => (u.account || '') === account);
+      }
+      if (!targetUser) {
+        targetUser = usersRes.data[0];
+      }
+
       const updateData = {
         updateTime: db.serverDate()
       };
 
-      if (event.nickName) {
-        updateData.nickName = event.nickName;
+      if (nickName) {
+        updateData.nickName = nickName;
       }
-      if (event.avatarUrl) {
-        updateData.avatarUrl = event.avatarUrl;
+      if (avatarUrl) {
+        updateData.avatarUrl = avatarUrl;
       }
 
-      await db.collection('users').doc(userRes.data[0]._id).update({
+      await db.collection('users').doc(targetUser._id).update({
         data: updateData
       });
 

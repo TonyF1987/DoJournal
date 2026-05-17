@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container" bindtap="closeAccountDropdown">
   <!-- 顶部导航 -->
   <view class="nav-bar">
     <view class="back-btn" bindtap="goToHome">
@@ -27,19 +27,22 @@
       <text class="nickname-text" wx:if="{{nickName}}">{{nickName}}</text>
       <text class="nickname-placeholder" wx:else>点击下方按钮获取用户信息</text>
     </view>
-    <!-- 获取用户信息按钮（同时也是头像选择按钮） -->
-    <button class="get-user-info-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-      <text>{{avatarUrl && nickName ? '重新获取' : '获取用户信息'}}</text>
+    <!-- 获取用户信息按钮 -->
+    <button class="get-user-info-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" wx:if="{{!avatarUrl}}">
+      <text>获取用户信息</text>
     </button>
-    <!-- 昵称输入框 -->
-    <view class="nickname-input-wrapper">
+    <!-- 重新获取按钮 -->
+    <button class="get-user-info-btn" wx:if="{{avatarUrl && nickName}}" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <text>重新获取</text>
+    </button>
+    <!-- 昵称输入框（自动获取微信昵称） -->
+    <view class="nickname-input-wrapper" wx:if="{{avatarUrl && !nickName}}">
       <input
         class="nickname-input"
         type="nickname"
-        placeholder="昵称将自动填充"
+        placeholder="点击获取微信昵称"
         value="{{nickName}}"
         bindinput="onNicknameInput"
-        maxlength="20"
         focus="{{nicknameFocus}}"
       />
     </view>
@@ -47,15 +50,34 @@
 
   <!-- 表单区域 -->
   <view class="form-section">
-    <view class="input-group">
+    <!-- 账号输入框带下拉 -->
+    <view class="input-group account-input-group">
       <input
-        class="form-input"
+        class="form-input account-input"
         type="text"
         placeholder="请输入手机号或账号"
         value="{{phoneNumber}}"
         bindinput="onPhoneInput"
         maxlength="50"
+        bindfocus="closeAccountDropdown"
       />
+      <!-- 下拉箭头 -->
+      <view wx:if="{{accounts.length > 0}}" class="dropdown-arrow" catchtap="toggleAccountDropdown">
+        <text class="arrow-icon {{showAccountDropdown ? 'up' : ''}}">▼</text>
+      </view>
+      <!-- 下拉列表 -->
+      <view wx:if="{{showAccountDropdown && accounts.length > 0}}" class="account-dropdown" catchtap="stopPropagation">
+        <view class="dropdown-item" wx:for="{{accounts}}" wx:key="_id" bindtap="selectAccount" data-account="{{item}}">
+          <view class="dropdown-avatar">
+            <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" />
+            <text wx:else>👤</text>
+          </view>
+          <view class="dropdown-info">
+            <text class="dropdown-name">{{item.nickName || '微信用户'}}</text>
+            <text class="dropdown-account">{{item.account || item.phoneNumber || '微信账号'}}</text>
+          </view>
+        </view>
+      </view>
     </view>
 
     <view class="input-group">

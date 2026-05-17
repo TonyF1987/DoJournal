@@ -68,17 +68,55 @@ function formatDate(date) {
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { title, content, type, recurring, recurringDays, recurringEndType, recurringEndDate, recurringEndTimes, images, points, subject, date, childId } = event;
+  const { title, content, type, recurring, recurringDays, recurringEndType, recurringEndDate, recurringEndTimes, images, points, subject, date, childId, account } = event;
+
+  // 获取用户信息（支持同一个 openid 的多个账号）
+  const usersRes = await db.collection('users').where({
+    _openid: wxContext.OPENID
+  }).get();
+
+  // 找到对应账号的用户
+  let user;
+  if (usersRes.data.length > 0) {
+    if (account) {
+      user = usersRes.data.find(u => (u.account || '') === account);
+    }
+    if (!user) {
+      user = usersRes.data[0];
+    }
+  }
+
+  // 检查是否是只读权限（使用 openid + account 联合判断）
+  let isReadOnly = false;
+  try {
+    if (user) {
+      // 如果用户有家庭，检查是否是只读
+      if (user.familyId) {
+        const familyRes = await db.collection('families').doc(user.familyId).get();
+        
+        if (familyRes.data) {
+          const family = familyRes.data;
+          const members = family.members || [];
+          const currentMember = members.find(m => m.openid === wxContext.OPENID && m.account === (user.account || ''));
+          
+          if (currentMember && currentMember.readOnly) {
+            isReadOnly = true;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('检查权限失败:', err);
+  }
+  
+  if (isReadOnly) {
+    return { success: false, errMsg: '您只有只读权限，无法添加作业' };
+  }
 
   // 获取用户信息，获取当前小朋友ID
   let currentChildId = childId;
-  if (!currentChildId) {
-    const userRes = await db.collection('users').where({
-      _openid: wxContext.OPENID
-    }).get();
-    if (userRes.data.length > 0) {
-      currentChildId = userRes.data[0].currentChildId;
-    }
+  if (!currentChildId && user) {
+    currentChildId = user.currentChildId;
   }
 
   if (!recurring) {

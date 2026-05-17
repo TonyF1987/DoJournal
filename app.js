@@ -53,11 +53,15 @@ App({
 
   // 登录并获取openid
   login(callback) {
+    // 使用当前账号的 account 参数来获取正确的用户信息
+    const currentAccount = this.globalData.userInfo?.account || '';
     wx.cloud.callFunction({
       name: 'login',
-      data: {},
+      data: {
+        account: currentAccount
+      },
       success: res => {
-        const { openid, userId, isNewUser } = res.result;
+        const { openid, userId, isNewUser, userInfo } = res.result;
         this.globalData.openid = openid;
         this.globalData.userId = userId;
         this.globalData.isLoggedIn = true;
@@ -66,6 +70,11 @@ App({
         wx.setStorageSync('openid', openid);
         wx.setStorageSync('userId', userId);
         wx.setStorageSync('isLoggedIn', true);
+        
+        // 保存用户信息
+        if (userInfo) {
+          this.saveUserInfo(userInfo);
+        }
         
         console.log('登录成功:', res.result);
         
@@ -114,8 +123,13 @@ App({
 
   // 从数据库重新加载用户信息
   loadUserInfo(callback) {
+    // 使用当前账号的 account 参数来获取正确的用户信息
+    const currentAccount = this.globalData.userInfo?.account || '';
     wx.cloud.callFunction({
       name: 'getUserInfo',
+      data: {
+        account: currentAccount
+      },
       success: (res) => {
         if (res.result && res.result.success) {
           const userInfo = res.result.userInfo;

@@ -112,9 +112,43 @@ async function imageToBase64(imageUrl) {
 
 // 主函数
 exports.main = async (event, context) => {
-  const { imgUrl, mode = 'auto' } = event
+  const wxContext = cloud.getWXContext();
+  const { imgUrl, mode = 'auto' } = event;
+  const db = cloud.database();
 
   try {
+    // 检查是否是只读权限
+    try {
+      // 首先获取用户信息
+      const userRes = await db.collection('users').where({
+        _openid: wxContext.OPENID
+      }).get();
+
+      if (userRes.data && userRes.data.length > 0) {
+        const user = userRes.data[0];
+
+        // 如果用户有家庭，检查是否是只读
+        if (user.familyId) {
+          const familyRes = await db.collection('families').doc(user.familyId).get();
+          
+          if (familyRes.data) {
+            const family = familyRes.data;
+            const members = family.members || [];
+            const currentMember = members.find(m => m.openid === wxContext.OPENID);
+            
+            if (currentMember && currentMember.readOnly) {
+              return {
+                errCode: -4,
+                errMsg: '您只有只读权限，无法使用OCR功能',
+                items: []
+              };
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('检查权限失败:', err);
+    }
     console.log('开始百度OCR识别,图片URL:', imgUrl, '模式:', mode)
 
     // 如果imgUrl是云存储的fileID,获取临时URL

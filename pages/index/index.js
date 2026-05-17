@@ -8,6 +8,7 @@ Page({
       nickName: '小宝贝',
       avatarUrl: ''
     },
+    isReadOnly: false,
     currentChild: null,
     showChildModal: false,
     showAddChildModal: false,
@@ -284,8 +285,10 @@ Page({
     const firstDay = new Date(year, month, 1);
     // 获取当月最后一天
     const lastDay = new Date(year, month + 1, 0);
-    // 获取当月第一天是星期几
-    const firstDayOfWeek = firstDay.getDay();
+    // 获取当月第一天是星期几（0=周日, 1=周一...6=周六），调整为周一为0
+    let firstDayOfWeek = firstDay.getDay();
+    // 转换：将周日(0)移到最后，周一从0开始
+    firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
     // 获取当月的天数
     const daysInMonth = lastDay.getDate();
 
@@ -334,6 +337,37 @@ Page({
         isToday: isToday,
         isSelected: isSelected
       });
+    }
+
+    // 如果日历未展开，确保今天显示在中位（和generateCalendarData保持一致）
+    if (!this.data.calendarExpanded) {
+      // 找到今天在数组中的位置
+      let todayIndex = -1;
+      if (isCurrentMonth) {
+        // 获取今天是星期几（0=周日, 1=周一...6=周六）
+        const todayWeekday = today.getDay();
+        // 调整为周一为0的索引
+        const adjustedTodayWeekday = todayWeekday === 0 ? 6 : todayWeekday - 1;
+        // 计算今天在日历中的索引
+        todayIndex = firstDayOfWeek + today.getDate() - 1; // 减1因为day从1开始
+      }
+
+      if (todayIndex >= 0) {
+        // 显示2周（14天），让今天位于中间
+        // 计算起始位置，让今天在第7天的位置（0-based的话是第6天）
+        let startIndex = Math.max(0, todayIndex - 6);
+        // 确保结束位置不超过日历数据长度
+        let endIndex = Math.min(startIndex + 14, calendarData.length);
+        // 如果剩余天数不够，调整起始位置
+        if (endIndex - startIndex < 14) {
+          startIndex = Math.max(0, endIndex - 14);
+        }
+        calendarData = calendarData.slice(startIndex, endIndex);
+      } else {
+        // 如果不是当前月或找不到今天，默认显示前2周
+        const showDays = Math.min(firstDayOfWeek + 14, calendarData.length);
+        calendarData = calendarData.slice(0, showDays);
+      }
     }
 
     return calendarData;
@@ -448,15 +482,31 @@ Page({
 
     // 如果已登录，通过云函数加载用户数据
     if (app.globalData.openid) {
+      const currentAccount = app.globalData.userInfo?.account || '';
       wx.cloud.callFunction({
         name: 'getUserInfo',
+        data: {
+          account: currentAccount
+        },
         success: (res) => {
           if (res.result && res.result.success) {
             const userInfo = res.result.userInfo;
             const currentChild = this.getCurrentChild(userInfo);
+            
+            // 检查是否是只读权限
+            let isReadOnly = false;
+            if (userInfo.familyId && userInfo.familyMembers) {
+              const currentMember = userInfo.familyMembers.find(m => 
+                m.openid === app.globalData.openid && 
+                (m.account || '') === currentAccount
+              );
+              isReadOnly = currentMember && currentMember.readOnly === true;
+            }
+            
             this.setData({
               userInfo: userInfo,
-              currentChild: currentChild || null
+              currentChild: currentChild || null,
+              isReadOnly: isReadOnly
             });
             app.saveUserInfo(userInfo);
 
@@ -999,7 +1049,8 @@ Page({
         ratingPercent: ratingPercent,
         proofImage: proofImage,
         comment: comment,
-        rating: ratingPercent === 100 ? 3 : (ratingPercent === 80 ? 2 : 1)
+        rating: ratingPercent === 100 ? 3 : (ratingPercent === 80 ? 2 : 1),
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();
@@ -1369,7 +1420,8 @@ Page({
             sourceDate: sourceDate,
             targetDate: targetDate,
             subject: subject,
-            childId: currentChild.id
+            childId: currentChild.id,
+            account: app.globalData.userInfo?.account || ''
           },
           success: resolve,
           fail: reject
@@ -1426,7 +1478,8 @@ Page({
         sourceDate: sourceDate,
         targetDate: targetDate,
         subject: subject,
-        childId: currentChild.id
+        childId: currentChild.id,
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();
@@ -1503,8 +1556,10 @@ Page({
     const firstDay = new Date(year, month, 1);
     // 获取当月最后一天
     const lastDay = new Date(year, month + 1, 0);
-    // 获取当月第一天是星期几
-    const firstDayOfWeek = firstDay.getDay();
+    // 获取当月第一天是星期几（0=周日, 1=周一...6=周六），调整为周一为0
+    let firstDayOfWeek = firstDay.getDay();
+    // 转换：将周日(0)移到最后，周一从0开始
+    firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
     // 获取当月的天数
     const daysInMonth = lastDay.getDate();
     
@@ -1539,28 +1594,33 @@ Page({
         });
     }
     
-    // 如果日历未展开，确保包含今天日期
+    // 如果日历未展开，确保今天显示在中位
     if (!this.data.calendarExpanded) {
       // 找到今天在数组中的位置
       let todayIndex = -1;
       if (isCurrentMonth) {
+        // 获取今天是星期几（0=周日, 1=周一...6=周六）
+        const todayWeekday = today.getDay();
+        // 调整为周一为0的索引
+        const adjustedTodayWeekday = todayWeekday === 0 ? 6 : todayWeekday - 1;
+        // 计算今天在日历中的索引
         todayIndex = firstDayOfWeek + today.getDate() - 1; // 减1因为day从1开始
       }
       
       if (todayIndex >= 0) {
-        // 如果今天在前2周内，显示前2周
-        if (todayIndex < firstDayOfWeek + 14) {
-          const showDays = firstDayOfWeek + 14;
-          calendarData = calendarData.slice(0, showDays);
-        } else {
-          // 如果今天在后半周，调整显示范围以包含今天
-          // 计算需要显示多少天才能包含今天
-          const showDays = todayIndex + 1;
-          calendarData = calendarData.slice(0, showDays);
+        // 显示2周（14天），让今天位于中间
+        // 计算起始位置，让今天在第7天的位置（0-based的话是第6天）
+        let startIndex = Math.max(0, todayIndex - 6);
+        // 确保结束位置不超过日历数据长度
+        let endIndex = Math.min(startIndex + 14, calendarData.length);
+        // 如果剩余天数不够，调整起始位置
+        if (endIndex - startIndex < 14) {
+          startIndex = Math.max(0, endIndex - 14);
         }
+        calendarData = calendarData.slice(startIndex, endIndex);
       } else {
         // 如果不是当前月或找不到今天，默认显示前2周
-        const showDays = firstDayOfWeek + 14;
+        const showDays = Math.min(firstDayOfWeek + 14, calendarData.length);
         calendarData = calendarData.slice(0, showDays);
       }
     }
@@ -1627,7 +1687,15 @@ Page({
     this.setData({
       calendarExpanded: !this.data.calendarExpanded
     });
-    this.generateCalendarData(this.data.monthCheckins);
+    // 检查是否登录
+    if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+      // 未登录，更新演示日历数据
+      const demoCalendarData = this.generateDemoCalendar();
+      this.setData({ calendarData: demoCalendarData });
+    } else {
+      // 已登录，加载打卡记录
+      this.loadMonthCheckins();
+    }
   },
 
   // 日期点击事件
@@ -2285,7 +2353,8 @@ Page({
         data: {
           childId: currentChild.id,
           subjects: subjects
-        }
+        },
+        account: app.globalData.userInfo?.account || ''
       },
       success: async res => {
         wx.hideLoading();
@@ -2426,7 +2495,8 @@ Page({
       name: 'manageChildren',
       data: {
         action: 'switch',
-        child: { id: childId }
+        child: { id: childId },
+        account: app.globalData.userInfo?.account || ''
       },
       success: async res => {
         wx.hideLoading();
@@ -2572,7 +2642,8 @@ Page({
       name: 'manageChildren',
       data: {
         action: action,
-        child: newChild
+        child: newChild,
+        account: app.globalData.userInfo?.account || ''
       },
       success: async res => {
         wx.hideLoading();
@@ -2589,6 +2660,8 @@ Page({
           this.loadHomework();
           
           wx.showToast({ title: '保存成功', icon: 'success' });
+        } else {
+          wx.showToast({ title: res.result.errMsg || '保存失败', icon: 'none' });
         }
       },
       fail: err => {
@@ -2615,7 +2688,8 @@ Page({
             name: 'manageChildren',
             data: {
               action: 'delete',
-              child: { id: child.id }
+              child: { id: child.id },
+              account: app.globalData.userInfo?.account || ''
             },
             success: async res => {
               wx.hideLoading();

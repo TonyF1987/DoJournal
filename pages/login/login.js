@@ -9,7 +9,10 @@ Page({
     showPassword: false,
     isLoading: false,
     canSubmitValue: false,
-    nicknameFocus: false
+    nicknameFocus: false, // 昵称输入框是否聚焦
+    accounts: [], // 该 openid 下的所有账号
+    showAccountDropdown: false, // 是否显示账号下拉列表
+    hasGotUserInfo: false // 是否已经获取了用户信息
   },
 
   onLoad(options) {
@@ -40,6 +43,11 @@ Page({
     this.setData({
       nickName: e.detail.value
     });
+    
+    // 如果还没有获取账号列表，现在获取
+    if (!this.data.hasGotUserInfo) {
+      this.loadAccounts();
+    }
   },
 
   async onChooseAvatar(e) {
@@ -64,12 +72,76 @@ Page({
       });
     }
     
-    // 头像选择完成后，让昵称输入框自动聚焦
+    // 获取头像后，延迟一会儿自动聚焦昵称输入框，让用户可以快速获取微信昵称
     setTimeout(() => {
       this.setData({
         nicknameFocus: true
       });
-    }, 300);
+    }, 500);
+    
+    // 如果还没有获取账号列表，现在获取
+    if (!this.data.hasGotUserInfo) {
+      this.loadAccounts();
+    }
+  },
+
+  // 获取账号列表
+  async loadAccounts() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'handleAuth',
+        data: {
+          action: 'getAccountsByOpenid'
+        }
+      });
+
+      if (res.result && res.result.success) {
+        const accounts = res.result.accounts || [];
+        this.setData({
+          accounts: accounts,
+          hasGotUserInfo: true
+        });
+
+        if (accounts.length === 1) {
+          // 只有一个账号，自动填充
+          const account = accounts[0];
+          this.setData({
+            phoneNumber: account.account || account.phoneNumber || ''
+          }, () => {
+            this.updateCanSubmit();
+          });
+        }
+      }
+    } catch (err) {
+      console.error('获取账号列表失败:', err);
+    }
+  },
+
+  // 选择账号
+  selectAccount(e) {
+    const account = e.currentTarget.dataset.account;
+    this.setData({
+      phoneNumber: account.account || account.phoneNumber || '',
+      showAccountDropdown: false
+    }, () => {
+      this.updateCanSubmit();
+    });
+  },
+
+  // 切换账号下拉列表
+  toggleAccountDropdown() {
+    if (this.data.accounts.length > 0) {
+      this.setData({
+        showAccountDropdown: !this.data.showAccountDropdown
+      });
+    }
+  },
+
+  // 关闭账号下拉列表
+  closeAccountDropdown() {
+    this.setData({
+      showAccountDropdown: false
+    });
   },
 
   onPhoneInput(e) {
@@ -224,5 +296,9 @@ Page({
     wx.navigateTo({
       url: '/pages/privacy-policy/privacy-policy'
     });
+  },
+
+  stopPropagation() {
+    // 阻止事件冒泡
   }
 });

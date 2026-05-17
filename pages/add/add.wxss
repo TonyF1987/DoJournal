@@ -7,6 +7,27 @@ page {
   overflow-x: hidden;
 }
 
+/* 只读权限提示 */
+.read-only-banner {
+  background: linear-gradient(135deg, #FF9800, #FFB74D);
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin: -24rpx -24rpx 0;
+}
+
+.read-only-icon {
+  font-size: 36rpx;
+}
+
+.read-only-text {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 500;
+}
+
 /* 科目模式容器 */
 .subject-mode-container {
   padding-bottom: 40rpx;
@@ -798,6 +819,15 @@ page {
 .btn-submit[disabled] {
   background: #e0e0e0;
   color: #999;
+}
+
+.btn-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.item-readonly {
+  cursor: default;
 }
 
 .btn-delete {

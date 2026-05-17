@@ -14,7 +14,45 @@ function getLocalDateStr(date) {
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { homeworkId, proofImage, comment, rating, ratingPercent, checkinDate, childId } = event;
+  const { homeworkId, proofImage, comment, rating, ratingPercent, checkinDate, childId, account } = event;
+
+  // 获取用户信息（支持同一个 openid 的多个账号）
+  const usersRes = await db.collection('users').where({
+    _openid: wxContext.OPENID
+  }).get();
+
+  // 找到对应账号的用户
+  let user;
+  if (usersRes.data.length > 0) {
+    if (account) {
+      user = usersRes.data.find(u => (u.account || '') === account);
+    }
+    if (!user) {
+      user = usersRes.data[0];
+    }
+  }
+
+  // 检查是否是只读权限（使用 openid + account 联合判断）
+  try {
+    if (user) {
+      // 如果用户有家庭，检查是否是只读
+      if (user.familyId) {
+        const familyRes = await db.collection('families').doc(user.familyId).get();
+        
+        if (familyRes.data) {
+          const family = familyRes.data;
+          const members = family.members || [];
+          const currentMember = members.find(m => m.openid === wxContext.OPENID && m.account === (user.account || ''));
+          
+          if (currentMember && currentMember.readOnly) {
+            return { success: false, errMsg: '您只有只读权限，无法打卡' };
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('检查权限失败:', err);
+  }
 
   // 获取作业信息
   const homeworkRes = await db.collection('homework').doc(homeworkId).get();
@@ -36,11 +74,7 @@ exports.main = async (event, context) => {
     homeworkDate = homework.homeworkDate || homework.date || todayStr;
   }
 
-  // 获取用户信息
-  const userRes = await db.collection('users').where({
-    _openid: wxContext.OPENID
-  }).get();
-  const user = userRes.data[0];
+
 
   if (!user) {
     return { success: false, errMsg: '用户不存在' };

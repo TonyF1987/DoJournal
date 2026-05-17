@@ -4,6 +4,7 @@
     "pages/login/login",
     "pages/rewards/rewards",
     "pages/me/me",
+    "pages/accounts/accounts",
     "pages/add/add",
     "pages/checkin/checkin",
     "pages/share/share",

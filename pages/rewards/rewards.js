@@ -150,8 +150,12 @@ Page({
     }
 
     if (app.globalData.openid) {
+      const currentAccount = app.globalData.userInfo?.account || '';
       wx.cloud.callFunction({
         name: 'getUserInfo',
+        data: {
+          account: currentAccount
+        },
         success: (res) => {
           if (res.result && res.result.success) {
             const userData = res.result.userInfo;
@@ -470,7 +474,8 @@ Page({
                 childId: currentChild.id,
                 type: type,
                 item: item
-              }
+              },
+              account: app.globalData.userInfo?.account || ''
             },
             success: (res) => {
               wx.hideLoading();
@@ -576,7 +581,8 @@ Page({
           childId: currentChild.id,
           type: currentModalType,
           item: data
-        }
+        },
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();
@@ -640,7 +646,8 @@ Page({
       data: {
         childId: currentChild.id,
         rewardId: rewardId,
-        points: points
+        points: points,
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();
@@ -691,7 +698,8 @@ Page({
         data: {
           childId: currentChild.id,
           violation: violation
-        }
+        },
+        account: app.globalData.userInfo?.account || ''
       },
       success: (res) => {
         wx.hideLoading();
@@ -780,7 +788,8 @@ Page({
       name: 'manageChildren',
       data: {
         action: 'switch',
-        child: { id: childId }
+        child: { id: childId },
+        account: app.globalData.userInfo?.account || ''
       },
       success: async res => {
         wx.hideLoading();
@@ -885,7 +894,8 @@ Page({
       name: 'manageChildren',
       data: {
         action: action,
-        child: newChild
+        child: newChild,
+        account: app.globalData.userInfo?.account || ''
       },
       success: async res => {
         wx.hideLoading();
@@ -926,7 +936,8 @@ Page({
             name: 'manageChildren',
             data: {
               action: 'delete',
-              child: { id: child.id }
+              child: { id: child.id },
+              account: app.globalData.userInfo?.account || ''
             },
             success: async res => {
               wx.hideLoading();

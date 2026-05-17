@@ -273,11 +273,14 @@
         <view class="family-info-card">
           <text class="family-name">{{familyInfo.name}}</text>
           <text class="family-desc">成员：{{familyMembers.length}}人</text>
+          <view wx:if="{{isFamilyCreator}}" class="edit-family-name" bindtap="showEditFamilyName">
+            <text>✏️ 编辑名称</text>
+          </view>
         </view>
         <view class="family-section">
           <view class="section-title">家庭成员</view>
           <view class="family-members-list">
-            <block wx:for="{{familyMembers}}" wx:key="openid">
+            <block wx:for="{{familyMembers}}" wx:key="index">
               <view class="family-member">
                 <view class="member-avatar">
                   <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="member-avatar-img" />
@@ -285,15 +288,33 @@
                 </view>
                 <view class="member-info">
                   <text class="member-name">{{item.nickName}}</text>
-                  <text class="member-role" wx:if="{{item.isOwner}}">创建者</text>
+                  <view class="member-badges">
+                    <text class="member-role" wx:if="{{item.role === 'creator'}}">创建者</text>
+                    <text class="member-role" wx:elif="{{item.role === 'admin'}}">管理员</text>
+                    <text class="member-role member-readonly" wx:if="{{item.readOnly}}">只读</text>
+                  </view>
+                  <view class="member-account" wx:if="{{item.account}}">
+                    <text class="account-label">账号：</text>
+                    <text class="account-value">{{item.account}}</text>
+                  </view>
+                </view>
+                <view wx:if="{{isFamilyCreator && !(item.openid === currentUserOpenid && item.account === currentUserAccount)}}" class="member-actions">
+                  <button class="btn-action btn-small" bindtap="toggleMemberReadOnly" data-openid="{{item.openid}}" data-account="{{item.account}}" data-readonly="{{!item.readOnly}}">
+                    {{item.readOnly ? '取消只读' : '设为只读'}}
+                  </button>
+                  <button class="btn-action btn-small btn-danger" bindtap="removeFamilyMember" data-openid="{{item.openid}}" data-account="{{item.account}}">
+                    移除
+                  </button>
                 </view>
               </view>
             </block>
           </view>
         </view>
         <view class="family-actions">
+          <button wx:if="{{isFamilyCreator}}" class="btn-confirm" bindtap="showAddAccountModal">添加本微信其他账号</button>
           <button class="btn-cancel" bindtap="generateInviteCode">生成邀请码</button>
-          <button class="btn-danger" bindtap="leaveFamily">退出家庭</button>
+          <button wx:if="{{isFamilyCreator}}" class="btn-action btn-danger" bindtap="showDissolveFamily">解散家庭</button>
+          <button wx:else class="btn-danger" bindtap="leaveFamily">退出家庭</button>
         </view>
       </view>
 
@@ -306,6 +327,86 @@
           <button class="btn-confirm" bindtap="showCreateFamilyModal">创建家庭</button>
           <button class="btn-cancel" bindtap="showJoinFamilyModal">加入已有家庭</button>
         </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 编辑家庭名称弹窗 -->
+<view class="modal" wx:if="{{showEditFamilyName}}" bindtap="closeEditFamilyName">
+  <view class="modal-mask"></view>
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text>修改家庭名称</text>
+      <text class="close-btn" bindtap="closeEditFamilyName">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">家庭名称 *</text>
+        <input class="form-input" placeholder="请输入家庭名称" value="{{editFamilyName}}" bindinput="onEditFamilyNameInput" />
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closeEditFamilyName">取消</button>
+      <button class="btn-confirm" bindtap="saveFamilyName">保存</button>
+    </view>
+  </view>
+</view>
+
+<!-- 解散家庭确认弹窗 -->
+<view class="modal" wx:if="{{showDissolveFamily}}" bindtap="closeDissolveFamily">
+  <view class="modal-mask"></view>
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text>解散家庭</text>
+      <text class="close-btn" bindtap="closeDissolveFamily">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="warning-text">
+        <text>⚠️ 此操作不可恢复！</text>
+      </view>
+      <view class="warning-desc">
+        <text>解散家庭将：</text>
+        <text>• 移除所有成员的家庭关联</text>
+        <text>• 删除家庭数据</text>
+        <text>• 删除所有邀请码</text>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closeDissolveFamily">取消</button>
+      <button class="btn-confirm btn-danger" bindtap="confirmDissolveFamily">确认解散</button>
+    </view>
+  </view>
+</view>
+
+<!-- 添加账号弹窗 -->
+<view class="modal" wx:if="{{showAddAccountModal}}" bindtap="closeAddAccountModal">
+  <view class="modal-mask"></view>
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text>添加本微信其他账号</text>
+      <text class="close-btn" bindtap="closeAddAccountModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="empty-state" wx:if="{{availableAccounts.length === 0}}">
+        <text class="empty-icon">😕</text>
+        <text class="empty-text">没有可添加的账号</text>
+        <text class="empty-desc">当前微信下的所有账号都已加入此家庭</text>
+      </view>
+      <view class="account-list" wx:else>
+        <block wx:for="{{availableAccounts}}" wx:key="_id">
+          <view class="account-item" bindtap="addAccountToFamily" data-account="{{item.account}}">
+            <view class="account-avatar-item">
+              <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="account-avatar-img" />
+              <text wx:else>👤</text>
+            </view>
+            <view class="account-info-item">
+              <text class="account-name-item">{{item.nickName}}</text>
+              <view class="account-tag-item" wx:if="{{item.account}}">{{item.account}}</view>
+            </view>
+            <text class="add-icon">+</text>
+          </view>
+        </block>
       </view>
     </view>
   </view>

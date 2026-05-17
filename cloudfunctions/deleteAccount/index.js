@@ -8,20 +8,45 @@ const _ = db.command;
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID;
+  const { account } = event;
 
   try {
-    const userRes = await db.collection('users').where({
+    const usersRes = await db.collection('users').where({
       _openid: openid
     }).get();
 
-    if (!userRes.data || userRes.data.length === 0) {
+    if (!usersRes.data || usersRes.data.length === 0) {
       return {
         success: false,
         errMsg: '用户不存在'
       };
     }
 
-    const userId = userRes.data[0]._id;
+    // 找到对应账号的用户
+    let user;
+    if (account) {
+      user = usersRes.data.find(u => (u.account || '') === account);
+    }
+    if (!user) {
+      user = usersRes.data[0];
+    }
+    
+    // 检查是否是只读权限（使用 openid + account 联合判断）
+    if (user.familyId) {
+      const familyRes = await db.collection('families').doc(user.familyId).get();
+      
+      if (familyRes.data) {
+        const family = familyRes.data;
+        const members = family.members || [];
+        const currentMember = members.find(m => m.openid === openid && m.account === (user.account || ''));
+        
+        if (currentMember && currentMember.readOnly) {
+          return { success: false, errMsg: '您只有只读权限，无法注销账号' };
+        }
+      }
+    }
+
+    const userId = user._id;
 
     await db.collection('users').doc(userId).remove();
 
@@ -42,7 +67,8 @@ exports.main = async (event, context) => {
     }).get();
 
     for (const family of familyRes.data) {
-      const updatedMembers = family.members.filter(m => m.openid !== openid);
+      // 使用 openid + account 联合判断来过滤成员
+      const updatedMembers = family.members.filter(m => !(m.openid === openid && m.account === (user.account || '')));
       
       if (updatedMembers.length === 0) {
         await db.collection('families').doc(family._id).remove();

@@ -151,6 +151,17 @@ page {
   box-sizing: border-box;
 }
 
+/* 隐藏的昵称输入框（用于获取微信昵称） */
+.nickname-input-hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.01;
+  z-index: 1;
+}
+
 /* 表单区域 */
 .form-section {
   padding: 0 64rpx;
@@ -233,4 +244,109 @@ page {
 /* 底部占位 */
 .bottom-space {
   height: 80rpx;
+}
+
+/* 账号输入框组 */
+.account-input-group {
+  position: relative;
+}
+
+.account-input {
+  padding-right: 80rpx;
+}
+
+/* 下拉箭头 */
+.dropdown-arrow {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24rpx;
+  z-index: 10;
+}
+
+.arrow-icon {
+  font-size: 24rpx;
+  color: #999999;
+  transition: transform 0.3s;
+}
+
+.arrow-icon.up {
+  transform: rotate(180deg);
+}
+
+/* 账号下拉列表 */
+.account-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+  margin-top: 8rpx;
+  overflow: hidden;
+  z-index: 9999;
+  max-height: 500rpx;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background-color: #ffffff;
+  transition: background-color 0.2s;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:active {
+  background-color: #f5f5f5;
+}
+
+.dropdown-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.dropdown-avatar image {
+  width: 100%;
+  height: 100%;
+  border-radius: 36rpx;
+}
+
+.dropdown-avatar text {
+  font-size: 32rpx;
+}
+
+.dropdown-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.dropdown-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333333;
+}
+
+.dropdown-account {
+  font-size: 24rpx;
+  color: #999999;
 }

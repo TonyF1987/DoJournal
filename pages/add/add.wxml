@@ -11,6 +11,11 @@
     }
   </wxs>
   <view class="container">
+    <!-- 只读权限提示 -->
+    <view class="read-only-banner" wx:if="{{isReadOnly}}">
+      <text class="read-only-icon">👁️</text>
+      <text class="read-only-text">您只有只读权限，无法添加/编辑作业</text>
+    </view>
     
     <!-- 科目模式页面 -->
     <view wx:if="{{isSubjectMode}}" class="subject-mode-container">

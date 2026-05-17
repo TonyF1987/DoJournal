@@ -152,7 +152,8 @@ Page({
             comment: this.data.comment,
             rating: this.data.rating,
             ratingPercent: this.data.ratingPercent,
-            checkinDate: this.data.checkinDate
+            checkinDate: this.data.checkinDate,
+            account: app.globalData.userInfo?.account || ''
           },
           success: (cloudRes) => {
             wx.hideLoading();

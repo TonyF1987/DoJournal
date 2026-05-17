@@ -7,21 +7,23 @@ const _ = db.command;
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
+  const { account, userInfo: eventUserInfo } = event;
 
-  // 获取用户信息
-  let userRes = await db.collection('users').where({
+  // 获取用户信息（支持同一个 openid 的多个账号）
+  let users = await db.collection('users').where({
     _openid: wxContext.OPENID
   }).get();
 
   let userId;
   let isNewUser = false;
+  let user;
 
-  if (userRes.data.length === 0) {
+  if (users.data.length === 0) {
     // 新用户，创建用户记录
     const defaultChild = {
       id: Date.now().toString(),
       name: '小宝贝',
-      avatarUrl: event.userInfo ? event.userInfo.avatarUrl : '',
+      avatarUrl: eventUserInfo ? eventUserInfo.avatarUrl : '',
       gender: '',
       birthDate: '',
       schoolStage: '',
@@ -37,9 +39,10 @@ exports.main = async (event, context) => {
     let addRes = await db.collection('users').add({
       data: {
         _openid: wxContext.OPENID,
-        nickName: event.userInfo ? event.userInfo.nickName : '',
-        avatarUrl: event.userInfo ? event.userInfo.avatarUrl : '',
-        phoneNumber: event.userInfo ? event.userInfo.phoneNumber : '',
+        nickName: eventUserInfo ? eventUserInfo.nickName : '',
+        avatarUrl: eventUserInfo ? eventUserInfo.avatarUrl : '',
+        phoneNumber: eventUserInfo ? eventUserInfo.phoneNumber : '',
+        account: account || '',
         unionId: wxContext.UNIONID || '',
         children: [defaultChild],
         currentChildId: defaultChild.id,
@@ -49,9 +52,26 @@ exports.main = async (event, context) => {
     });
     userId = addRes._id;
     isNewUser = true;
+    
+    // 获取刚创建的用户信息
+    const newUserRes = await db.collection('users').doc(userId).get();
+    user = newUserRes.data;
   } else {
-    userId = userRes.data[0]._id;
-    const user = userRes.data[0];
+    // 如果指定了 account 则查找对应账号，否则使用第一个
+    if (account) {
+      const targetUser = users.data.find(u => (u.account || '') === account);
+      if (targetUser) {
+        userId = targetUser._id;
+        user = targetUser;
+      } else {
+        // 如果找不到指定账号，使用第一个
+        userId = users.data[0]._id;
+        user = users.data[0];
+      }
+    } else {
+      userId = users.data[0]._id;
+      user = users.data[0];
+    }
     
     if (user.familyId) {
       // 有家庭，检查并更新家庭中的小朋友数据
@@ -91,7 +111,7 @@ exports.main = async (event, context) => {
         });
         
         // 更新家庭信息（如果需要）
-        if (event.userInfo || needUpdate) {
+        if (eventUserInfo || needUpdate) {
           const updateData = {
             updateTime: db.serverDate()
           };
@@ -140,20 +160,20 @@ exports.main = async (event, context) => {
       });
       
       // 更新用户信息（如果有）
-      if (event.userInfo || needUpdate) {
+      if (eventUserInfo || needUpdate) {
         const updateData = {
           updateTime: db.serverDate()
         };
         
-        if (event.userInfo) {
-          if (event.userInfo.nickName) {
-            updateData.nickName = event.userInfo.nickName;
+        if (eventUserInfo) {
+          if (eventUserInfo.nickName) {
+            updateData.nickName = eventUserInfo.nickName;
           }
-          if (event.userInfo.avatarUrl) {
-            updateData.avatarUrl = event.userInfo.avatarUrl;
+          if (eventUserInfo.avatarUrl) {
+            updateData.avatarUrl = eventUserInfo.avatarUrl;
           }
-          if (event.userInfo.phoneNumber) {
-            updateData.phoneNumber = event.userInfo.phoneNumber;
+          if (eventUserInfo.phoneNumber) {
+            updateData.phoneNumber = eventUserInfo.phoneNumber;
           }
           if (wxContext.UNIONID) {
             updateData.unionId = wxContext.UNIONID;
@@ -169,11 +189,14 @@ exports.main = async (event, context) => {
         });
       }
     }
+    
+    // 重新获取更新后的用户信息
+    const updatedUserRes = await db.collection('users').doc(userId).get();
+    user = updatedUserRes.data;
   }
 
-  // 获取完整的用户信息返回
-  const updatedUserRes = await db.collection('users').doc(userId).get();
-  let userInfo = updatedUserRes.data;
+  // 加载用户信息（已经获取到了 user）
+  let userInfo = user;
 
   // 如果用户有家庭，加载家庭数据
   if (userInfo.familyId) {
@@ -187,10 +210,62 @@ exports.main = async (event, context) => {
     }
   }
 
+  // 获取同一个 openid 下的所有账号信息
+  const allUsersRes = await db.collection('users').where({
+    _openid: wxContext.OPENID
+  }).get();
+  const allUsers = allUsersRes.data;
+
+  // 如果当前用户没有设置 currentChildId，或者是新账号，尝试使用创建者的当前小孩
+  if (!userInfo.currentChildId || isNewUser) {
+    let creatorCurrentChildId = null;
+
+    if (userInfo.familyId) {
+      // 有家庭，查找家庭创建者账号
+      const familyRes = await db.collection('families').doc(userInfo.familyId).get();
+      if (familyRes.data) {
+        const family = familyRes.data;
+        const creatorMember = family.members.find(m => m.role === 'creator');
+        if (creatorMember) {
+          // 找到创建者账号，获取其 currentChildId
+          const creatorUser = allUsers.find(u => 
+            (u.account || '') === (creatorMember.account || '')
+          );
+          if (creatorUser && creatorUser.currentChildId) {
+            creatorCurrentChildId = creatorUser.currentChildId;
+          }
+        }
+      }
+    } else {
+      // 没有家庭，使用第一个账号的 currentChildId
+      if (allUsers.length &gt; 0) {
+        creatorCurrentChildId = allUsers[0].currentChildId;
+      }
+    }
+
+    // 如果找到了创建者的当前小孩，并且该小孩存在，则使用它
+    if (creatorCurrentChildId) {
+      const children = userInfo.children || [];
+      const childExists = children.some(c =&gt; c.id === creatorCurrentChildId);
+      if (childExists) {
+        // 更新当前用户的 currentChildId
+        await db.collection('users').doc(userId).update({
+          data: {
+            currentChildId: creatorCurrentChildId,
+            updateTime: db.serverDate()
+          }
+        });
+        // 更新 userInfo
+        userInfo.currentChildId = creatorCurrentChildId;
+      }
+    }
+  }
+
   return {
     openid: wxContext.OPENID,
     userId: userId,
     isNewUser: isNewUser,
-    userInfo: userInfo
+    userInfo: userInfo,
+    allAccounts: allUsers
   };
 };

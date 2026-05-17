@@ -6,31 +6,52 @@ const db = cloud.database();
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
+  const { action, account, nickName, avatarUrl } = event;
+  console.log('getUserInfo 被调用，action:', action, 'account:', account);
 
   try {
     // 如果是更新用户资料的操作
-    if (event.action === 'updateProfile') {
+    if (action === 'updateProfile') {
       const updateData = {};
-      if (event.nickName) {
-        updateData.nickName = event.nickName;
+      if (nickName) {
+        updateData.nickName = nickName;
       }
-      if (event.avatarUrl) {
-        updateData.avatarUrl = event.avatarUrl;
+      if (avatarUrl) {
+        updateData.avatarUrl = avatarUrl;
+      }
+      
+      // 查找要更新的用户（通过 account 区分）
+      const usersRes = await db.collection('users').where({
+        _openid: wxContext.OPENID
+      }).get();
+      
+      if (!usersRes.data || usersRes.data.length === 0) {
+        return {
+          success: false,
+          errMsg: '用户不存在'
+        };
+      }
+      
+      // 找到对应账号的用户
+      let targetUser;
+      if (account) {
+        targetUser = usersRes.data.find(u => (u.account || '') === account);
+      }
+      if (!targetUser) {
+        targetUser = usersRes.data[0];
       }
       
       // 更新用户记录
-      await db.collection('users').where({
-        _openid: wxContext.OPENID
-      }).update({
-        data: updateData
+      await db.collection('users').doc(targetUser._id).update({
+        data: {
+          ...updateData,
+          updateTime: db.serverDate()
+        }
       });
 
       // 返回更新后的用户信息
-      const updatedUser = await db.collection('users').where({
-        _openid: wxContext.OPENID
-      }).get();
-
-      let userInfo = updatedUser.data[0];
+      const updatedUserRes = await db.collection('users').doc(targetUser._id).get();
+      let userInfo = updatedUserRes.data;
       
       // 如果用户有家庭，同时更新家庭中的成员信息
       if (userInfo && userInfo.familyId) {
@@ -39,13 +60,13 @@ exports.main = async (event, context) => {
           const familyRes = await db.collection('families').doc(userInfo.familyId).get();
           
           if (familyRes.data) {
-            // 更新家庭中的成员信息
+            // 更新家庭中的成员信息（使用 openid + account 联合判断）
             const updatedMembers = familyRes.data.members.map(member => {
-              if (member.openid === wxContext.OPENID) {
+              if (member.openid === wxContext.OPENID && member.account === (userInfo.account || '')) {
                 return {
                   ...member,
-                  nickName: event.nickName || member.nickName,
-                  avatarUrl: event.avatarUrl || member.avatarUrl
+                  nickName: nickName || member.nickName,
+                  avatarUrl: avatarUrl || member.avatarUrl
                 };
               }
               return member;
@@ -76,29 +97,41 @@ exports.main = async (event, context) => {
       };
     }
 
-    // 查找用户记录
-    const userRes = await db.collection('users').where({
+    // 查找用户记录（支持同一个 openid 的多个账号）
+    const usersRes = await db.collection('users').where({
       _openid: wxContext.OPENID
     }).get();
 
-    if (!userRes.data || userRes.data.length === 0) {
+    console.log('查询到用户列表:', usersRes.data);
+
+    if (!usersRes.data || usersRes.data.length === 0) {
       return {
         success: false,
         errMsg: '用户不存在'
       };
     }
 
-    let userInfo = userRes.data[0];
+    // 如果指定了 account 则查找对应账号，否则使用第一个
+    let userInfo;
+    if (account) {
+      userInfo = usersRes.data.find(u => (u.account || '') === account);
+      console.log('根据account查找用户:', account, '找到:', userInfo);
+    }
+    if (!userInfo) {
+      userInfo = usersRes.data[0];
+      console.log('使用第一个用户:', userInfo);
+    }
 
     // 如果用户有家庭，加载家庭数据
     if (userInfo && userInfo.familyId) {
       try {
         const familyRes = await db.collection('families').doc(userInfo.familyId).get();
         if (familyRes.data) {
-          // 将家庭的小朋友数据合并到用户信息中
+          // 将家庭的小朋友数据和成员信息合并到用户信息中
           userInfo = {
             ...userInfo,
-            children: familyRes.data.children || []
+            children: familyRes.data.children || [],
+            familyMembers: familyRes.data.members || []
           };
         }
       } catch (err) {
@@ -106,9 +139,12 @@ exports.main = async (event, context) => {
       }
     }
 
+    console.log('getUserInfo 返回数据，userInfo:', userInfo, 'allAccounts:', usersRes.data);
+
     return {
       success: true,
-      userInfo: userInfo
+      userInfo: userInfo,
+      allAccounts: usersRes.data
     };
   } catch (err) {
     console.error('获取用户信息失败:', err);
