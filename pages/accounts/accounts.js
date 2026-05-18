@@ -6,12 +6,31 @@ Page({
     currentAccountId: '',
     showEditProfile: false,
     editUserInfo: {},
-    isCreator: false, // 当前账号是否是家庭创建者
-    hasFamily: false, // 是否有家庭
-    familyId: '' // 当前家庭ID
+    isCreator: false,
+    isOriginalCreatorGlobal: false,
+    hasFamily: false,
+    familyId: ''
   },
 
   onLoad() {
+    const userInfo = app.globalData.userInfo;
+    
+    if (app.globalData.originalCreatorAccount === '' || app.globalData.isOriginalCreator === false) {
+      app.globalData.isOriginalCreator = userInfo && userInfo.familyRole === 'creator';
+      app.globalData.originalCreatorAccount = userInfo && userInfo.familyRole === 'creator' ? (userInfo.account || '') : '';
+    }
+    
+    this.setData({
+      isOriginalCreatorGlobal: app.globalData.isOriginalCreator,
+      currentAccountId: app.globalData.userId || ''
+    });
+    
+    if (userInfo) {
+      this.setData({
+        accounts: [userInfo]
+      });
+    }
+    
     this.loadAccounts();
   },
 
@@ -19,7 +38,6 @@ Page({
     this.loadAccounts();
   },
 
-  // 检查当前账号是否是家庭创建者
   checkIsCreator() {
     const userInfo = app.globalData.userInfo;
     console.log('检查创建者身份，userInfo:', userInfo);
@@ -34,17 +52,15 @@ Page({
       return Promise.resolve(false);
     }
 
-    // 先检查本地存储的角色信息
     const isCreatorLocal = userInfo.familyRole === 'creator';
     console.log('本地familyRole:', userInfo.familyRole, 'isCreatorLocal:', isCreatorLocal);
     
     this.setData({
       hasFamily: true,
       familyId: userInfo.familyId,
-      isCreator: isCreatorLocal // 先用本地信息
+      isCreator: isCreatorLocal
     });
 
-    // 同时获取家庭信息确认角色
     return wx.cloud.callFunction({
       name: 'manageFamily',
       data: {
@@ -64,30 +80,22 @@ Page({
         this.setData({ isCreator });
         return isCreator;
       }
-      // 如果云函数失败，保留本地信息
       return isCreatorLocal;
     }).catch(err => {
       console.error('检查创建者身份失败:', err);
-      // 如果云函数失败，保留本地信息
       return isCreatorLocal;
     });
   },
 
-  // 加载账号列表
   loadAccounts() {
     console.log('加载账号列表');
     wx.showLoading({ title: '加载中...' });
     
-    // 先检查当前账号是否是创建者
-    this.checkIsCreator().then(isCreator => {
-      console.log('checkIsCreator 完成，isCreator:', isCreator);
-      
-      // 如果有家庭，先获取家庭信息
+    this.checkIsCreator().then(() => {
       const userInfo = app.globalData.userInfo;
       const hasFamily = userInfo && userInfo.familyId;
       
       if (hasFamily) {
-        // 获取家庭信息，以便显示角色标签
         wx.cloud.callFunction({
           name: 'manageFamily',
           data: {
@@ -107,7 +115,6 @@ Page({
     });
   },
 
-  // 加载账号列表
   loadAccountList(familyInfo) {
     wx.cloud.callFunction({
       name: 'login',
@@ -122,7 +129,6 @@ Page({
           let allAccounts = res.result.allAccounts || [];
           console.log('所有账号:', allAccounts);
           
-          // 如果有家庭信息，补充角色和只读信息
           if (familyInfo && familyInfo.members) {
             allAccounts = allAccounts.map(account => {
               const member = familyInfo.members.find(m => 
@@ -133,17 +139,24 @@ Page({
                 return {
                   ...account,
                   familyRole: member.role,
-                  readOnly: member.readOnly || false
+                  readOnly: member.readOnly || false,
+                  inFamily: true
                 };
               }
-              return account;
+              return {
+                ...account,
+                inFamily: false
+              };
             });
+          } else {
+            allAccounts = allAccounts.map(account => ({
+              ...account,
+              inFamily: false
+            }));
           }
           
-          // 如果是创建者，显示所有账号；否则只显示当前账号
           let displayAccounts = allAccounts;
-          if (!this.data.isCreator && this.data.hasFamily) {
-            // 非创建者且有家庭，只显示当前账号
+          if (!app.globalData.isOriginalCreator && this.data.hasFamily) {
             displayAccounts = allAccounts.filter(account => 
               account._id === app.globalData.userId
             );
@@ -157,7 +170,8 @@ Page({
           
           this.setData({
             accounts: displayAccounts,
-            currentAccountId: app.globalData.userId
+            currentAccountId: app.globalData.userId,
+            isOriginalCreatorGlobal: app.globalData.isOriginalCreator
           }, () => {
             console.log('setData 完成，当前数据:', this.data);
           });
@@ -166,35 +180,28 @@ Page({
       fail: (err) => {
         wx.hideLoading();
         console.error('加载账号失败:', err);
-        // 如果失败，至少显示当前账号
         if (app.globalData.userInfo) {
           this.setData({
             accounts: [app.globalData.userInfo],
-            currentAccountId: app.globalData.userId
+            currentAccountId: app.globalData.userId,
+            isOriginalCreatorGlobal: app.globalData.isOriginalCreator
           });
         }
       }
     });
   },
 
-  // 切换账号
   switchAccount(e) {
     console.log('切换账号被点击');
     const account = e.currentTarget.dataset.account;
     console.log('目标账号:', account);
-    console.log('当前状态:', {
-      isCreator: this.data.isCreator,
-      hasFamily: this.data.hasFamily,
-      currentAccountId: this.data.currentAccountId
-    });
     
     if (account._id === this.data.currentAccountId) {
       console.log('已经是当前账号，不切换');
       return;
     }
 
-    // 检查是否有权限切换账号
-    if (!this.data.isCreator && this.data.hasFamily) {
+    if (!app.globalData.isOriginalCreator && this.data.hasFamily) {
       wx.showModal({
         title: '提示',
         content: '只有家庭创建者才能切换账号',
@@ -204,7 +211,6 @@ Page({
     }
 
     console.log('开始切换账号...');
-
     wx.showLoading({ title: '切换中...' });
 
     wx.cloud.callFunction({
@@ -216,27 +222,19 @@ Page({
         wx.hideLoading();
         if (res.result && res.result.success !== false) {
           const userInfo = res.result.userInfo;
-          
-          // 更新 app 全局数据
           app.saveUserInfo(userInfo);
           
-          // 更新当前页面的数据
           this.setData({
             currentAccountId: userInfo._id
           });
           
-          // 重新加载账号列表（可能角色信息有变化）
           this.checkIsCreator();
+          this.loadAccounts();
           
           wx.showToast({
             title: '切换成功',
             icon: 'success'
           });
-
-          // 延迟返回，让用户看到提示
-          setTimeout(() => {
-            wx.navigateBack();
-          }, 800);
         } else {
           wx.showToast({
             title: '切换失败',
@@ -255,10 +253,8 @@ Page({
     });
   },
 
-  // 跳转到添加账号页面
   goToAddAccount() {
-    // 如果不是创建者且有家庭，禁止添加
-    if (!this.data.isCreator && this.data.hasFamily) {
+    if (!app.globalData.isOriginalCreator && this.data.hasFamily) {
       wx.showModal({
         title: '提示',
         content: '只有家庭创建者才能添加和管理其他账号',
@@ -272,9 +268,7 @@ Page({
     });
   },
 
-  // 打开编辑资料弹窗
   openEditProfile() {
-    // 每个账号都可以编辑自己的资料
     this.setData({
       showEditProfile: true,
       editUserInfo: {
@@ -284,7 +278,6 @@ Page({
     });
   },
 
-  // 关闭编辑资料弹窗
   closeEditProfile() {
     this.setData({
       showEditProfile: false,
@@ -292,19 +285,15 @@ Page({
     });
   },
 
-  // 阻止事件冒泡
   stopPropagation() {
-    // 阻止事件冒泡
   },
 
-  // 昵称输入
   onNickNameInput(e) {
     this.setData({
       'editUserInfo.nickName': e.detail.value
     });
   },
 
-  // 选择头像
   chooseAvatar() {
     wx.chooseMedia({
       count: 1,
@@ -350,7 +339,6 @@ Page({
     });
   },
 
-  // 保存资料
   saveProfile() {
     const { editUserInfo } = this.data;
     
@@ -375,8 +363,6 @@ Page({
           wx.showToast({ title: '保存成功', icon: 'success' });
           this.closeEditProfile();
           this.loadAccounts();
-          
-          // 更新 app 全局数据
           app.saveUserInfo(res.result.userInfo);
         } else {
           wx.showToast({ title: res.result && res.result.errMsg || '保存失败', icon: 'none' });
@@ -386,6 +372,49 @@ Page({
         wx.hideLoading();
         console.error('保存资料失败:', err);
         wx.showToast({ title: '保存失败', icon: 'none' });
+      }
+    });
+  },
+
+  toggleAccountReadOnly(e) {
+    const memberAccount = e.currentTarget.dataset.account;
+    const readOnly = e.currentTarget.dataset.readonly;
+
+    wx.showModal({
+      title: '确认操作',
+      content: readOnly ? '确定要设置该账号为只读权限吗？' : '确定要取消该账号的只读权限吗？',
+      success: async (modalRes) => {
+        if (modalRes.confirm) {
+          wx.showLoading({ title: '设置中...' });
+
+          try {
+            const res = await wx.cloud.callFunction({
+              name: 'manageFamily',
+              data: {
+                action: 'setMemberReadOnly',
+                data: {
+                  memberOpenid: app.globalData.openid,
+                  memberAccount: memberAccount,
+                  readOnly: readOnly,
+                  account: app.globalData.originalCreatorAccount || ''
+                }
+              }
+            });
+
+            wx.hideLoading();
+
+            if (res.result && res.result.success) {
+              wx.showToast({ title: '设置成功', icon: 'success' });
+              this.loadAccounts();
+            } else {
+              wx.showToast({ title: res.result?.errMsg || '设置失败', icon: 'none' });
+            }
+          } catch (err) {
+            wx.hideLoading();
+            console.error('设置权限失败:', err);
+            wx.showToast({ title: '设置失败', icon: 'none' });
+          }
+        }
       }
     });
   }

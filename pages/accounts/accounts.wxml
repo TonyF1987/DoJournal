@@ -1,11 +1,11 @@
 <view class="container">
   <!-- 标题提示 -->
-  <view class="tips-section" wx:if="{{isCreator || !hasFamily}}">
+  <view class="tips-section" wx:if="{{isOriginalCreatorGlobal || !hasFamily}}">
     <text class="tips-text">您可以使用不同的账号登录，每个账号都是独立的，但可以加入同一个家庭</text>
   </view>
 
   <!-- 非创建者提示 -->
-  <view class="tips-section warning-tips" wx:if="{{hasFamily && !isCreator}}">
+  <view class="tips-section warning-tips" wx:if="{{hasFamily && !isOriginalCreatorGlobal}}">
     <text class="tips-text">当前账号不是家庭创建者，只能查看和使用当前账号</text>
   </view>
 
@@ -18,9 +18,9 @@
     <view class="accounts-list">
       <block wx:for="{{accounts}}" wx:key="_id">
         <view class="account-item {{currentAccountId === item._id ? 'active' : ''}}" 
-              bindtap="{{(isCreator || !hasFamily) ? 'switchAccount' : ''}}" 
+              bindtap="{{(isOriginalCreatorGlobal || !hasFamily) ? 'switchAccount' : ''}}" 
               data-account="{{item}}"
-              style="{{!(isCreator || !hasFamily) ? 'cursor: default;' : ''}}">
+              style="{{!(isOriginalCreatorGlobal || !hasFamily) ? 'cursor: default;' : ''}}">
           <view class="account-avatar">
             <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="account-avatar-img" />
             <text wx:else>👤</text>
@@ -33,22 +33,28 @@
               <text wx:else class="account-tag">微信账号</text>
             </view>
             <view class="account-badges" wx:if="{{item.familyRole || item.readOnly}}">
-              <text class="member-role" wx:if="{{item.familyRole === 'creator'}}">创建者</text>
+              <text class="member-role" wx:if="{{item.familyRole === 'creator'}}">家庭管理员</text>
               <text class="member-role" wx:elif="{{item.familyRole === 'admin'}}">管理员</text>
+              <text class="member-role member-member" wx:elif="{{item.familyRole}}">家庭成员</text>
               <text class="member-role member-readonly" wx:if="{{item.readOnly}}">只读</text>
             </view>
           </view>
           <view wx:if="{{currentAccountId === item._id}}" class="account-status">
             <text class="status-text">当前使用</text>
           </view>
-          <view wx:elif="{{(isCreator || !hasFamily)}}" class="account-arrow">›</view>
+          <view wx:elif="{{isOriginalCreatorGlobal && item.familyId}}" class="account-actions">
+            <button class="btn-action btn-small" catchtap="toggleAccountReadOnly" data-account="{{item.account}}" data-readonly="{{!item.readOnly}}">
+              {{item.readOnly ? '取消只读' : '设为只读'}}
+            </button>
+          </view>
+          <view wx:elif="{{(isOriginalCreatorGlobal || !hasFamily)}}" class="account-arrow">›</view>
         </view>
       </block>
     </view>
   </view>
 
   <!-- 添加新账号 -->
-  <view class="add-account-section" wx:if="{{isCreator || !hasFamily}}">
+  <view class="add-account-section" wx:if="{{isOriginalCreatorGlobal || !hasFamily}}">
     <view class="add-account-btn" bindtap="goToAddAccount">
       <text class="add-icon">+</text>
       <text class="add-text">添加新账号</text>

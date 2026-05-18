@@ -40,12 +40,6 @@ function checkReadOnly(familyMembers, openid, account) {
   return member && member.readOnly === true;
 }
 
-// 检查当前用户是否是只读成员
-function checkReadOnly(familyMembers, openid, account) {
-  const member = findMember(familyMembers, openid, account);
-  return member && member.readOnly === true;
-}
-
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
   const { action, data } = event;
@@ -74,6 +68,8 @@ exports.main = async (event, context) => {
         return await updateFamilyName(wxContext, data);
       case 'setMemberReadOnly':
         return await setMemberReadOnly(wxContext, data);
+      case 'setMemberHidden':
+        return await setMemberHidden(wxContext, data);
       case 'dissolveFamily':
         return await dissolveFamily(wxContext, data);
       case 'getAvailableAccounts':
@@ -374,7 +370,7 @@ async function removeMember(wxContext, data) {
     return { success: false, errMsg: '您不在这个家庭中' };
   }
 
-  if (currentMember.role !== 'creator' && currentMember.role !== 'admin') {
+  if (currentMember.role !== 'creator') {
     return { success: false, errMsg: '您没有权限移除成员' };
   }
 
@@ -599,7 +595,7 @@ async function generateInvitationCode(wxContext, data) {
     return { success: false, errMsg: '您不在这个家庭中' };
   }
 
-  if (currentMember.role !== 'creator' && currentMember.role !== 'admin') {
+  if (currentMember.role !== 'creator') {
     return { success: false, errMsg: '您没有权限生成邀请码' };
   }
 
@@ -777,8 +773,8 @@ async function setMemberReadOnly(wxContext, data) {
   }
 
   if (currentMember.role !== 'creator') {
-    return { success: false, errMsg: '只有家庭创建者可以修改成员权限' };
-  }
+      return { success: false, errMsg: '只有家庭创建者可以修改成员权限' };
+    }
 
   // 检查被修改的成员是否存在（使用 openid + account 联合判断）
   const targetMember = findMember(family.members, memberOpenid, memberAccount || '');
@@ -824,6 +820,91 @@ async function setMemberReadOnly(wxContext, data) {
   return {
     success: true,
     message: readOnly ? '已设置只读权限' : '已取消只读权限'
+  };
+}
+
+// 设置成员隐藏
+async function setMemberHidden(wxContext, data) {
+  const { memberOpenid, memberAccount, hidden, account } = data;
+  
+  if (!memberOpenid) {
+    return { success: false, errMsg: '请提供成员OpenID' };
+  }
+
+  // 获取当前用户信息（需要传入 account 参数）
+  const currentAccount = account || '';
+  const currentUsers = await getUsersByOpenid(wxContext.OPENID);
+  
+  if (currentUsers.length === 0) {
+    return { success: false, errMsg: '用户不存在' };
+  }
+  
+  const currentUser = currentUsers.find(u => (u.account || '') === currentAccount) || currentUsers[0];
+  
+  if (!currentUser.familyId) {
+    return { success: false, errMsg: '您还没有加入家庭' };
+  }
+
+  const familyId = currentUser.familyId;
+
+  // 获取家庭信息
+  const familyRes = await db.collection('families').doc(familyId).get();
+  
+  if (!familyRes.data) {
+    return { success: false, errMsg: '家庭不存在' };
+  }
+  
+  const family = familyRes.data;
+
+  // 检查只读权限
+  if (checkReadOnly(family.members, wxContext.OPENID, currentAccount)) {
+    return { success: false, errMsg: '只读账号不能修改成员权限' };
+  }
+
+  // 检查权限（使用 openid + account 联合判断）
+  const currentMember = findMember(family.members, wxContext.OPENID, currentAccount);
+  if (!currentMember) {
+    return { success: false, errMsg: '您不在这个家庭中' };
+  }
+
+  if (currentMember.role !== 'creator') {
+    return { success: false, errMsg: '只有家庭创建者可以修改成员权限' };
+  }
+
+  // 检查被修改的成员是否存在（使用 openid + account 联合判断）
+  const targetMember = findMember(family.members, memberOpenid, memberAccount || '');
+  if (!targetMember) {
+    return { success: false, errMsg: '成员不存在' };
+  }
+
+  // 不能修改创建者的权限
+  if (targetMember.role === 'creator') {
+    return { success: false, errMsg: '不能修改家庭创建者的权限' };
+  }
+
+  // 只能隐藏普通成员
+  if (targetMember.role !== 'member') {
+    return { success: false, errMsg: '只能隐藏普通成员' };
+  }
+
+  // 更新成员隐藏状态
+  const updatedMembers = family.members.map(m => {
+    if (m.openid === memberOpenid && m.account === (memberAccount || '')) {
+      return { ...m, hidden: hidden };
+    }
+    return m;
+  });
+
+  await db.collection('families').doc(familyId).update({
+    data: {
+      members: updatedMembers,
+      updateTime: db.serverDate()
+    }
+  });
+
+  return {
+    success: true,
+    message: hidden ? '已隐藏成员' : '已取消隐藏成员'
   };
 }
 

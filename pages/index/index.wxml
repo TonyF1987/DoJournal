@@ -528,7 +528,7 @@
                 <view class="member-avatar">👤</view>
                 <view class="member-info">
                   <text class="member-name">{{item.nickName}}</text>
-                  <text class="member-role">{{item.role === 'creator' ? '创建者' : item.role === 'admin' ? '管理员' : '成员'}}</text>
+                  <text class="member-role">{{item.role === 'creator' ? '管理员' : item.role === 'admin' ? '管理员' : '成员'}}</text>
                 </view>
               </view>
             </block>

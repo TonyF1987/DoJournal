@@ -395,6 +395,10 @@ page {
   background: #FF9800;
 }
 
+.member-hidden {
+  background: #9E9E9E;
+}
+
 .member-badges {
   display: flex;
   gap: 8rpx;

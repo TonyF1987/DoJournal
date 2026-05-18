@@ -35,7 +35,7 @@
       </view>
       <view class="menu-content">
         <text class="menu-title">家庭管理</text>
-        <text class="menu-desc">{{userInfo.familyId ? (familyInfo ? familyInfo.name + ' · ' + familyMembers.length + '人' : '家庭') : '创建/加入家庭'}}</text>
+        <text class="menu-desc">{{userInfo.familyId ? (familyInfo ? familyInfo.name + ' · ' + displayFamilyMembers.length + '人' : '家庭') : '创建/加入家庭'}}</text>
       </view>
       <view class="menu-hint" wx:if="{{userInfo._id && !userInfo.familyId}}">
         <text class="hint-dot"></text>
@@ -272,7 +272,7 @@
       <view wx:elif="{{familyInfo}}">
         <view class="family-info-card">
           <text class="family-name">{{familyInfo.name}}</text>
-          <text class="family-desc">成员：{{familyMembers.length}}人</text>
+          <text class="family-desc">成员：{{displayFamilyMembers.length}}人</text>
           <view wx:if="{{isFamilyCreator}}" class="edit-family-name" bindtap="showEditFamilyName">
             <text>✏️ 编辑名称</text>
           </view>
@@ -280,7 +280,7 @@
         <view class="family-section">
           <view class="section-title">家庭成员</view>
           <view class="family-members-list">
-            <block wx:for="{{familyMembers}}" wx:key="index">
+            <block wx:for="{{displayFamilyMembers}}" wx:key="index">
               <view class="family-member">
                 <view class="member-avatar">
                   <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="member-avatar-img" />
@@ -289,9 +289,10 @@
                 <view class="member-info">
                   <text class="member-name">{{item.nickName}}</text>
                   <view class="member-badges">
-                    <text class="member-role" wx:if="{{item.role === 'creator'}}">创建者</text>
+                    <text class="member-role" wx:if="{{item.role === 'creator'}}">管理员</text>
                     <text class="member-role" wx:elif="{{item.role === 'admin'}}">管理员</text>
                     <text class="member-role member-readonly" wx:if="{{item.readOnly}}">只读</text>
+                    <text class="member-role member-hidden" wx:if="{{item.hidden}}">隐藏</text>
                   </view>
                   <view class="member-account" wx:if="{{item.account}}">
                     <text class="account-label">账号：</text>
@@ -299,13 +300,13 @@
                   </view>
                 </view>
                 <view wx:if="{{isFamilyCreator && !(item.openid === currentUserOpenid && item.account === currentUserAccount)}}" class="member-actions">
-                  <button class="btn-action btn-small" bindtap="toggleMemberReadOnly" data-openid="{{item.openid}}" data-account="{{item.account}}" data-readonly="{{!item.readOnly}}">
-                    {{item.readOnly ? '取消只读' : '设为只读'}}
-                  </button>
-                  <button class="btn-action btn-small btn-danger" bindtap="removeFamilyMember" data-openid="{{item.openid}}" data-account="{{item.account}}">
-                    移除
-                  </button>
-                </view>
+                <button class="btn-action btn-small" bindtap="toggleMemberHidden" data-openid="{{item.openid}}" data-account="{{item.account}}" data-hidden="{{!item.hidden}}">
+                  {{item.hidden ? '取消隐藏' : '隐藏'}}
+                </button>
+                <button class="btn-action btn-small btn-danger" bindtap="removeFamilyMember" data-openid="{{item.openid}}" data-account="{{item.account}}">
+                  移除
+                </button>
+              </view>
               </view>
             </block>
           </view>

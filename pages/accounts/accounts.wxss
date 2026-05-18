@@ -131,6 +131,10 @@
   border-radius: 8rpx;
 }
 
+.member-member {
+  background: #2196F3;
+}
+
 .member-readonly {
   background: #FF9800;
 }
@@ -149,6 +153,26 @@
   margin-left: 20rpx;
   font-size: 36rpx;
   color: #cccccc;
+}
+
+.account-actions {
+  display: flex;
+  align-items: center;
+  margin-left: 20rpx;
+}
+
+.btn-action {
+  background-color: #4CAF50;
+  color: #ffffff;
+  border: none;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  padding: 12rpx 20rpx;
+}
+
+.btn-small {
+  padding: 8rpx 16rpx;
+  font-size: 22rpx;
 }
 
 .add-account-section {

@@ -83,7 +83,8 @@ exports.main = async (event, context) => {
             // 加载家庭数据
             userInfo = {
               ...userInfo,
-              children: familyRes.data.children || []
+              children: familyRes.data.children || [],
+              familyMembers: familyRes.data.members || []
             };
           }
         } catch (err) {

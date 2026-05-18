@@ -103,7 +103,9 @@ App({
     sharedMessage: null, // 存储从聊天转发的消息
     isLoggedIn: false, // 登录状态标记
     currentChildId: null, // 当前选中的小朋友ID
-    children: [] // 所有小朋友列表
+    children: [], // 所有小朋友列表
+    originalCreatorAccount: '', // 原始登录的创建者账号
+    isOriginalCreator: false // 原始登录是否是创建者
   },
 
   // 保存用户信息到本地存储

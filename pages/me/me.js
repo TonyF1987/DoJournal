@@ -38,6 +38,10 @@ Page({
 
   onShow() {
     this.loadUserInfo();
+    // 如果用户有家庭，刷新家庭信息（不打开弹窗）
+    if (app.globalData.userInfo && app.globalData.userInfo.familyId) {
+      this.loadFamilyInfo(false);
+    }
   },
 
   // 跳转到登录页面
@@ -127,7 +131,7 @@ Page({
   openFamilyManage() {
     if (!this.checkLoginAndPrompt()) return;
     if (this.data.userInfo.familyId) {
-      this.loadFamilyInfo();
+      this.loadFamilyInfo(true);
     } else {
       this.setData({ showFamilyManage: true });
     }
@@ -144,7 +148,7 @@ Page({
     });
   },
 
-  loadFamilyInfo() {
+  loadFamilyInfo(shouldOpenManage = false) {
     console.log('loadFamilyInfo 被调用，当前用户信息:', this.data.userInfo);
     
     wx.cloud.callFunction({
@@ -176,14 +180,16 @@ Page({
           this.setData({
             familyInfo: family,
             familyMembers: family ? family.members : [],
-            showFamilyManage: true,
+            showFamilyManage: shouldOpenManage,
             isFamilyCreator: isCreator,
             currentUserOpenid: currentOpenid,
             currentUserAccount: currentAccount
+          }, () => {
+            this.filterFamilyMembers();
           });
         } else {
-          console.log('云函数返回失败，设置showFamilyManage为true');
-          this.setData({ showFamilyManage: true });
+          console.log('云函数返回失败，设置showFamilyManage为', shouldOpenManage);
+          this.setData({ showFamilyManage: shouldOpenManage });
         }
       },
       fail: err => {
@@ -227,21 +233,21 @@ Page({
       success: res => {
         wx.hideLoading();
         if (res.result && res.result.success) {
-          wx.showToast({ title: '家庭创建成功', icon: 'success' });
-          this.closeFamilyManage();
+        wx.showToast({ title: '家庭创建成功', icon: 'success' });
+        this.closeFamilyManage();
+        setTimeout(() => {
+          // 先加载用户信息
+          this.loadUserInfo();
+          // 再延迟加载家庭信息并打开家庭管理
           setTimeout(() => {
-            // 先加载用户信息
-            this.loadUserInfo();
-            // 再延迟加载家庭信息并打开家庭管理
-            setTimeout(() => {
-              this.setData({ showFamilyManage: true }, () => {
-                this.loadFamilyInfo();
-              });
-            }, 500);
+            this.setData({ showFamilyManage: true }, () => {
+              this.loadFamilyInfo(false);
+            });
           }, 500);
-        } else {
-          wx.showToast({ title: res.result && res.result.errMsg || '创建失败', icon: 'none' });
-        }
+        }, 500);
+      } else {
+        wx.showToast({ title: res.result && res.result.errMsg || '创建失败', icon: 'none' });
+      }
       },
       fail: err => {
         wx.hideLoading();
@@ -520,6 +526,16 @@ Page({
   },
 
   deleteAccount() {
+    // 检查是否是只读账号
+    if (this.data.userInfo.familyReadOnly) {
+      wx.showModal({
+        title: '提示',
+        content: '您只有只读权限，无法注销账号',
+        showCancel: false
+      });
+      return;
+    }
+
     wx.showModal({
       title: '确认注销',
       content: '注销账号将永久删除您的所有数据，此操作不可恢复！确定要注销吗？',
@@ -663,7 +679,7 @@ Page({
       if (res.result && res.result.success) {
         wx.showToast({ title: '修改成功', icon: 'success' });
         this.closeEditFamilyName();
-        this.loadFamilyInfo();
+        this.loadFamilyInfo(false);
       } else {
         wx.showToast({ title: res.result?.errMsg || '修改失败', icon: 'none' });
       }
@@ -674,15 +690,49 @@ Page({
     }
   },
 
-  // 切换成员只读权限
-  async toggleMemberReadOnly(e) {
+
+
+  // 移除家庭成员
+  // 过滤家庭成员，非管理员看不到隐藏成员（除了自己）
+  filterFamilyMembers() {
+    const { familyMembers, isFamilyCreator, currentUserOpenid, currentUserAccount } = this.data;
+    
+    if (!familyMembers || familyMembers.length === 0) {
+      this.setData({ displayFamilyMembers: [] });
+      return;
+    }
+    
+    // 确保所有成员都有 hidden 字段
+    const normalizedMembers = familyMembers.map(member => ({
+      ...member,
+      hidden: member.hidden === true  // 只有显式为 true 才算隐藏
+    }));
+    
+    // 如果是创建者，显示所有成员
+    if (isFamilyCreator) {
+      this.setData({ displayFamilyMembers: normalizedMembers });
+    } else {
+      // 非创建者，过滤掉隐藏的成员，但保留自己
+      const displayMembers = normalizedMembers.filter(member => {
+        const isMe = member.openid === currentUserOpenid && member.account === currentUserAccount;
+        
+        // 显示自己，或者显示未被隐藏的
+        return isMe || !member.hidden;
+      });
+      
+      this.setData({ displayFamilyMembers: displayMembers });
+    }
+  },
+
+  // 切换成员隐藏状态
+  async toggleMemberHidden(e) {
     const memberOpenid = e.currentTarget.dataset.openid;
     const memberAccount = e.currentTarget.dataset.account;
-    const readOnly = e.currentTarget.dataset.readonly;
+    const hidden = e.currentTarget.dataset.hidden;
 
     wx.showModal({
       title: '确认操作',
-      content: readOnly ? '确定要设置该成员为只读权限吗？' : '确定要取消该成员的只读权限吗？',
+      content: hidden ? '确定要隐藏该成员吗？' : '确定要取消隐藏该成员吗？',
       success: async (modalRes) => {
         if (modalRes.confirm) {
           wx.showLoading({ title: '设置中...' });
@@ -691,11 +741,11 @@ Page({
             const res = await wx.cloud.callFunction({
               name: 'manageFamily',
               data: {
-                action: 'setMemberReadOnly',
-                data: {
+                action: 'setMemberHidden',
+                data: { 
                   memberOpenid: memberOpenid,
                   memberAccount: memberAccount,
-                  readOnly: readOnly,
+                  hidden: hidden,
                   account: this.data.userInfo.account || ''
                 }
               }
@@ -705,13 +755,13 @@ Page({
 
             if (res.result && res.result.success) {
               wx.showToast({ title: '设置成功', icon: 'success' });
-              this.loadFamilyInfo();
+              this.loadFamilyInfo(false);
             } else {
               wx.showToast({ title: res.result?.errMsg || '设置失败', icon: 'none' });
             }
           } catch (err) {
             wx.hideLoading();
-            console.error('设置权限失败:', err);
+            console.error('设置失败:', err);
             wx.showToast({ title: '设置失败', icon: 'none' });
           }
         }
@@ -719,7 +769,6 @@ Page({
     });
   },
 
-  // 移除家庭成员
   async removeFamilyMember(e) {
     const memberOpenid = e.currentTarget.dataset.openid;
     const memberAccount = e.currentTarget.dataset.account;
@@ -749,7 +798,7 @@ Page({
 
             if (res.result && res.result.success) {
               wx.showToast({ title: '移除成功', icon: 'success' });
-              this.loadFamilyInfo();
+              this.loadFamilyInfo(false);
             } else {
               wx.showToast({ title: res.result?.errMsg || '移除失败', icon: 'none' });
             }
@@ -824,7 +873,7 @@ Page({
             if (res.result && res.result.success) {
               wx.showToast({ title: '添加成功', icon: 'success' });
               this.closeAddAccountModal();
-              this.loadFamilyInfo();
+              this.loadFamilyInfo(false);
             } else {
               wx.showToast({ title: res.result?.errMsg || '添加失败', icon: 'none' });
             }
