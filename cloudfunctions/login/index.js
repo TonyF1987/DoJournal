@@ -225,12 +225,10 @@ exports.main = async (event, context) => {
       const familyRes = await db.collection('families').doc(userInfo.familyId).get();
       if (familyRes.data) {
         const family = familyRes.data;
-        const creatorMember = family.members.find(m => m.role === 'creator');
+        const creatorMember = family.members.find(function(m) { return m.role === 'creator'; });
         if (creatorMember) {
           // 找到创建者账号，获取其 currentChildId
-          const creatorUser = allUsers.find(u => 
-            (u.account || '') === (creatorMember.account || '')
-          );
+          const creatorUser = allUsers.find(function(u) { return (u.account || '') === (creatorMember.account || ''); });
           if (creatorUser && creatorUser.currentChildId) {
             creatorCurrentChildId = creatorUser.currentChildId;
           }
@@ -238,7 +236,7 @@ exports.main = async (event, context) => {
       }
     } else {
       // 没有家庭，使用第一个账号的 currentChildId
-      if (allUsers.length &gt; 0) {
+      if (allUsers.length > 0) {
         creatorCurrentChildId = allUsers[0].currentChildId;
       }
     }
@@ -246,7 +244,7 @@ exports.main = async (event, context) => {
     // 如果找到了创建者的当前小孩，并且该小孩存在，则使用它
     if (creatorCurrentChildId) {
       const children = userInfo.children || [];
-      const childExists = children.some(c =&gt; c.id === creatorCurrentChildId);
+      const childExists = children.some(function(c) { return c.id === creatorCurrentChildId; });
       if (childExists) {
         // 更新当前用户的 currentChildId
         await db.collection('users').doc(userId).update({
