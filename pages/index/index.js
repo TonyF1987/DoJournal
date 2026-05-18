@@ -1594,30 +1594,56 @@ Page({
         });
     }
     
-    // 如果日历未展开，确保今天显示在中位
+    // 如果日历未展开，确保今天显示在中位，并且保持正确的星期对齐
     if (!this.data.calendarExpanded) {
-      // 找到今天在数组中的位置
       let todayIndex = -1;
+      
       if (isCurrentMonth) {
-        // 获取今天是星期几（0=周日, 1=周一...6=周六）
-        const todayWeekday = today.getDay();
-        // 调整为周一为0的索引
-        const adjustedTodayWeekday = todayWeekday === 0 ? 6 : todayWeekday - 1;
-        // 计算今天在日历中的索引
+        // 计算今天在日历数组中的索引
         todayIndex = firstDayOfWeek + today.getDate() - 1; // 减1因为day从1开始
       }
       
       if (todayIndex >= 0) {
-        // 显示2周（14天），让今天位于中间
-        // 计算起始位置，让今天在第7天的位置（0-based的话是第6天）
-        let startIndex = Math.max(0, todayIndex - 6);
-        // 确保结束位置不超过日历数据长度
-        let endIndex = Math.min(startIndex + 14, calendarData.length);
-        // 如果剩余天数不够，调整起始位置
-        if (endIndex - startIndex < 14) {
-          startIndex = Math.max(0, endIndex - 14);
+        // 在完整calendarData数组中，索引0对应周一
+        
+        // 目标是让今天在第7天的位置（0-based的话是第6天）
+        let targetTodayPosition = 6;
+        let idealStartIndex = todayIndex - targetTodayPosition;
+        
+        // 找到起始位置的星期几（0=周一）
+        let startWeekday = idealStartIndex % 7;
+        if (startWeekday < 0) {
+          startWeekday += 7;
         }
-        calendarData = calendarData.slice(startIndex, endIndex);
+        
+        // 调整到上一个周一，确保第一格是周一
+        let adjustedStartIndex = idealStartIndex - startWeekday;
+        
+        // 确保不越界
+        if (adjustedStartIndex < 0) {
+          adjustedStartIndex = 0;
+        }
+        
+        let endIndex = adjustedStartIndex + 14;
+        
+        // 如果后面不够14天，往前挪
+        if (endIndex > calendarData.length) {
+          endIndex = calendarData.length;
+          adjustedStartIndex = Math.max(0, endIndex - 14);
+        }
+        
+        // 如果不从索引0开始，需要在前面填充空白保持对齐
+        if (adjustedStartIndex > 0) {
+          // 计算需要填充多少个空白
+          const paddingNeeded = adjustedStartIndex % 7;
+          for (let i = 0; i < paddingNeeded; i++) {
+            calendarData.unshift({ day: '', isCurrentMonth: false, hasHomework: false });
+          }
+          adjustedStartIndex += paddingNeeded;
+          endIndex += paddingNeeded;
+        }
+        
+        calendarData = calendarData.slice(adjustedStartIndex, endIndex);
       } else {
         // 如果不是当前月或找不到今天，默认显示前2周
         const showDays = Math.min(firstDayOfWeek + 14, calendarData.length);
