@@ -68,7 +68,7 @@
           <view class="card">
             <view class="form-label">作业内容 *</view>
             <view class="form-textarea-container">
-              <textarea class="form-textarea" name="content" placeholder="详细描述作业内容..." value="{{content}}" bindinput="onContentInput"></textarea>
+              <textarea class="form-textarea" name="content" placeholder="详细描述作业内容..." value="{{content}}" bindinput="onContentInput" maxlength="1000"></textarea>
             </view>
           </view>
 
@@ -249,7 +249,7 @@
         <view class="card">
           <view class="form-label">作业内容 *</view>
           <view class="form-textarea-container">
-            <textarea class="form-textarea" name="content" placeholder="详细描述作业内容..." value="{{content}}" bindinput="onContentInput"></textarea>
+            <textarea class="form-textarea" name="content" placeholder="详细描述作业内容..." value="{{content}}" bindinput="onContentInput" maxlength="1000"></textarea>
           </view>
         </view>
 
