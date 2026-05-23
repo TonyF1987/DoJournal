@@ -35,6 +35,10 @@ App({
         this.globalData.userInfo = parsedUserInfo;
         this.globalData.currentChildId = parsedUserInfo.currentChildId;
         this.globalData.children = parsedUserInfo.children || [];
+        
+        // 判断当前账号是否是家庭管理员
+        this.globalData.isOriginalCreator = 
+          parsedUserInfo.familyRole === 'creator';
       } catch (e) {
         console.error('解析用户信息失败', e);
       }
@@ -48,14 +52,6 @@ App({
       this.globalData.openid = openid;
       this.globalData.userId = userId;
       this.globalData.isLoggedIn = true;
-    }
-
-    // 恢复原始创建者状态
-    const originalCreatorAccount = wx.getStorageSync('originalCreatorAccount');
-    const isOriginalCreator = wx.getStorageSync('isOriginalCreator');
-    if (originalCreatorAccount !== '') {
-      this.globalData.originalCreatorAccount = originalCreatorAccount;
-      this.globalData.isOriginalCreator = isOriginalCreator || false;
     }
   },
 
@@ -112,8 +108,9 @@ App({
     isLoggedIn: false, // 登录状态标记
     currentChildId: null, // 当前选中的小朋友ID
     children: [], // 所有小朋友列表
-    originalCreatorAccount: '', // 原始登录的创建者账号
-    isOriginalCreator: false // 原始登录是否是创建者
+    originalCreatorOpenid: '', // 原始管理员的openid
+    originalCreatorAccount: '', // 原始管理员的账号
+    isOriginalCreator: false // 是否是从原始管理员登录（可以切换账号）
   },
 
   // 保存用户信息到本地存储
@@ -125,13 +122,16 @@ App({
     this.globalData.openid = userInfo._openid;
     this.globalData.userId = userInfo._id;
     
-    // 如果当前是创建者，更新原始创建者信息（只有首次或切换到创建者账号时才更新）
-    if (userInfo.familyRole === 'creator') {
-      this.globalData.isOriginalCreator = true;
+    // 如果当前是管理员且还没记录原始管理员 → 记录下来
+    if (userInfo.familyRole === 'creator' && !this.globalData.originalCreatorOpenid) {
+      this.globalData.originalCreatorOpenid = userInfo._openid;
       this.globalData.originalCreatorAccount = userInfo.account || '';
+      wx.setStorageSync('originalCreatorOpenid', this.globalData.originalCreatorOpenid);
       wx.setStorageSync('originalCreatorAccount', this.globalData.originalCreatorAccount);
-      wx.setStorageSync('isOriginalCreator', true);
     }
+    
+    // isOriginalCreator: 只要有记录过原始管理员，就能切换账号
+    this.globalData.isOriginalCreator = !!this.globalData.originalCreatorOpenid;
     
     wx.setStorageSync('userInfo', JSON.stringify(userInfo));
     wx.setStorageSync('openid', userInfo._openid);
@@ -189,14 +189,11 @@ App({
     this.globalData.isLoggedIn = false;
     this.globalData.currentChildId = null;
     this.globalData.children = [];
-    this.globalData.originalCreatorAccount = '';
     this.globalData.isOriginalCreator = false;
     
     wx.removeStorageSync('userInfo');
     wx.removeStorageSync('openid');
     wx.removeStorageSync('userId');
     wx.removeStorageSync('isLoggedIn');
-    wx.removeStorageSync('originalCreatorAccount');
-    wx.removeStorageSync('isOriginalCreator');
   },
 });

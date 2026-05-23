@@ -30,8 +30,10 @@ Page({
     currentUserAccount: '',
     showAddAccountModal: false,
     availableAccounts: [],
-    registrationEnabled: true,  // 注册开关状态
-    isAdmin: false  // 是否是管理员
+    registrationEnabled: true, // 注册开关状态
+    isAdmin: false, // 是否是管理员
+    showRegistrationInvitationModal: false, // 注册邀请码弹窗
+    registrationInvitationCode: '' // 注册邀请码
   },
 
   onLoad() {
@@ -391,6 +393,13 @@ Page({
               wx.hideLoading();
               if (res.result.success) {
                 wx.showToast({ title: '已退出家庭', icon: 'success' });
+                // 清空家庭相关状态
+                this.setData({
+                  familyInfo: null,
+                  familyMembers: [],
+                  isFamilyCreator: false
+                });
+                // 更新用户信息并关闭家庭管理
                 this.closeFamilyManage();
                 this.loadUserInfo();
               } else {
@@ -1049,6 +1058,54 @@ Page({
     } catch (err) {
       console.error('检查管理员状态失败:', err);
     }
+  },
+
+  // 生成注册邀请码
+  async generateRegistrationInvitation() {
+    wx.showLoading({ title: '生成中...' });
+
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'handleAuth',
+        data: {
+          action: 'generateRegistrationInvitation',
+          account: this.data.userInfo?.account || ''
+        }
+      });
+
+      wx.hideLoading();
+
+      if (res.result && res.result.success) {
+        this.setData({
+          registrationInvitationCode: res.result.code,
+          showRegistrationInvitationModal: true
+        });
+      } else {
+        wx.showToast({ title: res.result?.errMsg || '生成失败', icon: 'none' });
+      }
+    } catch (err) {
+      wx.hideLoading();
+      console.error('生成注册邀请码失败:', err);
+      wx.showToast({ title: '生成失败', icon: 'none' });
+    }
+  },
+
+  // 关闭注册邀请码弹窗
+  closeRegistrationInvitationModal() {
+    this.setData({
+      showRegistrationInvitationModal: false,
+      registrationInvitationCode: ''
+    });
+  },
+
+  // 复制注册邀请码
+  copyRegistrationInvitation() {
+    wx.setClipboardData({
+      data: this.data.registrationInvitationCode,
+      success: () => {
+        wx.showToast({ title: '已复制', icon: 'success' });
+      }
+    });
   },
 
   // 切换注册开关

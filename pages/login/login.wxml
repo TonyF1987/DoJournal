@@ -17,7 +17,7 @@
     <!-- 注册关闭提示 -->
     <view class="registration-notice" wx:if="{{!registrationEnabled}}">
       <text class="notice-icon">🔒</text>
-      <text class="notice-text">注册功能暂时关闭</text>
+      <text class="notice-text">注册功能暂时关闭，如有需要请联系管理员获取邀请码</text>
     </view>
   </view>
 
@@ -105,6 +105,18 @@
       <view class="password-eye" bindtap="togglePassword">
         <text>{{showPassword ? '🔓' : '🔒'}}</text>
       </view>
+    </view>
+
+    <!-- 邀请码输入框（仅注册关闭时显示） -->
+    <view class="input-group" wx:if="{{!registrationEnabled}}">
+      <input
+        class="form-input"
+        type="text"
+        placeholder="请输入邀请码（必填）"
+        value="{{invitationCode}}"
+        bindinput="onInvitationCodeInput"
+        maxlength="6"
+      />
     </view>
 
     <!-- 协议 -->

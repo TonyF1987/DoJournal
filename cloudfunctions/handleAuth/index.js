@@ -163,6 +163,51 @@ exports.main = async (event, context) => {
       };
     }
 
+    if (action === 'generateRegistrationInvitation') {
+      // 生成注册邀请码（仅管理员）
+      const { account } = event;
+      
+      // 验证管理员权限
+      const adminConfigRes = await db.collection('appConfig').where({
+        key: 'adminAccounts'
+      }).get();
+      
+      let isAdmin = false;
+      if (adminConfigRes.data.length > 0 && adminConfigRes.data[0].value) {
+        const adminAccounts = adminConfigRes.data[0].value;
+        isAdmin = adminAccounts.some(admin => {
+          return admin.openid === wxContext.OPENID && admin.account === (account || '');
+        });
+      }
+      
+      if (!isAdmin) {
+        return {
+          success: false,
+          errMsg: '您没有权限生成注册邀请码'
+        };
+      }
+      
+      // 生成邀请码
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const expireTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24小时有效
+
+      await db.collection('registration_invitations').add({
+        data: {
+          code: code,
+          expireTime: expireTime,
+          createTime: db.serverDate(),
+          _openid: wxContext.OPENID
+        }
+      });
+
+      return {
+        success: true,
+        code: code,
+        expireTime: expireTime,
+        message: '注册邀请码生成成功'
+      };
+    }
+
     if (action === 'checkUser') {
       // 检查用户是否已注册（支持手机号或账号）
       const user = await findUserByIdentifier(phoneNumber);
@@ -208,14 +253,29 @@ exports.main = async (event, context) => {
     }
 
     if (action === 'register') {
+      const { invitationCode } = event;
+      
       // 先检查注册开关
       const config = await getRegistrationConfig();
       if (!config.value) {
-        return {
-          success: false,
-          errMsg: '注册功能暂时关闭，如需注册请联系管理员邀请',
-          registrationDisabled: true
-        };
+        // 如果注册关闭，检查是否有有效注册邀请码
+        let hasValidInvitation = false;
+        if (invitationCode) {
+          const now = new Date();
+          const invitationRes = await db.collection('registration_invitations').where({
+            code: invitationCode,
+            expireTime: _.gte(now)
+          }).get();
+          hasValidInvitation = invitationRes.data.length > 0;
+        }
+        
+        if (!hasValidInvitation) {
+          return {
+            success: false,
+            errMsg: '注册功能暂时关闭，如需注册请联系管理员邀请',
+            registrationDisabled: true
+          };
+        }
       }
 
       // 注册新用户（支持手机号或账号注册）

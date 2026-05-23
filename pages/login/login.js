@@ -13,7 +13,8 @@ Page({
     accounts: [], // 该 openid 下的所有账号
     showAccountDropdown: false, // 是否显示账号下拉列表
     hasGotUserInfo: false, // 是否已经获取了用户信息
-    registrationEnabled: true // 注册功能是否开启
+    registrationEnabled: true, // 注册功能是否开启
+    invitationCode: '' // 邀请码
   },
 
   onLoad(options) {
@@ -181,6 +182,12 @@ Page({
     });
   },
 
+  onInvitationCodeInput(e) {
+    this.setData({
+      invitationCode: e.detail.value
+    });
+  },
+
   togglePassword() {
     this.setData({
       showPassword: !this.data.showPassword
@@ -232,7 +239,8 @@ Page({
         phoneNumber: this.data.phoneNumber,
         password: this.data.password,
         nickName: this.data.nickName || '微信用户',
-        avatarUrl: this.data.avatarUrl || ''
+        avatarUrl: this.data.avatarUrl || '',
+        invitationCode: this.data.invitationCode
       }
     });
 
@@ -256,9 +264,13 @@ Page({
     } else {
       // 如果是注册被禁用，显示特殊提示
       if (res.result.registrationDisabled) {
+        let hintText = '注册功能暂时关闭，如需注册请联系管理员获取邀请码';
+        if (this.data.invitationCode) {
+          hintText = '邀请码无效或已过期，请联系管理员获取新的邀请码';
+        }
         wx.showModal({
-          title: '注册暂停',
-          content: res.result.errMsg || '注册功能暂时关闭，如需注册请联系管理员邀请',
+          title: '提示',
+          content: hintText,
           showCancel: false,
           confirmText: '我知道了'
         });

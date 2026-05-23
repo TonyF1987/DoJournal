@@ -607,7 +607,7 @@ async function generateInvitationCode(wxContext, data) {
 
   // 生成邀请码
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const expireTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7天有效
+  const expireTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24小时有效
 
   await db.collection('family_invitations').add({
     data: {

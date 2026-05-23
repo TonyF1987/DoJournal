@@ -180,6 +180,15 @@
           <switch class="settings-switch" checked="{{registrationEnabled}}" bindtap="toggleRegistration" />
         </view>
         
+        <!-- 管理员专属：生成注册邀请码 -->
+        <view class="settings-item" wx:if="{{isAdmin}}" bindtap="generateRegistrationInvitation">
+          <view class="settings-item-left">
+          <text class="settings-icon">🎫</text>
+          <text class="settings-title">生成注册邀请码</text>
+          </view>
+          <text class="menu-arrow">›</text>
+        </view>
+        
         <view class="settings-item" bindtap="viewServiceAgreement">
           <text class="settings-icon">📄</text>
           <text class="settings-title">服务协议</text>
@@ -194,6 +203,28 @@
     </view>
     <view class="modal-footer">
       <button class="btn-confirm" bindtap="closeSettings">确定</button>
+    </view>
+  </view>
+</view>
+
+<!-- 注册邀请码弹窗 -->
+<view class="modal" wx:if="{{showRegistrationInvitationModal}}" bindtap="closeRegistrationInvitationModal">
+  <view class="modal-mask"></view>
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text>注册邀请码</text>
+      <text class="close-btn" bindtap="closeRegistrationInvitationModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="empty-state">
+        <text class="empty-icon">🎫</text>
+        <text class="empty-text">{{registrationInvitationCode}}</text>
+        <text class="empty-sub">24小时内有效</text>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closeRegistrationInvitationModal">关闭</button>
+      <button class="btn-confirm" bindtap="copyRegistrationInvitation">复制邀请码</button>
     </view>
   </view>
 </view>
