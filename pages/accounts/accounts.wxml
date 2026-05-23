@@ -42,11 +42,6 @@
           <view wx:if="{{currentAccountId === item._id}}" class="account-status">
             <text class="status-text">当前使用</text>
           </view>
-          <view wx:elif="{{isOriginalCreatorGlobal && item.familyId}}" class="account-actions">
-            <button class="btn-action btn-small" catchtap="toggleAccountReadOnly" data-account="{{item.account}}" data-readonly="{{!item.readOnly}}">
-              {{item.readOnly ? '取消只读' : '设为只读'}}
-            </button>
-          </view>
           <view wx:elif="{{(isOriginalCreatorGlobal || !hasFamily)}}" class="account-arrow">›</view>
         </view>
       </block>

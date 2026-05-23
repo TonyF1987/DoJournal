@@ -493,7 +493,7 @@
           <text class="checkin-section-label">打卡评语</text>
           <text class="checkin-section-optional">（可选）</text>
         </view>
-        <textarea class="checkin-comment" placeholder="记录完成心得..." value="{{checkinComment}}" bindinput="onCheckinCommentInput" maxlength="200"></textarea>
+        <textarea class="checkin-comment" placeholder="记录完成心得..." value="{{checkinComment}}" bindinput="onCheckinCommentInput" maxlength="1000"></textarea>
       </view>
     </view>
 

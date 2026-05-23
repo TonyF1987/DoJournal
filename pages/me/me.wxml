@@ -310,6 +310,9 @@
                   </view>
                 </view>
                 <view wx:if="{{isFamilyCreator && !(item.openid === currentUserOpenid && item.account === currentUserAccount)}}" class="member-actions">
+                <button class="btn-action btn-small" bindtap="toggleMemberReadOnly" data-openid="{{item.openid}}" data-account="{{item.account}}" data-readonly="{{!item.readOnly}}">
+                  {{item.readOnly ? '取消只读' : '设为只读'}}
+                </button>
                 <button class="btn-action btn-small" bindtap="toggleMemberHidden" data-openid="{{item.openid}}" data-account="{{item.account}}" data-hidden="{{!item.hidden}}">
                   {{item.hidden ? '取消隐藏' : '隐藏'}}
                 </button>
@@ -323,7 +326,7 @@
         </view>
         <view class="family-actions">
           <button wx:if="{{isFamilyCreator}}" class="btn-confirm" bindtap="showAddAccountModal">添加本微信其他账号</button>
-          <button class="btn-cancel" bindtap="generateInviteCode">生成邀请码</button>
+          <button wx:if="{{isFamilyCreator}}" class="btn-cancel" bindtap="generateInviteCode">生成邀请码</button>
           <button wx:if="{{isFamilyCreator}}" class="btn-action btn-danger" bindtap="showDissolveFamily">解散家庭</button>
           <button wx:else class="btn-danger" bindtap="leaveFamily">退出家庭</button>
         </view>

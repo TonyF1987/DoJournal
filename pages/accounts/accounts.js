@@ -15,11 +15,6 @@ Page({
   onLoad() {
     const userInfo = app.globalData.userInfo;
     
-    if (app.globalData.originalCreatorAccount === '' || app.globalData.isOriginalCreator === false) {
-      app.globalData.isOriginalCreator = userInfo && userInfo.familyRole === 'creator';
-      app.globalData.originalCreatorAccount = userInfo && userInfo.familyRole === 'creator' ? (userInfo.account || '') : '';
-    }
-    
     this.setData({
       isOriginalCreatorGlobal: app.globalData.isOriginalCreator,
       currentAccountId: app.globalData.userId || ''
@@ -372,49 +367,6 @@ Page({
         wx.hideLoading();
         console.error('保存资料失败:', err);
         wx.showToast({ title: '保存失败', icon: 'none' });
-      }
-    });
-  },
-
-  toggleAccountReadOnly(e) {
-    const memberAccount = e.currentTarget.dataset.account;
-    const readOnly = e.currentTarget.dataset.readonly;
-
-    wx.showModal({
-      title: '确认操作',
-      content: readOnly ? '确定要设置该账号为只读权限吗？' : '确定要取消该账号的只读权限吗？',
-      success: async (modalRes) => {
-        if (modalRes.confirm) {
-          wx.showLoading({ title: '设置中...' });
-
-          try {
-            const res = await wx.cloud.callFunction({
-              name: 'manageFamily',
-              data: {
-                action: 'setMemberReadOnly',
-                data: {
-                  memberOpenid: app.globalData.openid,
-                  memberAccount: memberAccount,
-                  readOnly: readOnly,
-                  account: app.globalData.originalCreatorAccount || ''
-                }
-              }
-            });
-
-            wx.hideLoading();
-
-            if (res.result && res.result.success) {
-              wx.showToast({ title: '设置成功', icon: 'success' });
-              this.loadAccounts();
-            } else {
-              wx.showToast({ title: res.result?.errMsg || '设置失败', icon: 'none' });
-            }
-          } catch (err) {
-            wx.hideLoading();
-            console.error('设置权限失败:', err);
-            wx.showToast({ title: '设置失败', icon: 'none' });
-          }
-        }
       }
     });
   },

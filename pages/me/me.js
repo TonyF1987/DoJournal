@@ -809,6 +809,51 @@ Page({
     });
   },
 
+  // 切换成员只读状态
+  async toggleMemberReadOnly(e) {
+    const memberOpenid = e.currentTarget.dataset.openid;
+    const memberAccount = e.currentTarget.dataset.account;
+    const readOnly = e.currentTarget.dataset.readonly;
+
+    wx.showModal({
+      title: '确认操作',
+      content: readOnly ? '确定要将该成员设为只读吗？' : '确定要取消该成员的只读状态吗？',
+      success: async (modalRes) => {
+        if (modalRes.confirm) {
+          wx.showLoading({ title: '设置中...' });
+
+          try {
+            const res = await wx.cloud.callFunction({
+              name: 'manageFamily',
+              data: {
+                action: 'setMemberReadOnly',
+                data: { 
+                  memberOpenid: memberOpenid,
+                  memberAccount: memberAccount,
+                  readOnly: readOnly,
+                  account: this.data.userInfo.account || ''
+                }
+              }
+            });
+
+            wx.hideLoading();
+
+            if (res.result && res.result.success) {
+              wx.showToast({ title: '设置成功', icon: 'success' });
+              this.loadFamilyInfo(false);
+            } else {
+              wx.showToast({ title: res.result?.errMsg || '设置失败', icon: 'none' });
+            }
+          } catch (err) {
+            wx.hideLoading();
+            console.error('设置失败:', err);
+            wx.showToast({ title: '设置失败', icon: 'none' });
+          }
+        }
+      }
+    });
+  },
+
   async removeFamilyMember(e) {
     const memberOpenid = e.currentTarget.dataset.openid;
     const memberAccount = e.currentTarget.dataset.account;

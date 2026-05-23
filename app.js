@@ -49,6 +49,14 @@ App({
       this.globalData.userId = userId;
       this.globalData.isLoggedIn = true;
     }
+
+    // 恢复原始创建者状态
+    const originalCreatorAccount = wx.getStorageSync('originalCreatorAccount');
+    const isOriginalCreator = wx.getStorageSync('isOriginalCreator');
+    if (originalCreatorAccount !== '') {
+      this.globalData.originalCreatorAccount = originalCreatorAccount;
+      this.globalData.isOriginalCreator = isOriginalCreator || false;
+    }
   },
 
   // 登录并获取openid
@@ -117,6 +125,14 @@ App({
     this.globalData.openid = userInfo._openid;
     this.globalData.userId = userInfo._id;
     
+    // 如果当前是创建者，更新原始创建者信息（只有首次或切换到创建者账号时才更新）
+    if (userInfo.familyRole === 'creator') {
+      this.globalData.isOriginalCreator = true;
+      this.globalData.originalCreatorAccount = userInfo.account || '';
+      wx.setStorageSync('originalCreatorAccount', this.globalData.originalCreatorAccount);
+      wx.setStorageSync('isOriginalCreator', true);
+    }
+    
     wx.setStorageSync('userInfo', JSON.stringify(userInfo));
     wx.setStorageSync('openid', userInfo._openid);
     wx.setStorageSync('userId', userInfo._id);
@@ -173,10 +189,14 @@ App({
     this.globalData.isLoggedIn = false;
     this.globalData.currentChildId = null;
     this.globalData.children = [];
+    this.globalData.originalCreatorAccount = '';
+    this.globalData.isOriginalCreator = false;
     
     wx.removeStorageSync('userInfo');
     wx.removeStorageSync('openid');
     wx.removeStorageSync('userId');
     wx.removeStorageSync('isLoggedIn');
+    wx.removeStorageSync('originalCreatorAccount');
+    wx.removeStorageSync('isOriginalCreator');
   },
 });

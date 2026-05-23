@@ -65,8 +65,8 @@
   <view class="card">
     <view class="form-label">打卡评语（可选）</view>
     <view class="comment-input-wrapper">
-      <textarea class="comment-input" placeholder="记录一下完成心得..." value="{{comment}}" bindinput="onCommentInput" maxlength="200"></textarea>
-      <text class="char-count">{{comment.length}}/200</text>
+      <textarea class="comment-input" placeholder="记录一下完成心得..." value="{{comment}}" bindinput="onCommentInput" maxlength="1000"></textarea>
+      <text class="char-count">{{comment.length}}/1000</text>
     </view>
   </view>
 
