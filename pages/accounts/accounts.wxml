@@ -22,7 +22,7 @@
               data-account="{{item}}"
               style="{{!(isOriginalCreatorGlobal || !hasFamily) ? 'cursor: default;' : ''}}">
           <view class="account-avatar">
-            <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="account-avatar-img" />
+            <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="account-avatar-img" binderror="onAccountAvatarError" data-index="{{index}}" />
             <text wx:else>👤</text>
           </view>
           <view class="account-info">
@@ -87,7 +87,7 @@
     <view class="modal-body">
       <view class="edit-avatar-section">
         <view class="edit-avatar" bindtap="chooseAvatar">
-          <image wx:if="{{editUserInfo.avatarUrl}}" src="{{editUserInfo.avatarUrl}}" mode="aspectFill" class="edit-avatar-img" />
+          <image wx:if="{{editUserInfo.avatarUrl}}" src="{{editUserInfo.avatarUrl}}" mode="aspectFill" class="edit-avatar-img" binderror="onEditAvatarError" />
           <text wx:else class="edit-avatar-placeholder">📷</text>
           <view class="avatar-edit-badge">更换头像</view>
         </view>

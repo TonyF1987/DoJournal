@@ -16,7 +16,7 @@
     <!-- 已登录状态 -->
     <view class="user-card" wx:else bindtap="openEditProfile">
       <view class="user-avatar">
-        <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" mode="aspectFill" class="user-avatar-img" />
+        <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" mode="aspectFill" class="user-avatar-img" binderror="onAvatarError" data-context="user" />
         <text wx:else>👤</text>
       </view>
       <view class="user-info">
@@ -129,7 +129,7 @@
     <view class="modal-body">
       <view class="edit-avatar-section">
         <view class="edit-avatar" bindtap="chooseAvatar">
-          <image wx:if="{{editUserInfo.avatarUrl}}" src="{{editUserInfo.avatarUrl}}" mode="aspectFill" class="edit-avatar-img" />
+          <image wx:if="{{editUserInfo.avatarUrl}}" src="{{editUserInfo.avatarUrl}}" mode="aspectFill" class="edit-avatar-img" binderror="onAvatarError" data-context="edit" />
           <text wx:else class="edit-avatar-placeholder">📷</text>
           <view class="avatar-edit-badge">更换头像</view>
         </view>
@@ -170,6 +170,16 @@
           </view>
           <switch class="settings-switch" checked="{{settings.darkMode}}" bindtap="toggleDarkMode" />
         </view>
+        
+        <!-- 管理员专属：注册功能开关 -->
+        <view class="settings-item" wx:if="{{isAdmin}}">
+          <view class="settings-item-left">
+          <text class="settings-icon">🔐</text>
+          <text class="settings-title">注册功能</text>
+          </view>
+          <switch class="settings-switch" checked="{{registrationEnabled}}" bindtap="toggleRegistration" />
+        </view>
+        
         <view class="settings-item" bindtap="viewServiceAgreement">
           <text class="settings-icon">📄</text>
           <text class="settings-title">服务协议</text>
@@ -283,7 +293,7 @@
             <block wx:for="{{displayFamilyMembers}}" wx:key="index">
               <view class="family-member">
                 <view class="member-avatar">
-                  <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="member-avatar-img" />
+                  <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="member-avatar-img" binderror="onMemberAvatarError" data-index="{{index}}" />
                   <text wx:else>👤</text>
                 </view>
                 <view class="member-info">
@@ -398,7 +408,7 @@
         <block wx:for="{{availableAccounts}}" wx:key="_id">
           <view class="account-item" bindtap="addAccountToFamily" data-account="{{item.account}}">
             <view class="account-avatar-item">
-              <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="account-avatar-img" />
+              <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="account-avatar-img" binderror="onAvailableAccountAvatarError" data-index="{{index}}" />
               <text wx:else>👤</text>
             </view>
             <view class="account-info-item">

@@ -25,7 +25,7 @@
     <view class="child-info-section" bindtap="openChildModal">
       <view class="child-card">
         <view class="child-card-avatar">
-          <image wx:if="{{currentChild && currentChild.avatarUrl}}" src="{{currentChild.avatarUrl}}" mode="aspectFill" class="child-avatar-img"></image>
+          <image wx:if="{{currentChild && currentChild.avatarUrl}}" src="{{currentChild.avatarUrl}}" mode="aspectFill" class="child-avatar-img" binderror="onCurrentChildAvatarError"></image>
           <text wx:else>👦</text>
         </view>
         <view class="child-card-detail">
@@ -220,7 +220,7 @@
             <view class="child-select-area" bindtap="switchChild" data-id="{{item.id}}">
               <view class="child-avatar-wrapper">
                 <view class="child-avatar">
-                  <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="child-avatar-img"></image>
+                  <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="child-avatar-img" binderror="onChildAvatarError" data-index="{{index}}"></image>
                   <text wx:else>{{item.gender === 'girl' ? '👧' : '👦'}}</text>
                 </view>
                 <view class="child-avatar-badge" wx:if="{{userInfo.currentChildId === item.id}}">当前</view>

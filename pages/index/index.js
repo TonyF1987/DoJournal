@@ -3032,5 +3032,21 @@ Page({
         }
       }
     });
+  },
+
+  // 处理当前小朋友头像加载失败
+  onCurrentChildAvatarError() {
+    this.setData({
+      'currentChild.avatarUrl': ''
+    });
+  },
+
+  // 处理小朋友列表头像加载失败
+  onChildAvatarError(e) {
+    const index = e.currentTarget.dataset.index;
+    const key = `userInfo.children[${index}].avatarUrl`;
+    this.setData({
+      [key]: ''
+    });
   }
 });

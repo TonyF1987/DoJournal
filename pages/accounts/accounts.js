@@ -417,5 +417,21 @@ Page({
         }
       }
     });
+  },
+
+  // 处理账号列表头像加载失败
+  onAccountAvatarError(e) {
+    const index = e.currentTarget.dataset.index;
+    const key = `accounts[${index}].avatarUrl`;
+    this.setData({
+      [key]: ''
+    });
+  },
+
+  // 处理编辑头像加载失败
+  onEditAvatarError() {
+    this.setData({
+      'editUserInfo.avatarUrl': ''
+    });
   }
 });

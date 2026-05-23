@@ -9,7 +9,7 @@
   <view class="header-gradient">
     <view class="user-card" bindtap="openChildModal">
       <view class="user-avatar">
-        <image wx:if="{{currentChild && currentChild.avatarUrl}}" src="{{currentChild.avatarUrl}}" mode="aspectFill" class="user-avatar-img"></image>
+        <image wx:if="{{currentChild && currentChild.avatarUrl}}" src="{{currentChild.avatarUrl}}" mode="aspectFill" class="user-avatar-img" binderror="onCurrentChildAvatarError"></image>
         <text wx:else>👦</text>
       </view>
       <view class="user-info">
@@ -363,7 +363,7 @@
         <block wx:for="{{children}}" wx:key="id">
           <view class="child-item {{userInfo.currentChildId === item.id ? 'active' : ''}}" bindtap="switchChild" data-id="{{item.id}}">
             <view class="child-avatar">
-              <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="child-avatar-img"></image>
+              <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="child-avatar-img" binderror="onChildAvatarError" data-index="{{index}}"></image>
               <text wx:else>{{item.gender === 'girl' ? '👧' : '👦'}}</text>
             </view>
             <view class="child-info">
@@ -397,7 +397,7 @@
         <text class="form-label">头像</text>
         <view class="avatar-upload" bindtap="chooseAvatar">
           <view class="preview-avatar">
-            <image wx:if="{{newChild.avatarUrl}}" src="{{newChild.avatarUrl}}" mode="aspectFill" class="preview-avatar-img"></image>
+            <image wx:if="{{newChild.avatarUrl}}" src="{{newChild.avatarUrl}}" mode="aspectFill" class="preview-avatar-img" binderror="onNewChildAvatarError"></image>
             <text wx:else>👤</text>
           </view>
           <text class="upload-text">点击上传</text>

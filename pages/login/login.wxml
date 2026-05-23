@@ -14,13 +14,18 @@
       <text class="logo-icon">📚</text>
     </view>
     <text class="app-name">作业打卡</text>
+    <!-- 注册关闭提示 -->
+    <view class="registration-notice" wx:if="{{!registrationEnabled}}">
+      <text class="notice-icon">🔒</text>
+      <text class="notice-text">注册功能暂时关闭</text>
+    </view>
   </view>
 
   <!-- 用户头像和昵称 -->
   <view class="user-info-section">
     <!-- 头像和昵称显示 -->
     <view class="user-info-display">
-      <image class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" wx:if="{{avatarUrl}}"></image>
+      <image class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" wx:if="{{avatarUrl}}" binderror="onAvatarError"></image>
       <view class="avatar-placeholder" wx:else>
         <text class="placeholder-icon">👤</text>
       </view>
@@ -69,7 +74,7 @@
       <view wx:if="{{showAccountDropdown && accounts.length > 0}}" class="account-dropdown" catchtap="stopPropagation">
         <view class="dropdown-item" wx:for="{{accounts}}" wx:key="_id" bindtap="selectAccount" data-account="{{item}}">
           <view class="dropdown-avatar">
-            <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" />
+            <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" binderror="onAccountAvatarError" data-index="{{index}}" />
             <text wx:else>👤</text>
           </view>
           <view class="dropdown-info">

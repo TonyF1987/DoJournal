@@ -29,11 +29,14 @@ Page({
     currentUserOpenid: '',
     currentUserAccount: '',
     showAddAccountModal: false,
-    availableAccounts: []
+    availableAccounts: [],
+    registrationEnabled: true,  // 注册开关状态
+    isAdmin: false  // 是否是管理员
   },
 
   onLoad() {
     this.loadUserInfo();
+    this.loadRegistrationConfig();
   },
 
   onShow() {
@@ -78,6 +81,9 @@ Page({
             });
             app.saveUserInfo(userData);
             app.globalData.isLoggedIn = true;
+            
+            // 用户信息加载完成后，检查管理员状态
+            this.checkAdminStatus();
           }
         }
       });
@@ -525,6 +531,38 @@ Page({
     });
   },
 
+  // 处理用户头像加载失败
+  onAvatarError(e) {
+    const context = e.currentTarget.dataset.context;
+    if (context === 'user') {
+      this.setData({
+        'userInfo.avatarUrl': ''
+      });
+    } else if (context === 'edit') {
+      this.setData({
+        'editUserInfo.avatarUrl': ''
+      });
+    }
+  },
+
+  // 处理家庭成员头像加载失败
+  onMemberAvatarError(e) {
+    const index = e.currentTarget.dataset.index;
+    const key = `familyMembers[${index}].avatarUrl`;
+    this.setData({
+      [key]: ''
+    });
+  },
+
+  // 处理可选账号列表头像加载失败
+  onAvailableAccountAvatarError(e) {
+    const index = e.currentTarget.dataset.index;
+    const key = `availableAccounts[${index}].avatarUrl`;
+    this.setData({
+      [key]: ''
+    });
+  },
+
   deleteAccount() {
     // 检查是否是只读账号
     if (this.data.userInfo.familyReadOnly) {
@@ -595,6 +633,8 @@ Page({
   },
 
   showSettings() {
+    // 打开设置弹窗时重新检查管理员状态
+    this.checkAdminStatus();
     this.setData({ showSettingsModal: true });
   },
 
@@ -922,6 +962,89 @@ Page({
       wx.hideLoading();
       console.error('解散家庭失败:', err);
       wx.showToast({ title: '解散失败', icon: 'none' });
+    }
+  },
+
+  // 加载注册配置
+  async loadRegistrationConfig() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'handleAuth',
+        data: {
+          action: 'getRegistrationConfig'
+        }
+      });
+
+      if (res.result && res.result.success) {
+        this.setData({
+          registrationEnabled: res.result.registrationEnabled
+        });
+      }
+    } catch (err) {
+      console.error('获取注册配置失败:', err);
+    }
+  },
+
+  // 检查管理员状态
+  async checkAdminStatus() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'handleAuth',
+        data: {
+          action: 'checkAdminStatus',
+          account: this.data.userInfo?.account || ''
+        }
+      });
+
+      if (res.result && res.result.success) {
+        this.setData({
+          isAdmin: res.result.isAdmin
+        });
+      }
+    } catch (err) {
+      console.error('检查管理员状态失败:', err);
+    }
+  },
+
+  // 切换注册开关
+  async toggleRegistration() {
+    const newStatus = !this.data.registrationEnabled;
+    
+    wx.showLoading({ title: '设置中...' });
+
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'handleAuth',
+        data: {
+          action: 'setRegistrationConfig',
+          enabled: newStatus,
+          account: this.data.userInfo?.account || ''
+        }
+      });
+
+      wx.hideLoading();
+
+      if (res.result && res.result.success) {
+        this.setData({
+          registrationEnabled: newStatus
+        });
+        wx.showToast({
+          title: newStatus ? '注册已开启' : '注册已关闭',
+          icon: 'success'
+        });
+      } else {
+        wx.showToast({
+          title: res.result?.errMsg || '设置失败',
+          icon: 'none'
+        });
+      }
+    } catch (err) {
+      wx.hideLoading();
+      console.error('设置注册配置失败:', err);
+      wx.showToast({
+        title: '设置失败',
+        icon: 'none'
+      });
     }
   }
 });

@@ -72,6 +72,25 @@ page {
   color: #333333;
 }
 
+.registration-notice {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 24rpx;
+  padding: 16rpx 32rpx;
+  background-color: #fff3e0;
+  border-radius: 40rpx;
+}
+
+.notice-icon {
+  font-size: 28rpx;
+}
+
+.notice-text {
+  font-size: 24rpx;
+  color: #e65100;
+}
+
 /* 用户信息区域 */
 .user-info-section {
   display: flex;

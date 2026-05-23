@@ -47,11 +47,122 @@ async function findUserByIdentifier(identifier) {
   return null;
 }
 
+async function getRegistrationConfig() {
+  try {
+    const configRes = await db.collection('appConfig').where({
+      key: 'registrationEnabled'
+    }).get();
+    
+    if (configRes.data.length > 0) {
+      return configRes.data[0];
+    }
+    
+    // 如果不存在，默认启用注册
+    return {
+      key: 'registrationEnabled',
+      value: true,
+      createTime: db.serverDate(),
+      updateTime: db.serverDate()
+    };
+  } catch (err) {
+    console.error('获取注册配置失败:', err);
+    return {
+      key: 'registrationEnabled',
+      value: true
+    };
+  }
+}
+
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
   const { action, phoneNumber, code, password, account, nickName, avatarUrl } = event;
 
   try {
+    if (action === 'getRegistrationConfig') {
+      const config = await getRegistrationConfig();
+      return {
+        success: true,
+        registrationEnabled: config.value
+      };
+    }
+
+    if (action === 'setRegistrationConfig') {
+      const { enabled, account } = event;
+      
+      // 验证管理员权限
+      const adminConfigRes = await db.collection('appConfig').where({
+        key: 'adminAccounts'
+      }).get();
+      
+      let isAdmin = false;
+      if (adminConfigRes.data.length > 0 && adminConfigRes.data[0].value) {
+        const adminAccounts = adminConfigRes.data[0].value;
+        // 检查是否是管理员（openid + account 组合）
+        isAdmin = adminAccounts.some(admin => {
+          return admin.openid === wxContext.OPENID && admin.account === (account || '');
+        });
+      }
+      
+      if (!isAdmin) {
+        return {
+          success: false,
+          errMsg: '您没有权限修改此配置'
+        };
+      }
+      
+      const configRes = await db.collection('appConfig').where({
+        key: 'registrationEnabled'
+      }).get();
+      
+      if (configRes.data.length > 0) {
+        // 更新现有配置
+        await db.collection('appConfig').doc(configRes.data[0]._id).update({
+          data: {
+            value: enabled,
+            updateTime: db.serverDate()
+          }
+        });
+      } else {
+        // 创建新配置
+        await db.collection('appConfig').add({
+          data: {
+            key: 'registrationEnabled',
+            value: enabled,
+            createTime: db.serverDate(),
+            updateTime: db.serverDate()
+          }
+        });
+      }
+      
+      return {
+        success: true,
+        message: '配置更新成功'
+      };
+    }
+    
+    if (action === 'checkAdminStatus') {
+      // 检查当前用户是否是管理员
+      const { account } = event;
+      
+      const adminConfigRes = await db.collection('appConfig').where({
+        key: 'adminAccounts'
+      }).get();
+      
+      let isAdmin = false;
+      if (adminConfigRes.data.length > 0 && adminConfigRes.data[0].value) {
+        const adminAccounts = adminConfigRes.data[0].value;
+        // 检查是否是管理员（openid + account 组合）
+        isAdmin = adminAccounts.some(admin => {
+          return admin.openid === wxContext.OPENID && admin.account === (account || '');
+        });
+      }
+      
+      return {
+        success: true,
+        isAdmin: isAdmin
+      };
+    }
+
     if (action === 'checkUser') {
       // 检查用户是否已注册（支持手机号或账号）
       const user = await findUserByIdentifier(phoneNumber);
@@ -97,6 +208,16 @@ exports.main = async (event, context) => {
     }
 
     if (action === 'register') {
+      // 先检查注册开关
+      const config = await getRegistrationConfig();
+      if (!config.value) {
+        return {
+          success: false,
+          errMsg: '注册功能暂时关闭，如需注册请联系管理员邀请',
+          registrationDisabled: true
+        };
+      }
+
       // 注册新用户（支持手机号或账号注册）
       const existingUser = await findUserByIdentifier(phoneNumber);
 

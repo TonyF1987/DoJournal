@@ -12,11 +12,32 @@ Page({
     nicknameFocus: false, // 昵称输入框是否聚焦
     accounts: [], // 该 openid 下的所有账号
     showAccountDropdown: false, // 是否显示账号下拉列表
-    hasGotUserInfo: false // 是否已经获取了用户信息
+    hasGotUserInfo: false, // 是否已经获取了用户信息
+    registrationEnabled: true // 注册功能是否开启
   },
 
   onLoad(options) {
     this.checkLoginStatus();
+    this.checkRegistrationConfig();
+  },
+
+  async checkRegistrationConfig() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'handleAuth',
+        data: {
+          action: 'getRegistrationConfig'
+        }
+      });
+      
+      if (res.result && res.result.success) {
+        this.setData({
+          registrationEnabled: res.result.registrationEnabled
+        });
+      }
+    } catch (err) {
+      console.error('获取注册配置失败:', err);
+    }
   },
 
   checkLoginStatus() {
@@ -233,7 +254,17 @@ Page({
         });
       }, 1000);
     } else {
-      throw new Error(res.result.errMsg);
+      // 如果是注册被禁用，显示特殊提示
+      if (res.result.registrationDisabled) {
+        wx.showModal({
+          title: '注册暂停',
+          content: res.result.errMsg || '注册功能暂时关闭，如需注册请联系管理员邀请',
+          showCancel: false,
+          confirmText: '我知道了'
+        });
+      } else {
+        throw new Error(res.result.errMsg);
+      }
     }
   },
 
@@ -300,5 +331,21 @@ Page({
 
   stopPropagation() {
     // 阻止事件冒泡
+  },
+
+  // 处理头像加载失败
+  onAvatarError() {
+    this.setData({
+      avatarUrl: ''
+    });
+  },
+
+  // 处理账号列表头像加载失败
+  onAccountAvatarError(e) {
+    const index = e.currentTarget.dataset.index;
+    const key = `accounts[${index}].avatarUrl`;
+    this.setData({
+      [key]: ''
+    });
   }
 });
