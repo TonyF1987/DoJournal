@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container {{settings.darkMode ? 'dark-mode' : ''}}">
   <!-- 顶部区域 -->
   <view class="top-section">
     <!-- 未登录状态 -->

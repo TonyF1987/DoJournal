@@ -18,6 +18,7 @@ Page({
   },
 
   onLoad(options) {
+    this.setData({ darkMode: app.globalData.darkMode });
     this.checkLoginStatus();
     this.checkRegistrationConfig();
   },

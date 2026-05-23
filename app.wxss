@@ -8,6 +8,210 @@ page {
   overflow-x: hidden;
 }
 
+/* ==================== 全局深色模式 ==================== */
+page.dark-mode {
+  background-color: #121212;
+  color: #fff;
+}
+
+.dark-mode .card {
+  background: #1E1E1E;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .btn-secondary {
+  background-color: #1E1E1E;
+  color: #81C784;
+  border-color: #81C784;
+}
+
+.dark-mode .text-secondary {
+  color: #999;
+}
+
+.dark-mode .container {
+  background: #121212;
+}
+
+.dark-mode .scroll-container {
+  background: #121212;
+}
+
+/* 通用文本颜色适配 */
+.dark-mode text {
+  color: inherit;
+}
+
+/* 通用背景和文本样式强制覆盖 */
+.dark-mode view {
+  color: inherit;
+}
+
+.dark-mode text {
+  color: inherit;
+}
+
+/* 全局深色模式强制覆盖 */
+.dark-mode .user-card {
+  background: #1E1E1E;
+}
+
+.dark-mode .user-name {
+  color: #fff;
+}
+
+.dark-mode .user-desc {
+  color: #999;
+}
+
+.dark-mode .user-avatar {
+  background: #333;
+}
+
+.dark-mode .user-info {
+  color: #fff;
+}
+
+.dark-mode .stats-card {
+  background: #1E1E1E;
+}
+
+.dark-mode .stat-value {
+  color: #fff;
+}
+
+.dark-mode .stat-label {
+  color: #999;
+}
+
+.dark-mode .list-item {
+  background: #1E1E1E;
+}
+
+.dark-mode .list-name {
+  color: #fff;
+}
+
+.dark-mode .list-desc {
+  color: #999;
+}
+
+.dark-mode .list-points {
+  color: #81C784;
+}
+
+.dark-mode .tab-bar {
+  background: #1E1E1E;
+  border-top-color: #333;
+}
+
+.dark-mode .tab-item {
+  color: #999;
+}
+
+.dark-mode .tab-item.active {
+  color: #81C784;
+}
+
+.dark-mode .tabs-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .list-section {
+  background: #121212;
+}
+
+.dark-mode .add-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .top-header {
+  background: linear-gradient(135deg, #2E7D32, #1B5E20);
+}
+
+.dark-mode .btn-primary {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+}
+
+/* 全面深色模式强制覆盖 */
+.dark-mode {
+  background-color: #121212;
+}
+
+.dark-mode view {
+  color: inherit;
+}
+
+.dark-mode text {
+  color: inherit;
+}
+
+/* 通用白色背景强制变为深色 */
+.dark-mode .user-card,
+.dark-mode .child-card,
+.dark-mode .stats-card,
+.dark-mode .list-item,
+.dark-mode .grid-item,
+.dark-mode .reward-item,
+.dark-mode .violation-item,
+.dark-mode .record-item,
+.dark-mode .homework-item {
+  background-color: #1E1E1E;
+}
+
+/* 通用文本颜色适配 */
+.dark-mode .user-name,
+.dark-mode .child-name,
+.dark-mode .list-name,
+.dark-mode .grid-name,
+.dark-mode .reward-name,
+.dark-mode .violation-name,
+.dark-mode .record-name,
+.dark-mode .homework-title,
+.dark-mode .stat-value {
+  color: #fff;
+}
+
+.dark-mode .user-desc,
+.dark-mode .child-desc,
+.dark-mode .list-desc,
+.dark-mode .grid-desc,
+.dark-mode .reward-desc,
+.dark-mode .violation-desc,
+.dark-mode .record-desc,
+.dark-mode .homework-content,
+.dark-mode .homework-time,
+.dark-mode .stat-label {
+  color: #999;
+}
+
+/* 通用积分颜色 */
+.dark-mode .list-points,
+.dark-mode .grid-points,
+.dark-mode .reward-points,
+.dark-mode .homework-points {
+  color: #81C784;
+}
+
+.dark-mode .list-points.negative,
+.dark-mode .grid-points.negative,
+.dark-mode .violation-points {
+  color: #FF8A80;
+}
+
+/* 通用顶部和区域背景 */
+.dark-mode .top-header,
+.dark-mode .header-gradient {
+  background: linear-gradient(135deg, #2E7D32, #1B5E20);
+}
+
+.dark-mode .tabs-section,
+.dark-mode .list-section,
+.dark-mode .add-section,
+.dark-mode .content-area {
+  background-color: #121212;
+}
+
 image {
   max-width: 100%;
   height: auto;

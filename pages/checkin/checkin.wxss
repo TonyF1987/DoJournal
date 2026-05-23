@@ -7,6 +7,59 @@ page {
   overflow-x: hidden;
 }
 
+page.dark-mode {
+  background: #121212;
+}
+
+/* 打卡页深色模式 */
+.dark-mode .homework-title {
+  color: #fff;
+}
+
+.dark-mode .homework-content {
+  color: #ccc;
+}
+
+.dark-mode .homework-time {
+  color: #666;
+}
+
+.dark-mode .homework-tag {
+  color: #81C784;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.dark-mode .form-label {
+  color: #fff;
+}
+
+.dark-mode .upload-btn {
+  background: #333;
+  border-color: #555;
+}
+
+.dark-mode .upload-text {
+  color: #999;
+}
+
+.dark-mode .comment-input {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .char-count {
+  color: #666;
+}
+
+.dark-mode .rating-item {
+  background: #333;
+  border-color: transparent;
+}
+
+.dark-mode .rating-label {
+  color: #999;
+}
+
 .homework-header {
   display: flex;
   justify-content: space-between;

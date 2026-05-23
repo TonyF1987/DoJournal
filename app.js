@@ -10,6 +10,10 @@ App({
       });
     }
 
+    // 恢复深色模式设置
+    const savedDarkMode = wx.getStorageSync('darkMode');
+    this.globalData.darkMode = savedDarkMode || false;
+
     // 检查登录状态，但不自动获取用户信息（需用户主动登录）
     this.checkLoginStatus();
   },
@@ -117,7 +121,8 @@ App({
     children: [], // 所有小朋友列表
     originalCreatorOpenid: '', // 原始管理员的openid
     originalCreatorAccount: '', // 原始管理员的账号
-    isOriginalCreator: false // 是否是从原始管理员登录（可以切换账号）
+    isOriginalCreator: false, // 是否是从原始管理员登录（可以切换账号）
+    darkMode: false // 深色模式开关
   },
 
   // 保存用户信息到本地存储

@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container {{darkMode ? 'dark-mode' : ''}}">
   <!-- 标题提示 -->
   <view class="tips-section" wx:if="{{isOriginalCreatorGlobal || !hasFamily}}">
     <text class="tips-text">您可以使用不同的账号登录，每个账号都是独立的，但可以加入同一个家庭</text>

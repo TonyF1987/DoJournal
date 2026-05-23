@@ -17,7 +17,8 @@ Page({
     
     this.setData({
       isOriginalCreatorGlobal: app.globalData.isOriginalCreator,
-      currentAccountId: app.globalData.userId || ''
+      currentAccountId: app.globalData.userId || '',
+      darkMode: app.globalData.darkMode
     });
     
     if (userInfo) {
@@ -30,6 +31,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ darkMode: app.globalData.darkMode });
     this.loadAccounts();
   },
 

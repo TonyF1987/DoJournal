@@ -5,6 +5,612 @@ page {
   box-sizing: border-box;
 }
 
+page.dark-mode {
+  background: #121212;
+}
+
+.dark-mode .child-card {
+  background: #1E1E1E;
+}
+
+.dark-mode .homework-item {
+  background: #1E1E1E;
+  border-color: #333;
+}
+
+.dark-mode .calendar {
+  background: #1E1E1E;
+}
+
+.dark-mode .calendar-day {
+  color: #fff;
+}
+
+.dark-mode .weekday {
+  color: #999;
+}
+
+.dark-mode .month-title {
+  color: #fff;
+}
+
+.dark-mode .nav-btn {
+  color: #fff;
+}
+
+.dark-mode .subject-item {
+  background: #1E1E1E;
+}
+
+.dark-mode .subject-item.active {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+}
+
+.dark-mode .empty-state {
+  background: #1E1E1E;
+}
+
+.dark-mode .empty-text {
+  color: #fff;
+}
+
+.dark-mode .empty-sub {
+  color: #999;
+}
+
+.dark-mode .card-desc {
+  color: #999;
+}
+
+.dark-mode .tab-item {
+  color: #999;
+}
+
+.dark-mode .tab-item.active {
+  color: #81C784;
+}
+
+/* 首页完整深色模式覆盖 */
+.dark-mode .demo-text {
+  color: #333;
+}
+
+.dark-mode .demo-login-btn {
+  background: #1E1E1E;
+  color: #81C784;
+}
+
+.dark-mode .guide-text {
+  color: #fff;
+}
+
+.dark-mode .guide-btn {
+  background: #1E1E1E;
+  color: #81C784;
+}
+
+.dark-mode .parent-name {
+  color: #fff;
+}
+
+.dark-mode .family-name {
+  color: #ddd;
+}
+
+.dark-mode .child-name {
+  color: #fff;
+}
+
+.dark-mode .child-desc {
+  color: #999;
+}
+
+.dark-mode .card-title {
+  color: #fff;
+}
+
+.dark-mode .card-count {
+  color: #fff;
+}
+
+.dark-mode .homework-title {
+  color: #fff;
+}
+
+.dark-mode .homework-content {
+  color: #ccc;
+}
+
+.dark-mode .homework-time {
+  color: #999;
+}
+
+.dark-mode .homework-points {
+  color: #81C784;
+}
+
+.dark-mode .checkin-comment {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .checkin-rating-item {
+  background: #333;
+}
+
+.dark-mode .checkin-rating-item.active {
+  background: #1B5E20;
+  border-color: #81C784;
+}
+
+.dark-mode .checkin-rating-label {
+  color: #ccc;
+}
+
+.dark-mode .checkin-rating-item.active .checkin-rating-label {
+  color: #81C784;
+}
+
+.dark-mode .checkin-rating-percent {
+  color: #999;
+}
+
+.dark-mode .checkin-rating-item.active .checkin-rating-percent {
+  color: #81C784;
+}
+
+.dark-mode .checkin-homework-info {
+  background: #1B3E1B;
+}
+
+.dark-mode .checkin-homework-content {
+  color: #ccc;
+}
+
+.dark-mode .checkin-homework-points {
+  color: #81C784;
+}
+
+.dark-mode .checkin-section-title {
+  color: #fff;
+}
+
+.dark-mode .modal-content {
+  background: #1E1E1E;
+}
+
+.dark-mode .modal-header {
+  border-bottom-color: #333;
+  color: #fff;
+}
+
+.dark-mode .modal-footer {
+  border-top-color: #333;
+}
+
+.dark-mode .subject-manage-item {
+  border-bottom-color: #333;
+}
+
+.dark-mode .subject-name {
+  color: #fff;
+}
+
+.dark-mode .sort-btn {
+  background: #333;
+  color: #999;
+}
+
+.dark-mode .sort-btn:active {
+  background: #444;
+}
+
+.dark-mode .empty-subjects {
+  color: #999;
+}
+
+.dark-mode .calendar-scroll-item {
+  background: #1E1E1E;
+}
+
+.dark-mode .calendar-scroll-item.has-homework {
+  background: #2E2E2E;
+}
+
+.dark-mode .calendar-scroll-item.has-pending {
+  background: rgba(255, 193, 7, 0.2);
+}
+
+.dark-mode .calendar-scroll-item.all-completed {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.dark-mode .scroll-weekday {
+  color: #999;
+}
+
+.dark-mode .scroll-day {
+  color: #fff;
+}
+
+/* 首页额外深色模式覆盖 */
+.dark-mode .top-header {
+  background: linear-gradient(135deg, #2E7D32, #1B5E20);
+}
+
+.dark-mode .family-info-section {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .parent-avatar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .parent-name {
+  color: #fff;
+}
+
+.dark-mode .family-status {
+  color: #ddd;
+}
+
+.dark-mode .family-icon {
+  color: #ddd;
+}
+
+.dark-mode .family-name {
+  color: #ddd;
+}
+
+.dark-mode .family-arrow {
+  color: #999;
+}
+
+.dark-mode .child-info-section {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .child-avatar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .child-name {
+  color: #fff;
+}
+
+.dark-mode .child-desc {
+  color: #999;
+}
+
+.dark-mode .stats-section {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .stat-card {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dark-mode .stat-value {
+  color: #fff;
+}
+
+.dark-mode .stat-label {
+  color: #ddd;
+}
+
+.dark-mode .tabs-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .list-section {
+  background: #121212;
+}
+
+.dark-mode .list-item {
+  background: #1E1E1E;
+  border-color: #333;
+}
+
+.dark-mode .list-item-name {
+  color: #fff;
+}
+
+.dark-mode .list-item-desc {
+  color: #999;
+}
+
+.dark-mode .list-item-points {
+  color: #81C784;
+}
+
+.dark-mode .list-item-points.negative {
+  color: #FF8A80;
+}
+
+.dark-mode .add-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .add-btn-text {
+  color: #fff;
+}
+
+.dark-mode .subjects-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .homework-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .calendar-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .calendar-wrapper {
+  background: #1E1E1E;
+}
+
+.dark-mode .calendar-toggle {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .calendar-toggle:active {
+  background: #444;
+}
+
+/* 首页更多深色模式覆盖 */
+.dark-mode .top-header {
+  background: linear-gradient(135deg, #2E7D32, #1B5E20);
+}
+
+.dark-mode .parent-info {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .parent-avatar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .parent-name {
+  color: #fff;
+}
+
+.dark-mode .family-name {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark-mode .family-arrow {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dark-mode .child-card {
+  background: #1E1E1E;
+}
+
+.dark-mode .child-card-avatar {
+  background: #333;
+}
+
+.dark-mode .child-card-name {
+  color: #fff;
+}
+
+.dark-mode .child-card-school {
+  color: #999;
+}
+
+.dark-mode .family-members-preview {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .member-preview-avatar {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.dark-mode .members-count {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark-mode .header-stats {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .stat-value {
+  color: #fff;
+}
+
+.dark-mode .stat-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dark-mode .subjects-header {
+  color: #fff;
+}
+
+.dark-mode .homework-header {
+  color: #fff;
+}
+
+.dark-mode .homework-title {
+  color: #fff;
+}
+
+.dark-mode .homework-content {
+  color: #ccc;
+}
+
+.dark-mode .homework-time {
+  color: #999;
+}
+
+.dark-mode .subject-item {
+  background: #1E1E1E;
+}
+
+.dark-mode .subject-item.active {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+}
+
+.dark-mode .subject-name {
+  color: #fff;
+}
+
+.dark-mode .subject-count {
+  color: #fff;
+}
+
+/* 首页日历深色模式修复 */
+.dark-mode .calendar {
+  background: #1E1E1E;
+}
+
+.dark-mode .calendar-day {
+  background: #333;
+}
+
+.dark-mode .calendar-day.today {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: #81C784;
+}
+
+.dark-mode .calendar-day.selected {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+}
+
+.dark-mode .calendar-day.has-homework {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.dark-mode .calendar-day.has-pending {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.dark-mode .calendar-day.all-completed {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.dark-mode .day-text {
+  color: #fff;
+}
+
+.dark-mode .calendar-day.other-month .day-text {
+  color: #666;
+}
+
+.dark-mode .calendar-day.today .day-text {
+  color: #81C784;
+}
+
+.dark-mode .calendar-day.selected .day-text {
+  color: #fff;
+}
+
+.dark-mode .weekday {
+  color: #999;
+}
+
+.dark-mode .calendar-toggle {
+  border-top-color: #333;
+}
+
+.dark-mode .calendar-toggle text {
+  color: #999;
+}
+
+.dark-mode .nav-btn {
+  color: #fff;
+}
+
+.dark-mode .month-title {
+  color: #fff;
+}
+
+/* 首页作业卡片深色模式 */
+.dark-mode .homework-card {
+  background: #1E1E1E;
+  border-color: #333;
+}
+
+.dark-mode .homework-card.done {
+  background: #2E2E2E;
+  border-color: #333;
+}
+
+.dark-mode .card-title {
+  color: #fff;
+}
+
+.dark-mode .homework-card.done .card-title {
+  color: #999;
+}
+
+.dark-mode .card-desc {
+  color: #999;
+}
+
+.dark-mode .homework-card.done .card-desc {
+  color: #777;
+}
+
+.dark-mode .meta-time {
+  color: #666;
+}
+
+.dark-mode .check-circle {
+  background: #333;
+  border-color: #555;
+}
+
+.dark-mode .check-circle:active {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #81C784;
+}
+
+.dark-mode .empty-state {
+  background: #1E1E1E;
+}
+
+.dark-mode .empty-text {
+  color: #fff;
+}
+
+.dark-mode .empty-sub {
+  color: #999;
+}
+
+/* 科目标签深色模式 */
+.dark-mode .tab-item {
+  background: linear-gradient(135deg, #2E2E2E, #333);
+}
+
+.dark-mode .tab-item.active {
+  background: linear-gradient(135deg, #FF9800, #FFA726);
+}
+
+.dark-mode .tab-text {
+  color: #999;
+}
+
+.dark-mode .tab-item.active .tab-text {
+  color: #fff;
+}
+
+.dark-mode .section-title {
+  color: #fff;
+}
+
+.dark-mode .action-btn {
+  color: #FFB74D;
+}
+
+.dark-mode .subject-count {
+  background: #333;
+  color: #999;
+}
+
 .container {
   padding: 24rpx;
   box-sizing: border-box;

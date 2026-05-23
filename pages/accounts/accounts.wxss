@@ -4,6 +4,63 @@
   padding-bottom: 40rpx;
 }
 
+/* 账号页面深色模式 */
+.dark-mode .container {
+  background-color: #121212;
+}
+
+.dark-mode .tips-section {
+  background-color: #1E2E3E;
+}
+
+.dark-mode .tips-section.warning-tips {
+  background-color: #3E2E1E;
+}
+
+.dark-mode .tips-section.warning-tips .tips-text {
+  color: #FFB74D;
+}
+
+.dark-mode .tips-text {
+  color: #64B5F6;
+}
+
+.dark-mode .accounts-section {
+  background-color: #1E1E1E;
+}
+
+.dark-mode .section-header {
+  border-bottom-color: #333;
+}
+
+.dark-mode .section-title {
+  color: #fff;
+}
+
+.dark-mode .account-item {
+  border-bottom-color: #333;
+}
+
+.dark-mode .account-item:active {
+  background-color: #333;
+}
+
+.dark-mode .account-item.active {
+  background-color: #1E3E1E;
+}
+
+.dark-mode .account-avatar {
+  background-color: #333;
+}
+
+.dark-mode .account-name {
+  color: #fff;
+}
+
+.dark-mode .account-desc {
+  color: #999;
+}
+
 .tips-section {
   padding: 30rpx;
   background-color: #E3F2FD;

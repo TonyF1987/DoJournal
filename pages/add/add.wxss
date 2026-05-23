@@ -7,6 +7,108 @@ page {
   overflow-x: hidden;
 }
 
+page.dark-mode {
+  background: #121212;
+}
+
+/* 添加作业页深色模式 */
+.dark-mode .scroll-container {
+  background: #121212;
+}
+
+.dark-mode .subject-header {
+  background: linear-gradient(135deg, #2E7D32, #1B5E20);
+}
+
+.dark-mode .selected-date-badge {
+  background: #1E1E1E;
+}
+
+.dark-mode .date-text {
+  color: #fff;
+}
+
+.dark-mode .homework-item {
+  background: #1E1E1E;
+}
+
+.dark-mode .item-title {
+  color: #fff;
+}
+
+.dark-mode .item-desc {
+  color: #999;
+}
+
+.dark-mode .item-time {
+  color: #666;
+}
+
+.dark-mode .item-points {
+  color: #FFB74D;
+  background: rgba(255, 152, 0, 0.2);
+}
+
+.dark-mode .item-recurring {
+  color: #64B5F6;
+  background: rgba(33, 150, 243, 0.2);
+}
+
+.dark-mode .divider-text {
+  color: #999;
+}
+
+.dark-mode .form-divider::before,
+.dark-mode .form-divider::after {
+  background: #444;
+}
+
+.dark-mode .btn-cancel-form {
+  background: #333;
+  color: #999;
+}
+
+.dark-mode .btn-add-new {
+  background: linear-gradient(135deg, #FF9800, #FFA726);
+}
+
+/* 添加作业页表单深色模式 */
+.dark-mode .form-label {
+  color: #fff;
+}
+
+.dark-mode .form-input {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .form-textarea {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .type-item {
+  border-color: #444;
+  background: #2E2E2E;
+}
+
+.dark-mode .type-item.active {
+  border-color: #81C784;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.dark-mode .type-text {
+  color: #999;
+}
+
+.dark-mode .import-instruction {
+  background: #2E2E2E;
+}
+
+.dark-mode .step-text {
+  color: #999;
+}
+
 /* 只读权限提示 */
 .read-only-banner {
   background: linear-gradient(135deg, #FF9800, #FFB74D);

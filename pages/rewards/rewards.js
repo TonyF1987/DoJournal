@@ -56,7 +56,10 @@ Page({
   onLoad() {
     // 检查是否显示演示数据提示
     const shouldShowDemo = !app.globalData.isLoggedIn && !app.globalData.openid;
-    this.setData({ showDemoBanner: shouldShowDemo });
+    this.setData({ 
+      showDemoBanner: shouldShowDemo,
+      darkMode: app.globalData.darkMode 
+    });
 
     // 如果未登录，设置演示数据
     if (shouldShowDemo) {
@@ -72,7 +75,10 @@ Page({
   onShow() {
     // 检查是否显示演示数据提示
     const shouldShowDemo = !app.globalData.isLoggedIn && !app.globalData.openid;
-    this.setData({ showDemoBanner: shouldShowDemo });
+    this.setData({ 
+      showDemoBanner: shouldShowDemo,
+      darkMode: app.globalData.darkMode 
+    });
 
     // 如果未登录，设置演示数据
     if (shouldShowDemo) {

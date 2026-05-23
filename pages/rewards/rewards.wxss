@@ -4,6 +4,411 @@ page {
   box-sizing: border-box;
 }
 
+page.dark-mode {
+  background: #121212;
+}
+
+.dark-mode .card {
+  background: #1E1E1E;
+}
+
+.dark-mode .tab-item {
+  color: #999;
+}
+
+.dark-mode .tab-item.active {
+  color: #81C784;
+}
+
+/* 积分页完整深色模式覆盖 */
+.dark-mode .demo-text {
+  color: #333;
+}
+
+.dark-mode .demo-login-btn {
+  background: #1E1E1E;
+  color: #81C784;
+}
+
+.dark-mode .user-card {
+  background: #1E1E1E;
+}
+
+.dark-mode .user-name {
+  color: #fff;
+}
+
+.dark-mode .user-desc {
+  color: #999;
+}
+
+.dark-mode .stats-card {
+  background: #1E1E1E;
+}
+
+.dark-mode .stat-item {
+  border-color: #333;
+}
+
+.dark-mode .stat-value {
+  color: #fff;
+}
+
+.dark-mode .stat-label {
+  color: #999;
+}
+
+.dark-mode .reward-item {
+  background: #1E1E1E;
+  border-color: #333;
+}
+
+.dark-mode .reward-name {
+  color: #fff;
+}
+
+.dark-mode .reward-points {
+  color: #81C784;
+}
+
+.dark-mode .reward-desc {
+  color: #999;
+}
+
+.dark-mode .violation-item {
+  background: #1E1E1E;
+  border-color: #333;
+}
+
+.dark-mode .violation-name {
+  color: #fff;
+}
+
+.dark-mode .violation-points {
+  color: #FF8A80;
+}
+
+.dark-mode .violation-desc {
+  color: #999;
+}
+
+.dark-mode .record-item {
+  background: #1E1E1E;
+  border-color: #333;
+}
+
+.dark-mode .record-name {
+  color: #fff;
+}
+
+.dark-mode .record-points {
+  color: #81C784;
+}
+
+.dark-mode .record-points.negative {
+  color: #FF8A80;
+}
+
+.dark-mode .record-time {
+  color: #999;
+}
+
+.dark-mode .empty-state {
+  background: #1E1E1E;
+}
+
+.dark-mode .empty-text {
+  color: #fff;
+}
+
+.dark-mode .empty-sub {
+  color: #999;
+}
+
+.dark-mode .btn-primary {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+}
+
+.dark-mode .btn-secondary {
+  background: #1E1E1E;
+  color: #81C784;
+  border-color: #81C784;
+}
+
+.dark-mode .modal-content {
+  background: #1E1E1E;
+}
+
+.dark-mode .modal-header {
+  border-bottom-color: #333;
+  color: #fff;
+}
+
+.dark-mode .modal-footer {
+  border-top-color: #333;
+}
+
+.dark-mode .form-label {
+  color: #fff;
+}
+
+.dark-mode .form-input {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .form-hint {
+  color: #999;
+}
+
+/* 积分页额外深色模式覆盖 */
+.dark-mode .top-header {
+  background: linear-gradient(135deg, #2E7D32, #1B5E20);
+}
+
+.dark-mode .user-info-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .user-avatar {
+  background: #333;
+}
+
+.dark-mode .user-detail-name {
+  color: #fff;
+}
+
+.dark-mode .user-detail-desc {
+  color: #999;
+}
+
+.dark-mode .user-detail-arrow {
+  color: #666;
+}
+
+.dark-mode .stats-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .tabs-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .tab-item {
+  color: #999;
+}
+
+.dark-mode .tab-item.active {
+  color: #81C784;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.dark-mode .list-section {
+  background: #121212;
+}
+
+.dark-mode .list-item {
+  background: #1E1E1E;
+  border-color: #333;
+}
+
+.dark-mode .list-item-name {
+  color: #fff;
+}
+
+.dark-mode .list-item-desc {
+  color: #999;
+}
+
+.dark-mode .list-item-points {
+  color: #81C784;
+}
+
+.dark-mode .list-item-points.negative {
+  color: #FF8A80;
+}
+
+.dark-mode .add-section {
+  background: #1E1E1E;
+}
+
+/* 积分页全面深色模式 */
+.dark-mode .tab-bar {
+  background: linear-gradient(135deg, #1E1E1E, #2E2E2E);
+}
+
+.dark-mode .tab-item {
+  color: #999;
+}
+
+.dark-mode .tab-item.active {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  color: #fff;
+}
+
+.dark-mode .grid-item {
+  background: #1E1E1E;
+}
+
+.dark-mode .item-emoji {
+  background: linear-gradient(135deg, #2E3E2E, #1B5E20);
+}
+
+.dark-mode .item-emoji.punishment {
+  background: linear-gradient(135deg, #3E1E1E, #5E2020);
+}
+
+.dark-mode .item-edit,
+.dark-mode .item-delete {
+  background: #333;
+}
+
+.dark-mode .item-name {
+  color: #fff;
+}
+
+.dark-mode .item-desc {
+  color: #999;
+}
+
+.dark-mode .item-points {
+  color: #81C784;
+}
+
+.dark-mode .item-points.punishment {
+  color: #FF8A80;
+}
+
+.dark-mode .add-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .add-title {
+  color: #fff;
+}
+
+.dark-mode .add-btn {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+}
+
+.dark-mode .record-item {
+  background: #1E1E1E;
+}
+
+.dark-mode .record-first-line {
+  color: #fff;
+}
+
+.dark-mode .record-second-line {
+  color: #999;
+}
+
+.dark-mode .record-time {
+  color: #666;
+}
+
+.dark-mode .record-points {
+  color: #81C784;
+}
+
+.dark-mode .record-points.negative {
+  color: #FF8A80;
+}
+
+.dark-mode .add-btn-text {
+  color: #fff;
+}
+
+/* 积分页正确的深色模式覆盖 */
+.dark-mode .header-gradient {
+  background: linear-gradient(135deg, #2E7D32, #1B5E20);
+}
+
+.dark-mode .user-card {
+  background: #1E1E1E;
+}
+
+.dark-mode .user-avatar {
+  background: #333;
+}
+
+.dark-mode .user-name {
+  color: #fff;
+}
+
+.dark-mode .user-desc {
+  color: #999;
+}
+
+.dark-mode .user-arrow {
+  color: #666;
+}
+
+.dark-mode .stats-row {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .stat-value {
+  color: #fff;
+}
+
+.dark-mode .stat-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark-mode .tab-bar {
+  background: linear-gradient(135deg, #1E1E1E, #2E2E2E);
+}
+
+.dark-mode .tab-item {
+  color: #999;
+}
+
+.dark-mode .tab-item.active {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  color: #fff;
+}
+
+.dark-mode .content-area {
+  background: #121212;
+}
+
+.dark-mode .grid-item {
+  background: #1E1E1E;
+}
+
+.dark-mode .grid-name {
+  color: #fff;
+}
+
+.dark-mode .grid-points {
+  color: #81C784;
+}
+
+.dark-mode .grid-points.negative {
+  color: #FF8A80;
+}
+
+.dark-mode .grid-desc {
+  color: #999;
+}
+
+.dark-mode .empty-state {
+  background: #1E1E1E;
+}
+
+.dark-mode .empty-text {
+  color: #fff;
+}
+
+.dark-mode .empty-sub {
+  color: #999;
+}
+
+.dark-mode .add-section {
+  background: #1E1E1E;
+}
+
 .container {
   min-height: 100vh;
   padding: 24rpx;

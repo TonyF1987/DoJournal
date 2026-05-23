@@ -1,4 +1,4 @@
-<view class="container" bindtap="closeAccountDropdown">
+<view class="container {{darkMode ? 'dark-mode' : ''}}" bindtap="closeAccountDropdown">
   <!-- 顶部导航 -->
   <view class="nav-bar">
     <view class="back-btn" bindtap="goToHome">

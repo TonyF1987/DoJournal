@@ -791,3 +791,210 @@ page {
   color: #4CAF50;
   font-weight: bold;
 }
+
+/* ==================== 深色模式样式 ==================== */
+.dark-mode {
+  background: #121212;
+}
+
+.dark-mode .top-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .login-icon-wrapper {
+  background: #333;
+}
+
+.dark-mode .login-title {
+  color: #fff;
+}
+
+.dark-mode .login-desc {
+  color: #999;
+}
+
+.dark-mode .login-arrow {
+  color: #666;
+}
+
+.dark-mode .user-name {
+  color: #fff;
+}
+
+.dark-mode .user-desc {
+  color: #999;
+}
+
+.dark-mode .user-arrow {
+  color: #666;
+}
+
+.dark-mode .menu-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .menu-item {
+  background: #1E1E1E;
+}
+
+.dark-mode .menu-item:active {
+  background: #333;
+}
+
+.dark-mode .menu-icon-wrapper {
+  background: linear-gradient(135deg, #2D3E2D, #1B5E20);
+}
+
+.dark-mode .menu-title {
+  color: #fff;
+}
+
+.dark-mode .menu-desc {
+  color: #999;
+}
+
+.dark-mode .menu-arrow {
+  color: #666;
+}
+
+.dark-mode .menu-divider {
+  background: #333;
+}
+
+.dark-mode .logout-btn {
+  background: #1E1E1E;
+  color: #fff;
+}
+
+.dark-mode .logout-btn:active {
+  background: #333;
+}
+
+.dark-mode .modal-content {
+  background: #1E1E1E;
+}
+
+.dark-mode .modal-header {
+  border-bottom-color: #333;
+  color: #fff;
+}
+
+.dark-mode .close-btn {
+  color: #999;
+}
+
+.dark-mode .family-info-card {
+  background: linear-gradient(135deg, #2D3E2D, #1B5E20);
+}
+
+.dark-mode .family-name {
+  color: #81C784;
+}
+
+.dark-mode .family-desc {
+  color: #999;
+}
+
+.dark-mode .section-title {
+  color: #999;
+}
+
+.dark-mode .family-member {
+  background: #333;
+}
+
+.dark-mode .member-name {
+  color: #fff;
+}
+
+.dark-mode .member-avatar {
+  background: #444;
+}
+
+.dark-mode .account-value {
+  background: #444;
+  color: #999;
+}
+
+.dark-mode .btn-action {
+  background: #333;
+  color: #81C784;
+  border-color: #81C784;
+}
+
+.dark-mode .btn-action.btn-danger {
+  color: #FF8A80;
+  border-color: #FF8A80;
+}
+
+.dark-mode .btn-cancel {
+  background: #333;
+  color: #999;
+}
+
+.dark-mode .btn-danger {
+  background: #1E1E1E;
+  color: #FF8A80;
+}
+
+.dark-mode .form-label {
+  color: #fff;
+}
+
+.dark-mode .form-input {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .form-hint {
+  color: #999;
+}
+
+.dark-mode .invite-code-card {
+  background: linear-gradient(135deg, #2D3E2D, #1B5E20);
+}
+
+.dark-mode .invite-code {
+  color: #81C784;
+}
+
+.dark-mode .invite-code-desc {
+  color: #999;
+}
+
+.dark-mode .settings-item {
+  border-bottom-color: #333;
+}
+
+.dark-mode .settings-title {
+  color: #fff;
+}
+
+.dark-mode .help-title {
+  color: #fff;
+}
+
+.dark-mode .help-item {
+  color: #999;
+}
+
+.dark-mode .empty-text {
+  color: #fff;
+}
+
+.dark-mode .empty-desc {
+  color: #999;
+}
+
+.dark-mode .account-item {
+  border-bottom-color: #333;
+}
+
+.dark-mode .account-name-item {
+  color: #fff;
+}
+
+.dark-mode .account-tag-item {
+  background: #333;
+  color: #999;
+}

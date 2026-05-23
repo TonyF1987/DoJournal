@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container {{darkMode ? 'dark-mode' : ''}}">
   <!-- 作业详情 -->
   <view class="card" wx:if="{{homework}}">
     <view class="homework-header">

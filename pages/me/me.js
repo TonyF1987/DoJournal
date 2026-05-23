@@ -37,6 +37,15 @@ Page({
   },
 
   onLoad() {
+    // 恢复深色模式设置
+    const savedDarkMode = wx.getStorageSync('darkMode');
+    if (savedDarkMode !== undefined) {
+      this.setData({
+        'settings.darkMode': savedDarkMode
+      });
+      app.globalData.darkMode = savedDarkMode;
+    }
+    
     this.loadUserInfo();
     this.loadRegistrationConfig();
   },
@@ -670,8 +679,22 @@ Page({
   },
 
   toggleDarkMode() {
+    const newDarkMode = !this.data.settings.darkMode;
     this.setData({
-      'settings.darkMode': !this.data.settings.darkMode
+      'settings.darkMode': newDarkMode
+    });
+    
+    // 保存设置到本地存储
+    wx.setStorageSync('darkMode', newDarkMode);
+    
+    // 更新全局状态
+    app.globalData.darkMode = newDarkMode;
+    
+    // 提示用户
+    wx.showToast({
+      title: newDarkMode ? '已切换到深色模式' : '已切换到浅色模式',
+      icon: 'success',
+      duration: 1500
     });
   },
 

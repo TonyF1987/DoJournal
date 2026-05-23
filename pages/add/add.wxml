@@ -1,4 +1,4 @@
-<scroll-view scroll-y="true" class="scroll-container">
+<scroll-view scroll-y="true" class="scroll-container {{darkMode ? 'dark-mode' : ''}}">
   <wxs module="utils">
     module.exports = {
       includes: function(arr, val) {

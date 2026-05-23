@@ -56,7 +56,7 @@ Page({
     // 设置今天的日期
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    this.setData({ today: todayStr });
+    this.setData({ today: todayStr, darkMode: app.globalData.darkMode });
     
     // 检查登录状态
     if (!app.globalData.isLoggedIn && !app.globalData.openid) {

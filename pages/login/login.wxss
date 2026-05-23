@@ -3,6 +3,19 @@ page {
   min-height: 100vh;
 }
 
+page.dark-mode {
+  background-color: #121212;
+}
+
+.dark-mode .form-input {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .btn-login {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+}
+
 .container {
   padding: 0;
   min-height: 100vh;
