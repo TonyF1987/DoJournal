@@ -27,6 +27,14 @@ App({
 
   // 检查登录状态
   checkLoginStatus() {
+    // 恢复原始管理员信息
+    const originalCreatorOpenid = wx.getStorageSync('originalCreatorOpenid');
+    const originalCreatorAccount = wx.getStorageSync('originalCreatorAccount');
+    if (originalCreatorOpenid) {
+      this.globalData.originalCreatorOpenid = originalCreatorOpenid;
+      this.globalData.originalCreatorAccount = originalCreatorAccount;
+    }
+
     // 检查是否已经有用户信息
     const userInfo = wx.getStorageSync('userInfo');
     if (userInfo) {
@@ -36,9 +44,8 @@ App({
         this.globalData.currentChildId = parsedUserInfo.currentChildId;
         this.globalData.children = parsedUserInfo.children || [];
         
-        // 判断当前账号是否是家庭管理员
-        this.globalData.isOriginalCreator = 
-          parsedUserInfo.familyRole === 'creator';
+        // isOriginalCreator: 只要有记录过原始管理员，就能切换账号
+        this.globalData.isOriginalCreator = !!this.globalData.originalCreatorOpenid;
       } catch (e) {
         console.error('解析用户信息失败', e);
       }
@@ -189,11 +196,15 @@ App({
     this.globalData.isLoggedIn = false;
     this.globalData.currentChildId = null;
     this.globalData.children = [];
+    this.globalData.originalCreatorOpenid = '';
+    this.globalData.originalCreatorAccount = '';
     this.globalData.isOriginalCreator = false;
     
     wx.removeStorageSync('userInfo');
     wx.removeStorageSync('openid');
     wx.removeStorageSync('userId');
     wx.removeStorageSync('isLoggedIn');
+    wx.removeStorageSync('originalCreatorOpenid');
+    wx.removeStorageSync('originalCreatorAccount');
   },
 });
