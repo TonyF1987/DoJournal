@@ -21,6 +21,7 @@ Page({
     violations: [],
     pointRecords: [],
     checkinRecords: [],
+    allCheckinRecords: [],
     showAddModal: false,
     showDetailModal: false,
     currentModalType: 'reward',
@@ -47,6 +48,13 @@ Page({
     },
     // 分页相关
     pageSize: 10,
+    recordCurrentPage: 1,
+    recordHasPrev: false,
+    recordHasNext: false,
+    statsCurrentPage: 1,
+    statsTotalPages: 1,
+    statsHasPrev: false,
+    statsHasNext: false,
     currentPage: 0,
     hasMore: true,
     isLoading: false,
@@ -220,12 +228,24 @@ Page({
     this.setData({ violations: violations });
   },
 
-  loadPointRecords(loadMore = false) {
-    console.log('开始加载积分记录, loadMore:', loadMore);
+  loadPointRecords(page = 1) {
+    const targetPage = typeof page === 'number' && page > 0 ? page : 1;
+    console.log('开始加载积分记录, page:', targetPage);
     const currentChild = this.data.currentChild;
     if (!currentChild) {
       console.log('没有选择小朋友，不加载积分记录');
-      this.setData({ pointRecords: [] });
+      this.setData({
+        pointRecords: [],
+        allCheckinRecords: [],
+        checkinRecords: [],
+        recordCurrentPage: 1,
+        recordHasPrev: false,
+        recordHasNext: false,
+        statsCurrentPage: 1,
+        statsTotalPages: 1,
+        statsHasPrev: false,
+        statsHasNext: false
+      });
       this.calculateStats([]);
       return;
     }
@@ -235,63 +255,59 @@ Page({
       return;
     }
 
-    const currentPage = loadMore ? this.data.currentPage + 1 : 0;
     const pageSize = this.data.pageSize;
-    const offset = currentPage * pageSize;
+    const offset = (targetPage - 1) * pageSize;
 
     this.setData({ isLoading: true });
 
-    // 先加载所有记录用于统计（只在首次加载时）
-    if (!loadMore) {
-      wx.cloud.callFunction({
-        name: 'getPointRecords',
-        data: {
-          childId: currentChild.id
-        },
-        success: (res) => {
-          if (res.result && res.result.success) {
-            const allRecords = res.result.data.map(item => ({
-              ...item,
-              createTime: this.formatDateTime(item.createTime),
-              homeworkDate: item.homeworkDate || this.formatDateOnly(item.createTime)
-            }));
-            this.calculateStats(allRecords);
-          } else {
-            this.calculateStats([]);
-          }
-        },
-        fail: (err) => {
-          console.error('加载所有记录失败:', err);
+    wx.cloud.callFunction({
+      name: 'getPointRecords',
+      data: {
+        childId: currentChild.id
+      },
+      success: (res) => {
+        if (res.result && res.result.success) {
+          const allRecords = res.result.data.map(item => ({
+            ...item,
+            createTime: this.formatDateTime(item.createTime),
+            homeworkDate: item.homeworkDate || this.formatDateOnly(item.createTime)
+          }));
+          this.calculateStats(allRecords);
+        } else {
           this.calculateStats([]);
         }
-      });
-    }
+      },
+      fail: (err) => {
+        console.error('加载所有记录失败:', err);
+        this.calculateStats([]);
+      }
+    });
 
-    // 分页加载兑换记录（奖励和惩罚）
     wx.cloud.callFunction({
       name: 'getPointRecords',
       data: {
         childId: currentChild.id,
         types: ['reward', 'violation'],
-        limit: pageSize,
-        skip: loadMore ? offset : 0
+        limit: pageSize + 1,
+        skip: offset
       },
       success: (res) => {
         if (res.result && res.result.success) {
           console.log('分页积分记录加载成功，数量:', res.result.data.length);
-          const newRecords = res.result.data.map(item => ({
+          const records = res.result.data.map(item => ({
             ...item,
             createTime: this.formatDateTime(item.createTime),
             homeworkDate: item.homeworkDate || this.formatDateOnly(item.createTime)
           }));
-
-          const pointRecords = loadMore ? [...this.data.pointRecords, ...newRecords] : newRecords;
-          const hasMore = newRecords.length === pageSize;
+          const pageRecords = records.slice(0, pageSize);
 
           this.setData({
-            pointRecords: pointRecords,
-            currentPage: currentPage,
-            hasMore: hasMore,
+            pointRecords: pageRecords,
+            recordCurrentPage: targetPage,
+            recordHasPrev: targetPage > 1,
+            recordHasNext: records.length > pageSize,
+            currentPage: targetPage - 1,
+            hasMore: records.length > pageSize,
             isLoading: false
           });
         } else {
@@ -398,6 +414,11 @@ Page({
       if (recordDateStr >= monthStartStr) monthConsume += points;
     });
     
+    const statsTotalPages = Math.max(1, Math.ceil(checkinRecords.length / this.data.pageSize));
+    const statsCurrentPage = Math.min(this.data.statsCurrentPage || 1, statsTotalPages);
+    const statsStart = (statsCurrentPage - 1) * this.data.pageSize;
+    const statsPageRecords = checkinRecords.slice(statsStart, statsStart + this.data.pageSize);
+
     this.setData({
       stats: {
         todayPoints,
@@ -409,8 +430,47 @@ Page({
         monthConsume,
         totalConsume
       },
-      checkinRecords: checkinRecords
+      allCheckinRecords: checkinRecords,
+      checkinRecords: statsPageRecords,
+      statsCurrentPage: statsCurrentPage,
+      statsTotalPages: statsTotalPages,
+      statsHasPrev: statsCurrentPage > 1,
+      statsHasNext: statsCurrentPage < statsTotalPages
     });
+  },
+
+  updateStatsPage(page) {
+    const totalPages = this.data.statsTotalPages || 1;
+    const targetPage = Math.min(Math.max(page, 1), totalPages);
+    const start = (targetPage - 1) * this.data.pageSize;
+    const checkinRecords = this.data.allCheckinRecords.slice(start, start + this.data.pageSize);
+
+    this.setData({
+      checkinRecords: checkinRecords,
+      statsCurrentPage: targetPage,
+      statsHasPrev: targetPage > 1,
+      statsHasNext: targetPage < totalPages
+    });
+  },
+
+  prevRecordPage() {
+    if (!this.data.recordHasPrev || this.data.isLoading) return;
+    this.loadPointRecords(this.data.recordCurrentPage - 1);
+  },
+
+  nextRecordPage() {
+    if (!this.data.recordHasNext || this.data.isLoading) return;
+    this.loadPointRecords(this.data.recordCurrentPage + 1);
+  },
+
+  prevStatsPage() {
+    if (!this.data.statsHasPrev) return;
+    this.updateStatsPage(this.data.statsCurrentPage - 1);
+  },
+
+  nextStatsPage() {
+    if (!this.data.statsHasNext) return;
+    this.updateStatsPage(this.data.statsCurrentPage + 1);
   },
 
   switchTab(e) {
@@ -993,19 +1053,22 @@ Page({
 
   // 触底加载更多
   onReachBottom() {
-    if (this.data.currentTab === 2 && this.data.hasMore && !this.data.isLoading) {
-      console.log('触底加载更多记录');
-      this.loadPointRecords(true);
-    }
   },
 
   // 下拉刷新
   onPullDownRefresh() {
     this.setData({
       currentPage: 0,
-      hasMore: true
+      hasMore: true,
+      recordCurrentPage: 1,
+      recordHasPrev: false,
+      recordHasNext: false,
+      statsCurrentPage: 1,
+      statsTotalPages: 1,
+      statsHasPrev: false,
+      statsHasNext: false
     });
-    this.loadPointRecords(false);
+    this.loadPointRecords(1);
     wx.stopPullDownRefresh();
   },
 

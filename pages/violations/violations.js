@@ -17,6 +17,7 @@ Page({
   },
 
   onLoad() {
+    this.setData({ darkMode: app.globalData.darkMode });
     this.initViolations();
     this.loadViolations();
     this.loadHistoryRecords();
@@ -121,6 +122,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ darkMode: app.globalData.darkMode });
     this.loadViolations();
     this.loadHistoryRecords();
   },

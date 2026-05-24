@@ -157,8 +157,93 @@ page.dark-mode {
   color: #fff;
 }
 
+.dark-mode .form-textarea {
+  background: #333;
+  color: #fff;
+}
+
 .dark-mode .form-hint {
   color: #999;
+}
+
+.dark-mode .icon-selector {
+  background: #333;
+}
+
+.dark-mode .selected-icon {
+  color: #fff;
+}
+
+.dark-mode .icon-arrow {
+  color: #999;
+}
+
+.dark-mode .btn-cancel {
+  background: #333;
+  color: #999;
+}
+
+.dark-mode .btn-confirm {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  color: #fff;
+}
+
+.dark-mode .icon-option {
+  background: #333;
+}
+
+.dark-mode .icon-option.selected {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #81C784;
+}
+
+.dark-mode .detail-section:first-child {
+  border-bottom-color: #333;
+}
+
+.dark-mode .detail-icon {
+  background: #333;
+}
+
+.dark-mode .detail-name {
+  color: #fff;
+}
+
+.dark-mode .detail-value {
+  color: #ccc;
+}
+
+.dark-mode .detail-label {
+  color: #999;
+}
+
+.dark-mode .stats-section {
+  background: #1E1E1E;
+}
+
+.dark-mode .stats-title {
+  color: #fff;
+}
+
+.dark-mode .stats-label {
+  color: #999;
+}
+
+.dark-mode .child-item {
+  background: #333;
+}
+
+.dark-mode .child-item.active {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #81C784;
+}
+
+.dark-mode .child-name {
+  color: #fff;
+}
+
+.dark-mode .child-info {
+  color: #fff;
 }
 
 /* 积分页额外深色模式覆盖 */
@@ -840,12 +925,61 @@ page.dark-mode {
   color: #f44336;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+  padding: 32rpx 0 12rpx;
+}
+
+.page-btn {
+  min-width: 140rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  border-radius: 32rpx;
+  background: #fff;
+  color: #4CAF50;
+  font-size: 26rpx;
+  font-weight: 500;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.page-btn.disabled {
+  color: #bbb;
+  background: #f5f5f5;
+  box-shadow: none;
+}
+
+.page-info {
+  min-width: 160rpx;
+  text-align: center;
+  color: #666;
+  font-size: 26rpx;
+}
+
 .loading-more,
 .no-more {
   text-align: center;
   padding: 30rpx 0;
   color: #999;
   font-size: 24rpx;
+}
+
+.dark-mode .page-btn {
+  background: #2E2E2E;
+  color: #81C784;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .page-btn.disabled {
+  background: #242424;
+  color: #666;
+}
+
+.dark-mode .page-info {
+  color: #999;
 }
 
 .record-points {
@@ -1301,4 +1435,97 @@ page.dark-mode {
 
 .date-picker text:last-child {
   color: #999;
+}
+
+.dark-mode .modal-content {
+  background: #1E1E1E;
+}
+
+.dark-mode .modal-header {
+  border-bottom-color: #333;
+  color: #fff;
+}
+
+.dark-mode .modal-body {
+  background: #1E1E1E;
+}
+
+.dark-mode .modal-footer {
+  background: #1E1E1E;
+  border-top-color: #333;
+}
+
+.dark-mode .form-label {
+  color: #fff;
+}
+
+.dark-mode .form-input,
+.dark-mode .form-textarea,
+.dark-mode .icon-selector,
+.dark-mode .date-picker,
+.dark-mode .avatar-upload,
+.dark-mode .gender-option {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .form-input::placeholder,
+.dark-mode .form-textarea::placeholder {
+  color: #777;
+}
+
+.dark-mode .btn-cancel {
+  background: #333;
+  color: #ccc;
+}
+
+.dark-mode .btn-confirm {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  color: #fff;
+}
+
+.dark-mode .icon-option {
+  background: #333;
+}
+
+.dark-mode .icon-option.selected,
+.dark-mode .gender-option.active {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #81C784;
+}
+
+.dark-mode .detail-section:first-child {
+  border-bottom-color: #333;
+}
+
+.dark-mode .detail-icon,
+.dark-mode .child-avatar,
+.dark-mode .preview-avatar,
+.dark-mode .child-edit,
+.dark-mode .child-delete {
+  background: #333;
+}
+
+.dark-mode .detail-name,
+.dark-mode .detail-value,
+.dark-mode .child-name,
+.dark-mode .gender-option text,
+.dark-mode .date-picker text {
+  color: #fff;
+}
+
+.dark-mode .detail-label,
+.dark-mode .child-school,
+.dark-mode .upload-text,
+.dark-mode .date-picker text:last-child {
+  color: #999;
+}
+
+.dark-mode .child-item {
+  background: #333;
+}
+
+.dark-mode .child-item.active {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #81C784;
 }

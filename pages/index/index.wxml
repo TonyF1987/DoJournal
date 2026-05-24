@@ -169,7 +169,7 @@
 </picker>
 
 <!-- 复制用日历弹窗（和参考设计一致） -->
-<view class="modal copy-calendar-full-modal" wx:if="{{showCopyCalendar}}">
+<view class="modal copy-calendar-full-modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showCopyCalendar}}">
   <view class="copy-calendar-popup">
     <!-- 头部：导航和关闭 -->
     <view class="copy-calendar-header">
@@ -206,7 +206,7 @@
 </view>
 
 <!-- 小朋友选择弹窗 -->
-<view class="modal" wx:if="{{showChildModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showChildModal}}">
   <view class="modal-mask" bindtap="closeChildModal"></view>
   <view class="modal-content child-list-modal">
     <view class="modal-header">
@@ -252,7 +252,7 @@
 </view>
 
 <!-- 添加/编辑小朋友弹窗 -->
-<view class="modal" wx:if="{{showAddChildModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showAddChildModal}}">
   <view class="modal-mask" bindtap="closeAddChildModal"></view>
   <view class="modal-content add-child-modal">
     <view class="modal-header">
@@ -309,7 +309,7 @@
 </view>
 
 <!-- 复制作业弹窗 -->
-<view class="modal copy-modal-container" wx:if="{{showCopyModal}}">
+<view class="modal copy-modal-container {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showCopyModal}}">
   <view class="modal-mask" bindtap="closeCopyModal"></view>
   <view class="copy-modal-content">
     <!-- 头部标题 -->
@@ -357,7 +357,7 @@
 </view>
 
 <!-- 科目管理弹窗 -->
-<view class="modal" wx:if="{{showSubjectManageModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showSubjectManageModal}}">
   <view class="modal-mask" bindtap="closeSubjectManageModal"></view>
   <view class="modal-content subject-manage-modal">
     <view class="modal-header">
@@ -392,7 +392,7 @@
 </view>
 
 <!-- 添加科目弹窗 -->
-<view class="modal" wx:if="{{showAddSubjectModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showAddSubjectModal}}">
   <view class="modal-mask" bindtap="closeAddSubjectModal"></view>
   <view class="modal-content add-subject-modal">
     <view class="modal-header">
@@ -413,7 +413,7 @@
 </view>
 
 <!-- 编辑科目弹窗 -->
-<view class="modal" wx:if="{{showEditSubjectModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showEditSubjectModal}}">
   <view class="modal-mask" bindtap="closeEditSubjectModal"></view>
   <view class="modal-content edit-subject-modal">
     <view class="modal-header">
@@ -433,7 +433,7 @@
   </view>
 </view>
 
-<view class="checkin-modal" wx:if="{{showCheckinModal}}">
+<view class="checkin-modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showCheckinModal}}">
   <view class="checkin-mask" bindtap="closeCheckinModal"></view>
   <view class="checkin-popup">
     <view class="checkin-popup-header">
@@ -505,7 +505,7 @@
 </view>
 
 <!-- 家庭管理弹窗 -->
-<view class="modal" wx:if="{{showFamilyManageModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showFamilyManageModal}}">
   <view class="modal-mask" bindtap="closeFamilyManage"></view>
   <view class="modal-content family-modal">
     <view class="modal-header">
@@ -558,7 +558,7 @@
 </view>
 
 <!-- 创建家庭弹窗 -->
-<view class="modal" wx:if="{{showCreateFamilyModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showCreateFamilyModal}}">
   <view class="modal-mask" bindtap="closeFamilyManage"></view>
   <view class="modal-content create-family-modal">
     <view class="modal-header">
@@ -579,7 +579,7 @@
 </view>
 
 <!-- 加入家庭弹窗 -->
-<view class="modal" wx:if="{{showJoinFamilyModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showJoinFamilyModal}}">
   <view class="modal-mask" bindtap="closeFamilyManage"></view>
   <view class="modal-content join-family-modal">
     <view class="modal-header">
@@ -603,7 +603,7 @@
 </view>
 
 <!-- 邀请码显示弹窗 -->
-<view class="modal" wx:if="{{showInviteCodeModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showInviteCodeModal}}">
   <view class="modal-mask" bindtap="closeFamilyManage"></view>
   <view class="modal-content invite-modal">
     <view class="modal-header">

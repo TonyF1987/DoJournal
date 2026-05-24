@@ -154,12 +154,14 @@
         <text class="empty-text">暂无记录</text>
       </view>
 
+      <view wx:if="{{pointRecords.length > 0}}" class="pagination">
+        <view class="page-btn {{!recordHasPrev || isLoading ? 'disabled' : ''}}" bindtap="prevRecordPage">上一页</view>
+        <view class="page-info">第 {{recordCurrentPage}} 页</view>
+        <view class="page-btn {{!recordHasNext || isLoading ? 'disabled' : ''}}" bindtap="nextRecordPage">下一页</view>
+      </view>
+
       <view wx:if="{{isLoading}}" class="loading-more">
         <text>加载中...</text>
-      </view>
-      
-      <view wx:if="{{!hasMore && pointRecords.length > 0}}" class="no-more">
-        <text>没有更多了</text>
       </view>
     </view>
 
@@ -239,16 +241,22 @@
           </block>
         </view>
         
-        <view wx:if="{{checkinRecords.length === 0}}" class="empty-state">
+        <view wx:if="{{allCheckinRecords.length === 0}}" class="empty-state">
           <text class="empty-icon">📋</text>
           <text class="empty-text">暂无打卡记录</text>
+        </view>
+
+        <view wx:if="{{allCheckinRecords.length > 0}}" class="pagination">
+          <view class="page-btn {{!statsHasPrev ? 'disabled' : ''}}" bindtap="prevStatsPage">上一页</view>
+          <view class="page-info">第 {{statsCurrentPage}} / {{statsTotalPages}} 页</view>
+          <view class="page-btn {{!statsHasNext ? 'disabled' : ''}}" bindtap="nextStatsPage">下一页</view>
         </view>
       </view>
     </view>
   </view>
 </view>
 
-<view class="modal" wx:if="{{showAddModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showAddModal}}">
   <view class="modal-mask" bindtap="closeAddModal"></view>
   <view class="modal-content">
     <view class="modal-header">
@@ -283,7 +291,7 @@
   </view>
 </view>
 
-<view class="modal" wx:if="{{showIconPicker}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showIconPicker}}">
   <view class="modal-mask" bindtap="closeAddModal"></view>
   <view class="modal-content icon-picker-content">
     <view class="modal-header">
@@ -302,7 +310,7 @@
   </view>
 </view>
 
-<view class="modal" wx:if="{{showDetailModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showDetailModal}}">
   <view class="modal-mask" bindtap="closeDetailModal"></view>
   <view class="modal-content detail-content">
     <view class="modal-header">
@@ -351,7 +359,7 @@
 </view>
 
 <!-- 小朋友选择弹窗 -->
-<view class="modal" wx:if="{{showChildModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showChildModal}}">
   <view class="modal-mask" bindtap="closeChildModal"></view>
   <view class="modal-content child-list-content">
     <view class="modal-header">
@@ -385,7 +393,7 @@
 </view>
 
 <!-- 添加/编辑小朋友弹窗 -->
-<view class="modal" wx:if="{{showAddChildModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showAddChildModal}}">
   <view class="modal-mask" bindtap="closeAddChildModal"></view>
   <view class="modal-content add-child-content">
     <view class="modal-header">

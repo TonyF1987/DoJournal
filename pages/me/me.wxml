@@ -119,7 +119,7 @@
   </view>
 </view>
 
-<view class="modal" wx:if="{{showEditProfile}}" bindtap="closeEditProfile">
+<view class="modal {{settings.darkMode ? 'dark-mode' : ''}}" wx:if="{{showEditProfile}}" bindtap="closeEditProfile">
   <view class="modal-mask"></view>
   <view class="modal-content" catchtap="stopPropagation">
     <view class="modal-header">
@@ -147,7 +147,7 @@
 </view>
 
 <!-- 设置弹窗 -->
-<view class="modal" wx:if="{{showSettingsModal}}" bindtap="closeSettings">
+<view class="modal {{settings.darkMode ? 'dark-mode' : ''}}" wx:if="{{showSettingsModal}}" bindtap="closeSettings">
   <view class="modal-mask"></view>
   <view class="modal-content" catchtap="stopPropagation">
     <view class="modal-header">
@@ -208,7 +208,7 @@
 </view>
 
 <!-- 注册邀请码弹窗 -->
-<view class="modal" wx:if="{{showRegistrationInvitationModal}}" bindtap="closeRegistrationInvitationModal">
+<view class="modal {{settings.darkMode ? 'dark-mode' : ''}}" wx:if="{{showRegistrationInvitationModal}}" bindtap="closeRegistrationInvitationModal">
   <view class="modal-mask"></view>
   <view class="modal-content" catchtap="stopPropagation">
     <view class="modal-header">
@@ -230,7 +230,7 @@
 </view>
 
 <!-- 帮助与反馈弹窗 -->
-<view class="modal" wx:if="{{showHelpModal}}" bindtap="closeHelp">
+<view class="modal {{settings.darkMode ? 'dark-mode' : ''}}" wx:if="{{showHelpModal}}" bindtap="closeHelp">
   <view class="modal-mask"></view>
   <view class="modal-content help-modal-content" catchtap="stopPropagation">
     <view class="modal-header">
@@ -264,7 +264,7 @@
   </view>
 </view>
 
-<view class="modal" wx:if="{{showFamilyManage || showCreateFamily || showJoinFamily || showInviteCode}}" bindtap="closeFamilyManage">
+<view class="modal {{settings.darkMode ? 'dark-mode' : ''}}" wx:if="{{showFamilyManage || showCreateFamily || showJoinFamily || showInviteCode}}" bindtap="closeFamilyManage">
   <view class="modal-mask"></view>
   <view class="modal-content" catchtap="stopPropagation">
     <view class="modal-header">
@@ -378,7 +378,7 @@
 </view>
 
 <!-- 编辑家庭名称弹窗 -->
-<view class="modal" wx:if="{{showEditFamilyName}}" bindtap="closeEditFamilyName">
+<view class="modal {{settings.darkMode ? 'dark-mode' : ''}}" wx:if="{{showEditFamilyName}}" bindtap="closeEditFamilyName">
   <view class="modal-mask"></view>
   <view class="modal-content" catchtap="stopPropagation">
     <view class="modal-header">
@@ -399,7 +399,7 @@
 </view>
 
 <!-- 解散家庭确认弹窗 -->
-<view class="modal" wx:if="{{showDissolveFamily}}" bindtap="closeDissolveFamily">
+<view class="modal {{settings.darkMode ? 'dark-mode' : ''}}" wx:if="{{showDissolveFamily}}" bindtap="closeDissolveFamily">
   <view class="modal-mask"></view>
   <view class="modal-content" catchtap="stopPropagation">
     <view class="modal-header">
@@ -425,7 +425,7 @@
 </view>
 
 <!-- 添加账号弹窗 -->
-<view class="modal" wx:if="{{showAddAccountModal}}" bindtap="closeAddAccountModal">
+<view class="modal {{settings.darkMode ? 'dark-mode' : ''}}" wx:if="{{showAddAccountModal}}" bindtap="closeAddAccountModal">
   <view class="modal-mask"></view>
   <view class="modal-content" catchtap="stopPropagation">
     <view class="modal-header">

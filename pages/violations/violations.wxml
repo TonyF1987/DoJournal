@@ -62,7 +62,7 @@
 </view>
 
 <!-- 添加/编辑违规行为弹窗 -->
-<view class="modal" wx:if="{{showModal}}">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showModal}}">
   <view class="modal-mask" bindtap="closeModal"></view>
   <view class="modal-content violation-modal">
     <view class="modal-header">

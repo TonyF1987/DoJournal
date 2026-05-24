@@ -413,7 +413,7 @@
   </view>
 
   <!-- 科目选择器弹窗 -->
-  <view class="modal" wx:if="{{showSubjectSelector}}">
+  <view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showSubjectSelector}}">
     <view class="modal-mask" bindtap="closeSubjectSelector"></view>
     <view class="modal-content subject-selector-modal">
       <view class="modal-header">
@@ -438,7 +438,7 @@
   </view>
 
   <!-- 添加科目弹窗 -->
-  <view class="modal" wx:if="{{showAddSubjectModal}}">
+  <view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showAddSubjectModal}}">
     <view class="modal-mask" bindtap="closeAddSubjectModal"></view>
     <view class="modal-content add-subject-modal">
       <view class="modal-header">
@@ -458,3 +458,34 @@
     </view>
   </view>
 </scroll-view>
+
+<view class="confirm-modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showOCRConfirmModal}}">
+  <view class="confirm-mask"></view>
+  <view class="confirm-content">
+    <view class="confirm-title">识别作业内容</view>
+    <view class="confirm-message">{{ocrConfirmContent}}</view>
+    <view class="confirm-actions">
+      <view class="confirm-btn cancel" bindtap="cancelOCRConfirm">取消</view>
+      <view class="confirm-btn confirm" bindtap="confirmOCRRecognize">确定</view>
+    </view>
+  </view>
+</view>
+
+<view class="custom-action-sheet {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showChatImportSheet}}">
+  <view class="custom-action-mask" bindtap="closeChatImportSheet"></view>
+  <view class="custom-action-panel">
+    <view class="custom-action-item" bindtap="onChatImportAction" data-action="album">从聊天选择图片</view>
+    <view class="custom-action-item" bindtap="onChatImportAction" data-action="camera">拍照识别作业</view>
+    <view class="custom-action-item" bindtap="onChatImportAction" data-action="guide">我知道如何转发</view>
+    <view class="custom-action-cancel" bindtap="closeChatImportSheet">取消</view>
+  </view>
+</view>
+
+<view class="custom-action-sheet {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showOCRModeSheet}}">
+  <view class="custom-action-mask" bindtap="closeOCRModeSheet"></view>
+  <view class="custom-action-panel">
+    <view class="custom-action-item" bindtap="onOCRModeAction" data-action="ai">🔥 AI智能识别（推荐）</view>
+    <view class="custom-action-item" bindtap="onOCRModeAction" data-action="manual">✏️ 手动输入</view>
+    <view class="custom-action-cancel" bindtap="closeOCRModeSheet">取消</view>
+  </view>
+</view>

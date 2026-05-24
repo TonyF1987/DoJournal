@@ -462,3 +462,70 @@ page {
   margin-left: 10rpx;
   font-weight: bold;
 }
+
+.dark-mode.container {
+  background: #121212;
+}
+
+.dark-mode .quick-action-item,
+.dark-mode .violation-item,
+.dark-mode .no-violations,
+.dark-mode .history-section {
+  background: #1E1E1E;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.25);
+  border-color: #333;
+}
+
+.dark-mode .quick-title,
+.dark-mode .section-title,
+.dark-mode .violation-name,
+.dark-mode .no-title,
+.dark-mode .history-title,
+.dark-mode .modal-title,
+.dark-mode .form-label {
+  color: #fff;
+}
+
+.dark-mode .quick-desc,
+.dark-mode .violation-desc,
+.dark-mode .no-desc,
+.dark-mode .history-time,
+.dark-mode .no-history-text,
+.dark-mode .custom-label {
+  color: #999;
+}
+
+.dark-mode .history-header,
+.dark-mode .history-item,
+.dark-mode .modal-header,
+.dark-mode .modal-footer {
+  border-color: #333;
+}
+
+.dark-mode .modal-content,
+.dark-mode .modal-body {
+  background: #1E1E1E;
+}
+
+.dark-mode .form-input,
+.dark-mode .form-textarea,
+.dark-mode .custom-input,
+.dark-mode .point-item {
+  background: #333;
+  color: #fff;
+  border-color: #444;
+}
+
+.dark-mode .point-item.active {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  color: #fff;
+}
+
+.dark-mode .btn-cancel {
+  background: #333;
+  color: #ccc;
+}
+
+.dark-mode .btn-confirm {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+}

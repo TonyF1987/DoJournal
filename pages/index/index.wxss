@@ -602,6 +602,66 @@ page.dark-mode {
   color: #fff;
 }
 
+.dark-mode .copy-calendar-popup,
+.dark-mode .copy-modal-content,
+.dark-mode .checkin-popup {
+  background: #1E1E1E;
+}
+
+.dark-mode .copy-calendar-header,
+.dark-mode .copy-modal-header,
+.dark-mode .checkin-popup-header,
+.dark-mode .copy-modal-footer,
+.dark-mode .checkin-popup-footer {
+  border-color: #333;
+}
+
+.dark-mode .copy-calendar-month,
+.dark-mode .copy-modal-title,
+.dark-mode .checkin-popup-title,
+.dark-mode .copy-subject-title,
+.dark-mode .checkin-section-label,
+.dark-mode .checkin-homework-content,
+.dark-mode .copy-subject-name {
+  color: #fff;
+}
+
+.dark-mode .copy-week-item,
+.dark-mode .copy-tip-text,
+.dark-mode .copy-date-arrow,
+.dark-mode .checkin-section-optional,
+.dark-mode .checkin-upload-text,
+.dark-mode .checkin-rating-percent {
+  color: #999;
+}
+
+.dark-mode .copy-date-item,
+.dark-mode .copy-date-input,
+.dark-mode .copy-subject-item,
+.dark-mode .checkin-homework-info,
+.dark-mode .checkin-upload-btn,
+.dark-mode .checkin-rating-item,
+.dark-mode .checkin-comment {
+  background: #333;
+  color: #fff;
+  border-color: #444;
+}
+
+.dark-mode .copy-date-disabled .copy-date-text {
+  color: #666;
+}
+
+.dark-mode .copy-date-selected,
+.dark-mode .copy-checkbox-checked,
+.dark-mode .checkin-rating-item.active {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #81C784;
+}
+
+.dark-mode .checkin-rating-label {
+  color: #fff;
+}
+
 .dark-mode .action-btn {
   color: #FFB74D;
 }

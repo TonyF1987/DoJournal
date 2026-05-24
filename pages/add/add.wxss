@@ -1099,3 +1099,299 @@ page.dark-mode {
   display: flex;
   gap: 20rpx;
 }
+
+.scroll-container.dark-mode,
+.dark-mode .container,
+.dark-mode .subject-mode-container {
+  background: #121212;
+}
+
+.dark-mode .card {
+  background: #1E1E1E;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.25);
+}
+
+.dark-mode .quick-actions .action-btn {
+  background: linear-gradient(135deg, #2E2E2E, #242424);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.35);
+}
+
+.dark-mode .action-title,
+.dark-mode .preview-title,
+.dark-mode .guide-title,
+.dark-mode .subject-text,
+.dark-mode .subject-name,
+.dark-mode .times-label,
+.dark-mode .stepper-input {
+  color: #fff;
+}
+
+.dark-mode .action-desc,
+.dark-mode .guide-step .step-text,
+.dark-mode .preview-item.text text,
+.dark-mode .custom-label,
+.dark-mode .times-tip,
+.dark-mode .subject-arrow,
+.dark-mode .empty-subjects {
+  color: #999;
+}
+
+.dark-mode .preview-count {
+  color: #81C784;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.dark-mode .forward-guide {
+  background: linear-gradient(135deg, #2E2E2E, #242424);
+}
+
+.dark-mode .import-btn,
+.dark-mode .preview-item,
+.dark-mode .day-item,
+.dark-mode .end-type-item,
+.dark-mode .date-picker-btn,
+.dark-mode .point-item,
+.dark-mode .stepper-btn,
+.dark-mode .stepper-input,
+.dark-mode .subject-selected,
+.dark-mode .btn-secondary,
+.dark-mode .btn-cancel {
+  background: #333;
+  color: #ccc;
+  border-color: #444;
+}
+
+.dark-mode .day-item.active,
+.dark-mode .end-type-item.active,
+.dark-mode .point-item.active {
+  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  color: #fff;
+}
+
+.dark-mode .points-display {
+  background: linear-gradient(135deg, #3E321A, #4A3A18);
+}
+
+.dark-mode .points-value {
+  color: #FFB74D;
+}
+
+.dark-mode .points-unit {
+  color: #FFA726;
+}
+
+.dark-mode .custom-points-section,
+.dark-mode .recurring-end {
+  border-top-color: #333;
+}
+
+.dark-mode .btn-submit[disabled] {
+  background: #333;
+  color: #666;
+}
+
+.dark-mode .btn-delete {
+  background: #1E1E1E;
+}
+
+.dark-mode .modal-content,
+.dark-mode .modal-body,
+.dark-mode .modal-footer {
+  background: #1E1E1E;
+}
+
+.dark-mode .modal-header,
+.dark-mode .modal-footer,
+.dark-mode .subject-item {
+  border-color: #333;
+}
+
+.dark-mode .modal-header {
+  color: #fff;
+}
+
+.dark-mode .subject-item:active {
+  background: #333;
+}
+
+.confirm-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.confirm-modal.dark-mode {
+  background: transparent;
+}
+
+.confirm-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.confirm-content {
+  position: relative;
+  width: 560rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background: #fff;
+}
+
+.confirm-title {
+  padding: 36rpx 36rpx 16rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #111;
+  text-align: center;
+}
+
+.confirm-message {
+  padding: 0 44rpx 36rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #333;
+  text-align: center;
+}
+
+.confirm-actions {
+  display: flex;
+  border-top: 1rpx solid #eee;
+}
+
+.confirm-btn {
+  flex: 1;
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  font-size: 32rpx;
+  background: #fff;
+}
+
+.confirm-btn.cancel {
+  color: #111;
+  border-right: 1rpx solid #eee;
+  font-weight: 600;
+}
+
+.confirm-btn.confirm {
+  color: #576B95;
+  font-weight: 600;
+}
+
+.dark-mode .confirm-mask {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.dark-mode .confirm-content,
+.dark-mode .confirm-btn {
+  background: #2C2C2E;
+}
+
+.dark-mode .confirm-title,
+.dark-mode .confirm-message,
+.dark-mode .confirm-btn.cancel {
+  color: #fff;
+}
+
+.dark-mode .confirm-actions,
+.dark-mode .confirm-btn.cancel {
+  border-color: #3A3A3C;
+}
+
+.dark-mode .confirm-btn.confirm {
+  color: #64B5F6;
+}
+
+.custom-action-sheet {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: transparent;
+}
+
+.custom-action-sheet.dark-mode {
+  background: transparent;
+}
+
+.custom-action-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.custom-action-panel {
+  position: absolute;
+  left: 16rpx;
+  right: 16rpx;
+  bottom: 24rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background: transparent;
+}
+
+.custom-action-item,
+.custom-action-cancel {
+  height: 108rpx;
+  line-height: 108rpx;
+  text-align: center;
+  font-size: 34rpx;
+  color: #007aff;
+  background: #fff;
+  border-bottom: 1rpx solid #eee;
+}
+
+.custom-action-item:active,
+.custom-action-cancel:active {
+  background: #f5f5f5;
+}
+
+.custom-action-cancel {
+  margin-top: 16rpx;
+  border-bottom: none;
+  color: #333;
+  font-weight: 500;
+}
+
+.dark-mode .custom-action-mask {
+  background: transparent;
+}
+
+.dark-mode .custom-action-panel {
+  background: transparent;
+}
+
+.dark-mode .custom-action-item,
+.dark-mode .custom-action-cancel {
+  background: #2C2C2E;
+  border-bottom-color: #3A3A3C;
+}
+
+.dark-mode .custom-action-item {
+  color: #64B5F6;
+}
+
+.dark-mode .custom-action-cancel {
+  color: #fff;
+}
+
+.dark-mode .custom-action-item:active,
+.dark-mode .custom-action-cancel:active {
+  background: #333;
+}

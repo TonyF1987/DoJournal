@@ -49,6 +49,15 @@ Page({
     recurringEndDate: '', // 截止日期
     recurringEndTimes: 8, // 重复次数(默认8次)
     showDatePicker: false,
+    showChatImportSheet: false,
+    showOCRModeSheet: false,
+    pendingOCRImagePath: '',
+    pendingOCRAppendMode: false,
+    showOCRConfirmModal: false,
+    ocrConfirmContent: '',
+    pendingOCRConfirmImagePath: '',
+    pendingOCRConfirmAppendMode: false,
+    pendingOCRConfirmCancelData: null,
     isReadOnly: false
   },
 
@@ -197,21 +206,14 @@ Page({
     }
 
     if (images.length > 0) {
-      wx.showModal({
-        title: '识别作业内容',
+      this.showOCRConfirm({
+        imagePath: images[0].url,
         content: '是否使用AI识别图片中的作业文字?',
-        success: (res) => {
-          if (res.confirm) {
-            this.recognizeImageContent(images[0].url);
-          } else {
-            this.setData({
-              title: '作业',
-              content: content,
-              importedContent: images,
-              type: 'import'
-            });
-            this.updateCanSubmit();
-          }
+        cancelData: {
+          title: '作业',
+          content: content,
+          importedContent: images,
+          type: 'import'
         }
       });
     } else if (content) {
@@ -233,6 +235,7 @@ Page({
 
   onShow() {
     const app = getApp();
+    this.setData({ darkMode: app.globalData.darkMode });
     if (app.globalData && app.globalData.sharedMessage && !this.data.hasHandledShare) {
       this.handleSharedMessage(app.globalData.sharedMessage);
       app.globalData.sharedMessage = null;
@@ -576,18 +579,24 @@ Page({
   },
 
   selectChatMaterial() {
-    wx.showActionSheet({
-      itemList: ['从聊天选择图片', '拍照识别作业', '我知道如何转发'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          this.selectFromAlbum();
-        } else if (res.tapIndex === 1) {
-          this.takePhoto();
-        } else if (res.tapIndex === 2) {
-          this.showForwardGuide();
-        }
-      }
-    });
+    this.setData({ showChatImportSheet: true });
+  },
+
+  closeChatImportSheet() {
+    this.setData({ showChatImportSheet: false });
+  },
+
+  onChatImportAction(e) {
+    const action = e.currentTarget.dataset.action;
+    this.closeChatImportSheet();
+
+    if (action === 'album') {
+      this.selectFromAlbum();
+    } else if (action === 'camera') {
+      this.takePhoto();
+    } else if (action === 'guide') {
+      this.showForwardGuide();
+    }
   },
 
   previewImage(e) {
@@ -696,23 +705,15 @@ Page({
 
           const hasExistingContent = this.data.content && this.data.content.trim().length > 0;
           
-          wx.showModal({
-            title: '识别作业内容',
+          this.showOCRConfirm({
+            imagePath: newImages[0].url,
+            appendMode: hasExistingContent,
             content: hasExistingContent ? '是否使用AI识别新图片中的作业文字？（将追加到现有内容后）' : '是否使用AI识别图片中的作业文字?',
-            success: (modalRes) => {
-              if (modalRes.confirm) {
-                this.recognizeImageContent(newImages[0].url, hasExistingContent);
-              } else {
-                if (!hasExistingContent) {
-                  this.setData({
-                    title: '作业',
-                    content: `包含${allImages.length}张作业图片`,
-                    importedContent: allImages,
-                    type: 'import'
-                  });
-                }
-                this.updateCanSubmit();
-              }
+            cancelData: hasExistingContent ? null : {
+              title: '作业',
+              content: `包含${allImages.length}张作业图片`,
+              importedContent: allImages,
+              type: 'import'
             }
           });
         }
@@ -750,28 +751,83 @@ Page({
     });
   },
 
+  showOCRConfirm(options) {
+    this.setData({
+      showOCRConfirmModal: true,
+      ocrConfirmContent: options.content,
+      pendingOCRConfirmImagePath: options.imagePath,
+      pendingOCRConfirmAppendMode: !!options.appendMode,
+      pendingOCRConfirmCancelData: options.cancelData || null
+    });
+  },
+
+  closeOCRConfirmModal() {
+    this.setData({
+      showOCRConfirmModal: false,
+      ocrConfirmContent: '',
+      pendingOCRConfirmImagePath: '',
+      pendingOCRConfirmAppendMode: false,
+      pendingOCRConfirmCancelData: null
+    });
+  },
+
+  cancelOCRConfirm() {
+    const cancelData = this.data.pendingOCRConfirmCancelData;
+    this.closeOCRConfirmModal();
+
+    if (cancelData) {
+      this.setData(cancelData);
+    }
+    this.updateCanSubmit();
+  },
+
+  confirmOCRRecognize() {
+    const imagePath = this.data.pendingOCRConfirmImagePath;
+    const appendMode = this.data.pendingOCRConfirmAppendMode;
+    this.closeOCRConfirmModal();
+    this.recognizeImageContent(imagePath, appendMode);
+  },
+
   recognizeImageContent(imagePath, appendMode = false) {
     this.showOCRModeSelector(imagePath, appendMode);
   },
 
   showOCRModeSelector(imagePath, appendMode = false) {
-    wx.showActionSheet({
-      itemList: ['🔥 AI智能识别（推荐）', '✏️ 手动输入'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          this.recognizeWithAI(imagePath, appendMode);
-        } else {
-          let newContent = `已导入图片，请手动输入作业内容`;
-          if (appendMode && this.data.content) {
-            newContent = this.data.content + '\n---\n' + newContent;
-          }
-          this.setData({
-            content: newContent
-          });
-          this.updateCanSubmit();
-        }
-      }
+    this.setData({
+      showOCRModeSheet: true,
+      pendingOCRImagePath: imagePath,
+      pendingOCRAppendMode: appendMode
     });
+  },
+
+  closeOCRModeSheet() {
+    this.setData({
+      showOCRModeSheet: false,
+      pendingOCRImagePath: '',
+      pendingOCRAppendMode: false
+    });
+  },
+
+  onOCRModeAction(e) {
+    const action = e.currentTarget.dataset.action;
+    const imagePath = this.data.pendingOCRImagePath;
+    const appendMode = this.data.pendingOCRAppendMode;
+
+    this.closeOCRModeSheet();
+
+    if (action === 'ai') {
+      this.recognizeWithAI(imagePath, appendMode);
+      return;
+    }
+
+    let newContent = `已导入图片，请手动输入作业内容`;
+    if (appendMode && this.data.content) {
+      newContent = this.data.content + '\n---\n' + newContent;
+    }
+    this.setData({
+      content: newContent
+    });
+    this.updateCanSubmit();
   },
 
   // 使用AI识别
@@ -995,21 +1051,36 @@ Page({
   },
 
   increasePoints() {
-    let points = this.data.points + 5;
+    let points = Number(this.data.points) || 0;
+    points += 1;
     if (points > 1000) points = 1000;
     this.setData({ points: points });
     this.updateCanSubmit();
   },
 
   decreasePoints() {
-    let points = this.data.points - 5;
+    let points = Number(this.data.points) || 1;
+    points -= 1;
     if (points < 1) points = 1;
     this.setData({ points: points });
     this.updateCanSubmit();
   },
 
   onCustomPointsInput(e) {
-    let value = parseInt(e.detail.value) || 1;
+    const inputValue = e.detail.value;
+    if (inputValue === '') {
+      this.setData({ points: '' });
+      this.updateCanSubmit();
+      return;
+    }
+
+    let value = parseInt(inputValue, 10);
+    if (Number.isNaN(value)) {
+      this.setData({ points: '' });
+      this.updateCanSubmit();
+      return;
+    }
+
     if (value < 1) value = 1;
     if (value > 1000) value = 1000;
     this.setData({ points: value });
@@ -1203,7 +1274,12 @@ Page({
   },
 
   canSubmit() {
-    const { content, recurring, recurringDays, selectedSubject, isEdit, editingHomework } = this.data;
+    const { content, recurring, recurringDays, selectedSubject, isEdit, editingHomework, points } = this.data;
+    const pointValue = Number(points);
+    const hasValidPoints = points !== '' && !Number.isNaN(pointValue) && pointValue >= 1 && pointValue <= 1000;
+    if (!hasValidPoints) {
+      return false;
+    }
     // 编辑模式：只要有科目和内容就允许提交（即使内容没有变化）
     if (isEdit || editingHomework) {
       if (!selectedSubject) {

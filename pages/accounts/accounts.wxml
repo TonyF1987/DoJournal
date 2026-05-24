@@ -72,7 +72,7 @@
 </view>
 
 <!-- 编辑资料弹窗 -->
-<view class="modal" wx:if="{{showEditProfile}}" bindtap="closeEditProfile">
+<view class="modal {{darkMode ? 'dark-mode' : ''}}" wx:if="{{showEditProfile}}" bindtap="closeEditProfile">
   <view class="modal-mask"></view>
   <view class="modal-content" catchtap="stopPropagation">
     <view class="modal-header">

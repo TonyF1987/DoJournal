@@ -488,3 +488,36 @@
 .btn-danger {
   background-color: #FF5252 !important;
 }
+
+.dark-mode .modal-content,
+.dark-mode .modal-body,
+.dark-mode .modal-footer {
+  background-color: #1E1E1E;
+}
+
+.dark-mode .modal-header {
+  border-bottom-color: #333;
+  color: #fff;
+}
+
+.dark-mode .form-label {
+  color: #fff;
+}
+
+.dark-mode .form-input {
+  background-color: #333;
+  color: #fff;
+}
+
+.dark-mode .form-hint {
+  color: #999;
+}
+
+.dark-mode .btn-cancel {
+  background-color: #333;
+  color: #ccc;
+}
+
+.dark-mode .btn-confirm {
+  background-color: #2E7D32;
+}
