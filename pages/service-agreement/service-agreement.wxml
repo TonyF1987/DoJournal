@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container {{darkMode ? 'dark-mode' : ''}}">
   <view class="content">
     <view class="section">
       <view class="title">服务协议</view>

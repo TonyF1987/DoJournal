@@ -1,5 +1,6 @@
 const app = getApp();
 const db = wx.cloud.database();
+const theme = require('../../utils/theme.js');
 
 function getNthRecurringDate(recurringDays, nth, startDateStr) {
   let currentDate = startDateStr ? new Date(startDateStr) : new Date();
@@ -65,7 +66,8 @@ Page({
     // 设置今天的日期
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    this.setData({ today: todayStr, darkMode: app.globalData.darkMode });
+    this.setData({ today: todayStr });
+    theme.syncDarkMode(this);
     
     // 检查登录状态
     if (!app.globalData.isLoggedIn && !app.globalData.openid) {
@@ -235,7 +237,7 @@ Page({
 
   onShow() {
     const app = getApp();
-    this.setData({ darkMode: app.globalData.darkMode });
+    theme.syncDarkMode(this);
     if (app.globalData && app.globalData.sharedMessage && !this.data.hasHandledShare) {
       this.handleSharedMessage(app.globalData.sharedMessage);
       app.globalData.sharedMessage = null;

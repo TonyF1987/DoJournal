@@ -1,4 +1,5 @@
 const app = getApp();
+const theme = require('../../utils/theme.js');
 
 Page({
   data: {
@@ -18,8 +19,8 @@ Page({
     this.setData({
       isOriginalCreatorGlobal: app.globalData.isOriginalCreator,
       currentAccountId: app.globalData.userId || '',
-      darkMode: app.globalData.darkMode
     });
+    theme.syncDarkMode(this);
     
     if (userInfo) {
       this.setData({
@@ -31,7 +32,7 @@ Page({
   },
 
   onShow() {
-    this.setData({ darkMode: app.globalData.darkMode });
+    theme.syncDarkMode(this);
     this.loadAccounts();
   },
 

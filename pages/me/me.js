@@ -1,5 +1,6 @@
 const app = getApp();
 const db = wx.cloud.database();
+const theme = require('../../utils/theme.js');
 
 Page({
   data: {
@@ -45,12 +46,19 @@ Page({
       });
       app.globalData.darkMode = savedDarkMode;
     }
+
+    theme.syncDarkMode(this, {
+      extraData: { 'settings.darkMode': app.globalData.darkMode }
+    });
     
     this.loadUserInfo();
     this.loadRegistrationConfig();
   },
 
   onShow() {
+    theme.syncDarkMode(this, {
+      extraData: { 'settings.darkMode': app.globalData.darkMode }
+    });
     this.loadUserInfo();
     // 如果用户有家庭，刷新家庭信息（不打开弹窗）
     if (app.globalData.userInfo && app.globalData.userInfo.familyId) {
@@ -683,14 +691,13 @@ Page({
     this.setData({
       'settings.darkMode': newDarkMode
     });
-    
-    // 保存设置到本地存储
-    wx.setStorageSync('darkMode', newDarkMode);
-    
-    // 更新全局状态
-    app.globalData.darkMode = newDarkMode;
-    
-    // 提示用户
+
+    theme.setGlobalDarkMode(newDarkMode);
+    theme.syncDarkMode(this, {
+      extraData: { 'settings.darkMode': newDarkMode }
+    });
+    theme.syncAllPages();
+
     wx.showToast({
       title: newDarkMode ? '已切换到深色模式' : '已切换到浅色模式',
       icon: 'success',

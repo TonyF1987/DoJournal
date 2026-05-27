@@ -5,9 +5,7 @@ page {
   box-sizing: border-box;
 }
 
-page.dark-mode {
-  background: #121212;
-}
+/* 页面背景由 utils/theme.js 的 setBackgroundColor 与 container.dark-mode 控制 */
 
 .dark-mode .child-card {
   background: #1E1E1E;
@@ -43,7 +41,8 @@ page.dark-mode {
 }
 
 .dark-mode .subject-item.active {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  background: rgba(143, 168, 146, 0.2);
+  border: 1rpx solid rgba(143, 168, 146, 0.3);
 }
 
 .dark-mode .empty-state {
@@ -67,17 +66,14 @@ page.dark-mode {
 }
 
 .dark-mode .tab-item.active {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
-/* 首页完整深色模式覆盖 */
-.dark-mode .demo-text {
-  color: #333;
-}
+/* 首页完整深色模式覆盖 - demo-text 见 styles/dark-theme.wxss */
 
 .dark-mode .demo-login-btn {
   background: #1E1E1E;
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .guide-text {
@@ -86,7 +82,7 @@ page.dark-mode {
 
 .dark-mode .guide-btn {
   background: #1E1E1E;
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .parent-name {
@@ -126,7 +122,7 @@ page.dark-mode {
 }
 
 .dark-mode .homework-points {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .checkin-comment {
@@ -139,8 +135,8 @@ page.dark-mode {
 }
 
 .dark-mode .checkin-rating-item.active {
-  background: #1B5E20;
-  border-color: #81C784;
+  background: rgba(143, 168, 146, 0.18);
+  border-color: #9eb0a0;
 }
 
 .dark-mode .checkin-rating-label {
@@ -148,7 +144,7 @@ page.dark-mode {
 }
 
 .dark-mode .checkin-rating-item.active .checkin-rating-label {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .checkin-rating-percent {
@@ -156,19 +152,17 @@ page.dark-mode {
 }
 
 .dark-mode .checkin-rating-item.active .checkin-rating-percent {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
-.dark-mode .checkin-homework-info {
-  background: #1B3E1B;
-}
+/* checkin-homework-info：见 styles/dark-theme.wxss */
 
 .dark-mode .checkin-homework-content {
   color: #ccc;
 }
 
 .dark-mode .checkin-homework-points {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .checkin-section-title {
@@ -234,9 +228,7 @@ page.dark-mode {
 }
 
 /* 首页额外深色模式覆盖 */
-.dark-mode .top-header {
-  background: linear-gradient(135deg, #2E7D32, #1B5E20);
-}
+/* top-header：见 styles/dark-theme.wxss */
 
 .dark-mode .family-info-section {
   background: rgba(255, 255, 255, 0.1);
@@ -320,7 +312,7 @@ page.dark-mode {
 }
 
 .dark-mode .list-item-points {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .list-item-points.negative {
@@ -361,9 +353,7 @@ page.dark-mode {
 }
 
 /* 首页更多深色模式覆盖 */
-.dark-mode .top-header {
-  background: linear-gradient(135deg, #2E7D32, #1B5E20);
-}
+/* top-header：见 styles/dark-theme.wxss */
 
 .dark-mode .parent-info {
   background: rgba(255, 255, 255, 0.1);
@@ -451,7 +441,8 @@ page.dark-mode {
 }
 
 .dark-mode .subject-item.active {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  background: rgba(143, 168, 146, 0.2);
+  border: 1rpx solid rgba(143, 168, 146, 0.3);
 }
 
 .dark-mode .subject-name {
@@ -473,11 +464,11 @@ page.dark-mode {
 
 .dark-mode .calendar-day.today {
   background: rgba(76, 175, 80, 0.3);
-  border-color: #81C784;
+  border-color: #9eb0a0;
 }
 
 .dark-mode .calendar-day.selected {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  background: rgba(143, 168, 146, 0.22);
 }
 
 .dark-mode .calendar-day.has-homework {
@@ -501,7 +492,7 @@ page.dark-mode {
 }
 
 .dark-mode .calendar-day.today .day-text {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .calendar-day.selected .day-text {
@@ -566,7 +557,7 @@ page.dark-mode {
 
 .dark-mode .check-circle:active {
   background: rgba(76, 175, 80, 0.2);
-  border-color: #81C784;
+  border-color: #9eb0a0;
 }
 
 .dark-mode .empty-state {
@@ -587,7 +578,8 @@ page.dark-mode {
 }
 
 .dark-mode .tab-item.active {
-  background: linear-gradient(135deg, #FF9800, #FFA726);
+  background: rgba(255, 167, 38, 0.35);
+  border: 1rpx solid rgba(255, 167, 38, 0.4);
 }
 
 .dark-mode .tab-text {
@@ -655,7 +647,7 @@ page.dark-mode {
 .dark-mode .copy-checkbox-checked,
 .dark-mode .checkin-rating-item.active {
   background: rgba(76, 175, 80, 0.2);
-  border-color: #81C784;
+  border-color: #9eb0a0;
 }
 
 .dark-mode .checkin-rating-label {
@@ -2832,4 +2824,50 @@ page.dark-mode {
   font-size: 28rpx;
   color: #999;
   display: block;
+}
+
+/* 邀请码弹窗（首页家庭） */
+.invite-code-card {
+  background: #f5f5f5;
+  border-radius: 16rpx;
+  padding: 40rpx 24rpx;
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+
+.invite-code {
+  font-size: 56rpx;
+  font-weight: bold;
+  color: #4CAF50;
+  letter-spacing: 8rpx;
+}
+
+.invite-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 28rpx;
+  color: #666;
+}
+
+.invite-tip-small {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.join-tip {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #999;
+  text-align: center;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #f44336, #e53935);
+  color: #fff;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  padding: 24rpx;
 }

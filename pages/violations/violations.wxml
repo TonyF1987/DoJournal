@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container {{darkMode ? 'dark-mode' : ''}}">
   <view class="page-header">
     <text class="page-title">违规行为管理</text>
     <text class="page-subtitle">记录违规行为，扣除相应积分，帮助孩子养成良好习惯</text>

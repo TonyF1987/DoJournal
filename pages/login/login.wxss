@@ -3,17 +3,53 @@ page {
   min-height: 100vh;
 }
 
-page.dark-mode {
+.container.dark-mode {
   background-color: #121212;
+  min-height: 100vh;
 }
 
-.dark-mode .form-input {
-  background: #333;
-  color: #fff;
+.dark-mode .back-icon,
+.dark-mode .nav-title,
+.dark-mode .app-name,
+.dark-mode .nickname-text,
+.dark-mode .form-label,
+.dark-mode .input-label {
+  color: #ffffff !important;
+}
+
+.dark-mode .nickname-placeholder,
+.dark-mode .input-hint,
+.dark-mode .footer-text {
+  color: #999999 !important;
+}
+
+.dark-mode .form-input,
+.dark-mode .password-input {
+  background: #2c2c2c !important;
+  color: #ffffff !important;
+  border-color: #404040;
+}
+
+.dark-mode .registration-notice {
+  background-color: rgba(255, 152, 0, 0.15) !important;
+}
+
+.dark-mode .notice-text {
+  color: #ffb74d !important;
+}
+
+.dark-mode .account-item,
+.dark-mode .account-dropdown {
+  background: #1e1e1e !important;
+  border-color: #333333 !important;
+}
+
+.dark-mode .account-name {
+  color: #ffffff !important;
 }
 
 .dark-mode .btn-login {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  background: linear-gradient(135deg, #2e7d32, #388e3c) !important;
 }
 
 .container {

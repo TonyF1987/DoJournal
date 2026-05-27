@@ -1,4 +1,5 @@
 const app = getApp();
+const theme = require('../../utils/theme.js');
 
 Page({
   data: {
@@ -18,9 +19,13 @@ Page({
   },
 
   onLoad(options) {
-    this.setData({ darkMode: app.globalData.darkMode });
+    theme.syncDarkMode(this);
     this.checkLoginStatus();
     this.checkRegistrationConfig();
+  },
+
+  onShow() {
+    theme.syncDarkMode(this);
   },
 
   async checkRegistrationConfig() {

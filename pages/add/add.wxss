@@ -7,18 +7,9 @@ page {
   overflow-x: hidden;
 }
 
-page.dark-mode {
-  background: #121212;
-}
+/* 添加作业页深色模式 - 页面背景由 utils/theme.js + dark-theme.wxss 控制 */
 
-/* 添加作业页深色模式 */
-.dark-mode .scroll-container {
-  background: #121212;
-}
-
-.dark-mode .subject-header {
-  background: linear-gradient(135deg, #2E7D32, #1B5E20);
-}
+/* subject-header：见 styles/dark-theme.wxss */
 
 .dark-mode .selected-date-badge {
   background: #1E1E1E;
@@ -92,10 +83,7 @@ page.dark-mode {
   background: #2E2E2E;
 }
 
-.dark-mode .type-item.active {
-  border-color: #81C784;
-  background: rgba(76, 175, 80, 0.2);
-}
+/* type-item.active：见 styles/dark-theme.wxss */
 
 .dark-mode .type-text {
   color: #999;
@@ -1136,10 +1124,7 @@ page.dark-mode {
   color: #999;
 }
 
-.dark-mode .preview-count {
-  color: #81C784;
-  background: rgba(76, 175, 80, 0.2);
-}
+/* preview-count：见 styles/dark-theme.wxss */
 
 .dark-mode .forward-guide {
   background: linear-gradient(135deg, #2E2E2E, #242424);
@@ -1161,12 +1146,7 @@ page.dark-mode {
   border-color: #444;
 }
 
-.dark-mode .day-item.active,
-.dark-mode .end-type-item.active,
-.dark-mode .point-item.active {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
-  color: #fff;
-}
+/* day/point active：见 styles/dark-theme.wxss */
 
 .dark-mode .points-display {
   background: linear-gradient(135deg, #3E321A, #4A3A18);

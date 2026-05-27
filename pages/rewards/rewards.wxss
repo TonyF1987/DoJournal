@@ -4,10 +4,6 @@ page {
   box-sizing: border-box;
 }
 
-page.dark-mode {
-  background: #121212;
-}
-
 .dark-mode .card {
   background: #1E1E1E;
 }
@@ -17,18 +13,10 @@ page.dark-mode {
 }
 
 .dark-mode .tab-item.active {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
-/* 积分页完整深色模式覆盖 */
-.dark-mode .demo-text {
-  color: #333;
-}
-
-.dark-mode .demo-login-btn {
-  background: #1E1E1E;
-  color: #81C784;
-}
+/* 积分页演示条 - 见 styles/dark-theme.wxss */
 
 .dark-mode .user-card {
   background: #1E1E1E;
@@ -68,7 +56,7 @@ page.dark-mode {
 }
 
 .dark-mode .reward-points {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .reward-desc {
@@ -102,7 +90,7 @@ page.dark-mode {
 }
 
 .dark-mode .record-points {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .record-points.negative {
@@ -126,13 +114,14 @@ page.dark-mode {
 }
 
 .dark-mode .btn-primary {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
+  background: #354a38;
+  color: #d4e6d6;
 }
 
 .dark-mode .btn-secondary {
   background: #1E1E1E;
-  color: #81C784;
-  border-color: #81C784;
+  color: #9eb0a0;
+  border-color: #9eb0a0;
 }
 
 .dark-mode .modal-content {
@@ -184,8 +173,8 @@ page.dark-mode {
 }
 
 .dark-mode .btn-confirm {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
-  color: #fff;
+  background: #354a38;
+  color: #d4e6d6;
 }
 
 .dark-mode .icon-option {
@@ -193,8 +182,8 @@ page.dark-mode {
 }
 
 .dark-mode .icon-option.selected {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: #81C784;
+  background: rgba(143, 168, 146, 0.15);
+  border-color: #9eb0a0;
 }
 
 .dark-mode .detail-section:first-child {
@@ -234,8 +223,8 @@ page.dark-mode {
 }
 
 .dark-mode .child-item.active {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: #81C784;
+  background: rgba(143, 168, 146, 0.15);
+  border-color: #9eb0a0;
 }
 
 .dark-mode .child-name {
@@ -247,9 +236,7 @@ page.dark-mode {
 }
 
 /* 积分页额外深色模式覆盖 */
-.dark-mode .top-header {
-  background: linear-gradient(135deg, #2E7D32, #1B5E20);
-}
+/* top-header：见 styles/dark-theme.wxss */
 
 .dark-mode .user-info-section {
   background: #1E1E1E;
@@ -283,10 +270,7 @@ page.dark-mode {
   color: #999;
 }
 
-.dark-mode .tab-item.active {
-  color: #81C784;
-  background: rgba(76, 175, 80, 0.2);
-}
+/* tab.active：见 styles/dark-theme.wxss */
 
 .dark-mode .list-section {
   background: #121212;
@@ -306,7 +290,7 @@ page.dark-mode {
 }
 
 .dark-mode .list-item-points {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .list-item-points.negative {
@@ -326,18 +310,13 @@ page.dark-mode {
   color: #999;
 }
 
-.dark-mode .tab-item.active {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
-  color: #fff;
-}
+/* tab.active：见 styles/dark-theme.wxss */
 
 .dark-mode .grid-item {
   background: #1E1E1E;
 }
 
-.dark-mode .item-emoji {
-  background: linear-gradient(135deg, #2E3E2E, #1B5E20);
-}
+/* item-emoji：见 styles/dark-theme.wxss */
 
 .dark-mode .item-emoji.punishment {
   background: linear-gradient(135deg, #3E1E1E, #5E2020);
@@ -356,9 +335,7 @@ page.dark-mode {
   color: #999;
 }
 
-.dark-mode .item-points {
-  color: #81C784;
-}
+/* item-points：见 styles/dark-theme.wxss */
 
 .dark-mode .item-points.punishment {
   color: #FF8A80;
@@ -372,9 +349,7 @@ page.dark-mode {
   color: #fff;
 }
 
-.dark-mode .add-btn {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
-}
+/* add-btn：见 styles/dark-theme.wxss */
 
 .dark-mode .record-item {
   background: #1E1E1E;
@@ -393,7 +368,7 @@ page.dark-mode {
 }
 
 .dark-mode .record-points {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .record-points.negative {
@@ -405,9 +380,7 @@ page.dark-mode {
 }
 
 /* 积分页正确的深色模式覆盖 */
-.dark-mode .header-gradient {
-  background: linear-gradient(135deg, #2E7D32, #1B5E20);
-}
+/* header-gradient：见 styles/dark-theme.wxss */
 
 .dark-mode .user-card {
   background: #1E1E1E;
@@ -429,9 +402,7 @@ page.dark-mode {
   color: #666;
 }
 
-.dark-mode .stats-row {
-  background: rgba(255, 255, 255, 0.1);
-}
+/* stats-row：见 styles/dark-theme.wxss */
 
 .dark-mode .stat-value {
   color: #fff;
@@ -449,10 +420,7 @@ page.dark-mode {
   color: #999;
 }
 
-.dark-mode .tab-item.active {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
-  color: #fff;
-}
+/* tab.active：见 styles/dark-theme.wxss */
 
 .dark-mode .content-area {
   background: #121212;
@@ -466,9 +434,7 @@ page.dark-mode {
   color: #fff;
 }
 
-.dark-mode .grid-points {
-  color: #81C784;
-}
+/* grid-points：见 styles/dark-theme.wxss */
 
 .dark-mode .grid-points.negative {
   color: #FF8A80;
@@ -969,7 +935,7 @@ page.dark-mode {
 
 .dark-mode .page-btn {
   background: #2E2E2E;
-  color: #81C784;
+  color: #9eb0a0;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3);
 }
 
@@ -1480,8 +1446,8 @@ page.dark-mode {
 }
 
 .dark-mode .btn-confirm {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
-  color: #fff;
+  background: #354a38;
+  color: #d4e6d6;
 }
 
 .dark-mode .icon-option {
@@ -1490,8 +1456,8 @@ page.dark-mode {
 
 .dark-mode .icon-option.selected,
 .dark-mode .gender-option.active {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: #81C784;
+  background: rgba(143, 168, 146, 0.15);
+  border-color: #9eb0a0;
 }
 
 .dark-mode .detail-section:first-child {
@@ -1526,6 +1492,6 @@ page.dark-mode {
 }
 
 .dark-mode .child-item.active {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: #81C784;
+  background: rgba(143, 168, 146, 0.15);
+  border-color: #9eb0a0;
 }

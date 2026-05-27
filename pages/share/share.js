@@ -1,5 +1,6 @@
 const app = getApp();
 const db = wx.cloud.database();
+const theme = require('../../utils/theme.js');
 
 Page({
   data: {
@@ -13,6 +14,8 @@ Page({
   },
 
   onLoad(options) {
+    theme.syncDarkMode(this);
+
     // 检查登录状态
     if (!app.globalData.isLoggedIn && !app.globalData.openid) {
       console.log('用户未登录，跳转到登录页面');
@@ -35,6 +38,10 @@ Page({
     setTimeout(() => {
       this.generatePoster();
     }, 500);
+  },
+
+  onShow() {
+    theme.syncDarkMode(this);
   },
 
   // 加载作业信息

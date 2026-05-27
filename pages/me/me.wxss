@@ -841,9 +841,7 @@ page {
   background: #333;
 }
 
-.dark-mode .menu-icon-wrapper {
-  background: linear-gradient(135deg, #2D3E2D, #1B5E20);
-}
+/* menu-icon-wrapper：见 styles/dark-theme.wxss */
 
 .dark-mode .menu-title {
   color: #fff;
@@ -883,13 +881,7 @@ page {
   color: #999;
 }
 
-.dark-mode .family-info-card {
-  background: linear-gradient(135deg, #2D3E2D, #1B5E20);
-}
-
-.dark-mode .family-name {
-  color: #81C784;
-}
+/* family-info-card / family-name：见 styles/dark-theme.wxss */
 
 .dark-mode .family-desc {
   color: #999;
@@ -916,11 +908,7 @@ page {
   color: #999;
 }
 
-.dark-mode .btn-action {
-  background: #333;
-  color: #81C784;
-  border-color: #81C784;
-}
+/* btn-action：见 styles/dark-theme.wxss */
 
 .dark-mode .btn-action.btn-danger {
   color: #FF8A80;
@@ -950,13 +938,7 @@ page {
   color: #999;
 }
 
-.dark-mode .invite-code-card {
-  background: linear-gradient(135deg, #2D3E2D, #1B5E20);
-}
-
-.dark-mode .invite-code {
-  color: #81C784;
-}
+/* invite-code：见 styles/dark-theme.wxss */
 
 .dark-mode .invite-code-desc {
   color: #999;

@@ -1,5 +1,6 @@
 const app = getApp();
 const db = wx.cloud.database();
+const theme = require('../../utils/theme.js');
 
 Page({
   data: {
@@ -17,7 +18,7 @@ Page({
   },
 
   onLoad() {
-    this.setData({ darkMode: app.globalData.darkMode });
+    theme.syncDarkMode(this);
     this.initViolations();
     this.loadViolations();
     this.loadHistoryRecords();
@@ -122,7 +123,7 @@ Page({
   },
 
   onShow() {
-    this.setData({ darkMode: app.globalData.darkMode });
+    theme.syncDarkMode(this);
     this.loadViolations();
     this.loadHistoryRecords();
   },

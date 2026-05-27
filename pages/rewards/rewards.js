@@ -1,5 +1,6 @@
 const app = getApp();
 const db = wx.cloud.database();
+const theme = require('../../utils/theme.js');
 
 Page({
   data: {
@@ -64,10 +65,8 @@ Page({
   onLoad() {
     // 检查是否显示演示数据提示
     const shouldShowDemo = !app.globalData.isLoggedIn && !app.globalData.openid;
-    this.setData({ 
-      showDemoBanner: shouldShowDemo,
-      darkMode: app.globalData.darkMode 
-    });
+    this.setData({ showDemoBanner: shouldShowDemo });
+    theme.syncDarkMode(this);
 
     // 如果未登录，设置演示数据
     if (shouldShowDemo) {
@@ -83,10 +82,8 @@ Page({
   onShow() {
     // 检查是否显示演示数据提示
     const shouldShowDemo = !app.globalData.isLoggedIn && !app.globalData.openid;
-    this.setData({ 
-      showDemoBanner: shouldShowDemo,
-      darkMode: app.globalData.darkMode 
-    });
+    this.setData({ showDemoBanner: shouldShowDemo });
+    theme.syncDarkMode(this);
 
     // 如果未登录，设置演示数据
     if (shouldShowDemo) {

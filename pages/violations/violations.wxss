@@ -463,8 +463,52 @@ page {
   font-weight: bold;
 }
 
-.dark-mode.container {
+.container.dark-mode {
   background: #121212;
+  min-height: 100vh;
+}
+
+/* page-header：见 styles/dark-theme.wxss */
+
+.dark-mode .history-content .violation-name {
+  color: #ffffff;
+}
+
+.dark-mode .history-content .violation-points {
+  color: #ff8a80;
+}
+
+.dark-mode .delete-record {
+  background: #333333;
+  color: #999999;
+}
+
+.dark-mode .arrow {
+  color: #999999;
+}
+
+.dark-mode .history-count {
+  background: rgba(76, 175, 80, 0.2);
+  color: #81c784;
+}
+
+.dark-mode .edit-btn {
+  background: rgba(76, 175, 80, 0.15);
+  color: #81c784;
+}
+
+.dark-mode .delete-btn {
+  background: rgba(255, 138, 101, 0.15);
+  color: #ff8a80;
+}
+
+.dark-mode .violation-points {
+  background: rgba(255, 138, 101, 0.15);
+  color: #ff8a80;
+}
+
+.dark-mode .close-btn {
+  color: #b0b0b0;
 }
 
 .dark-mode .quick-action-item,
@@ -516,16 +560,4 @@ page {
   border-color: #444;
 }
 
-.dark-mode .point-item.active {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
-  color: #fff;
-}
-
-.dark-mode .btn-cancel {
-  background: #333;
-  color: #ccc;
-}
-
-.dark-mode .btn-confirm {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
-}
+/* point-item / 按钮：见 styles/dark-theme.wxss */

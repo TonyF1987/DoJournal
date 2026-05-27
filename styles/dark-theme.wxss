@@ -1,0 +1,750 @@
+/**
+ * 深色模式共享样式（首页、积分页及子页面/弹窗）
+ * 通过容器或弹窗根节点上的 .dark-mode 类生效
+ */
+
+.container.dark-mode,
+.scroll-container.dark-mode {
+  min-height: 100vh;
+  background-color: #121212;
+  color: #e8e8e8;
+  box-sizing: border-box;
+}
+
+/* 演示/只读提示条 */
+.dark-mode .demo-text {
+  color: #f5f5f5 !important;
+}
+
+.dark-mode .demo-login-btn {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #c8e6c9 !important;
+  box-shadow: none;
+  border: 1rpx solid rgba(129, 199, 132, 0.45);
+}
+
+.dark-mode .guide-btn {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #c8e6c9 !important;
+}
+
+/* 弹窗与蒙层 */
+.dark-mode.modal,
+.dark-mode.checkin-modal,
+.dark-mode.copy-calendar-full-modal,
+.dark-mode.copy-modal-container {
+  z-index: 999;
+}
+
+.dark-mode.copy-calendar-full-modal {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+.dark-mode.copy-modal-container .modal-mask {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+.dark-mode .modal-mask,
+.dark-mode.checkin-modal .checkin-mask {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+.dark-mode .modal-content,
+.dark-mode .checkin-popup,
+.dark-mode .copy-calendar-popup,
+.dark-mode .copy-modal-content,
+.dark-mode.copy-calendar-full-modal .copy-calendar-popup {
+  background: #1e1e1e !important;
+  color: #e8e8e8;
+}
+
+.dark-mode .modal-header,
+.dark-mode .checkin-popup-header,
+.dark-mode .copy-modal-header,
+.dark-mode .copy-calendar-header {
+  color: #ffffff !important;
+  border-bottom-color: #333333 !important;
+}
+
+.dark-mode .modal-body,
+.dark-mode .checkin-popup-body {
+  background: #1e1e1e;
+  color: #e8e8e8;
+}
+
+.dark-mode .modal-footer,
+.dark-mode .checkin-popup-footer,
+.dark-mode .copy-modal-footer {
+  background: #1e1e1e !important;
+  border-top-color: #333333 !important;
+}
+
+.dark-mode .close-btn,
+.dark-mode .checkin-close,
+.dark-mode .copy-modal-close,
+.dark-mode .copy-calendar-close,
+.dark-mode .copy-calendar-arrow {
+  color: #b0b0b0 !important;
+}
+
+/* 表单 */
+.dark-mode .form-label {
+  color: #ffffff !important;
+}
+
+.dark-mode .form-input,
+.dark-mode .form-textarea {
+  background: #2c2c2c !important;
+  color: #ffffff !important;
+  border: 1rpx solid #404040;
+}
+
+.dark-mode .btn-cancel {
+  background: #2c2c2c !important;
+  color: #cccccc !important;
+}
+
+.dark-mode .checkin-btn-submit {
+  background: #2a4a6a !important;
+  color: #d4e6f6 !important;
+  box-shadow: none !important;
+}
+
+.dark-mode .btn-danger {
+  background: #4a3232 !important;
+  color: #e8c4c4 !important;
+  box-shadow: none !important;
+}
+
+/* 家庭 / 邀请 */
+.dark-mode .family-info-card {
+  background: linear-gradient(180deg, #1c2420 0%, #161b18 100%) !important;
+}
+
+.dark-mode .family-section .section-title {
+  color: #ffffff !important;
+}
+
+.dark-mode .member-item {
+  background: #2c2c2c !important;
+}
+
+.dark-mode .member-name {
+  color: #ffffff !important;
+}
+
+.dark-mode .member-role {
+  color: #999999 !important;
+}
+
+.dark-mode .family-empty-state .empty-text {
+  color: #999999 !important;
+}
+
+.dark-mode .invite-code-card {
+  background: #2c2c2c !important;
+  border: 1rpx solid #404040;
+}
+
+.dark-mode .invite-code {
+  color: #9eb0a0 !important;
+}
+
+.dark-mode .invite-tip,
+.dark-mode .invite-tip text,
+.dark-mode .join-tip,
+.dark-mode .join-tip text {
+  color: #999999 !important;
+}
+
+.dark-mode .invite-tip-small {
+  color: #777777 !important;
+}
+
+/* 小朋友列表 */
+.dark-mode .child-item {
+  background: #2c2c2c !important;
+  box-shadow: none;
+}
+
+.dark-mode .child-item.active {
+  background: rgba(143, 168, 146, 0.15) !important;
+  border: 2rpx solid rgba(143, 168, 146, 0.35) !important;
+}
+
+.dark-mode .child-name,
+.dark-mode .child-card-name {
+  color: #ffffff !important;
+}
+
+.dark-mode .child-school,
+.dark-mode .child-card-school,
+.dark-mode .child-meta,
+.dark-mode .child-desc {
+  color: #999999 !important;
+}
+
+.dark-mode .child-card-switch {
+  color: #9eb0a0 !important;
+}
+
+.dark-mode .child-card {
+  background: #2a2a2a !important;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.35);
+}
+
+.dark-mode .child-edit {
+  background: #3a4a5a !important;
+}
+
+.dark-mode .child-delete {
+  background: #4a2c2c !important;
+}
+
+.dark-mode .avatar-upload,
+.dark-mode .gender-option,
+.dark-mode .date-picker {
+  background: #2c2c2c !important;
+  color: #ffffff !important;
+}
+
+.dark-mode .gender-option.active {
+  background: rgba(143, 168, 146, 0.15) !important;
+  border-color: rgba(143, 168, 146, 0.35) !important;
+}
+
+.dark-mode .gender-option text {
+  color: #ffffff !important;
+}
+
+/* 作业卡片与标签 */
+.dark-mode .section-title,
+.dark-mode .homework-title,
+.dark-mode .subjects-header {
+  color: #ffffff !important;
+}
+
+.dark-mode .subject-count {
+  background: #333333 !important;
+  color: #aaaaaa !important;
+}
+
+.dark-mode .points-tag {
+  background: linear-gradient(135deg, #5d4e37, #8b6914) !important;
+  color: #ffe082 !important;
+}
+
+.dark-mode .meta-tag {
+  color: #9eb0a0 !important;
+  background: rgba(143, 168, 146, 0.12) !important;
+}
+
+.dark-mode .meta-tag.recurring {
+  color: #64b5f6 !important;
+  background: rgba(33, 150, 243, 0.18) !important;
+}
+
+.dark-mode .scroll-month {
+  color: #9eb0a0 !important;
+}
+
+/* 复制弹窗 */
+.dark-mode .copy-btn-cancel {
+  background: #2c2c2c !important;
+  color: #ffb74d !important;
+  border-color: #ffb74d !important;
+}
+
+.dark-mode .copy-checkbox {
+  background: #2c2c2c !important;
+  border-color: #555555 !important;
+}
+
+.dark-mode .copy-date-text {
+  color: #e0e0e0 !important;
+}
+
+.dark-mode .copy-date-disabled .copy-date-text {
+  color: #666666 !important;
+}
+
+/* 打卡页 */
+.dark-mode .card {
+  background: #1e1e1e !important;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.35);
+}
+
+.dark-mode .rating-result {
+  background: linear-gradient(135deg, #3e3a20, #2e2a18) !important;
+}
+
+.dark-mode .result-text {
+  color: #cccccc !important;
+}
+
+.dark-mode .result-points {
+  color: #ffb74d !important;
+}
+
+.dark-mode .tips {
+  background: linear-gradient(135deg, #1a2a3a, #1e3a5f) !important;
+}
+
+.dark-mode .tips-title,
+.dark-mode .tips-content {
+  color: #90caf9 !important;
+}
+
+.dark-mode .btn-submit[disabled] {
+  background: #333333 !important;
+  color: #777777 !important;
+}
+
+.dark-mode .tip {
+  color: #888888 !important;
+}
+
+.dark-mode .rating-item.active.excellent {
+  background: rgba(143, 168, 146, 0.15) !important;
+  border-color: rgba(143, 168, 146, 0.35) !important;
+}
+
+.dark-mode .rating-item.active.good {
+  background: rgba(33, 150, 243, 0.22) !important;
+  border-color: #64b5f6 !important;
+}
+
+.dark-mode .rating-item.active.pass {
+  background: rgba(255, 152, 0, 0.22) !important;
+  border-color: #ffb74d !important;
+}
+
+.dark-mode .rating-label {
+  color: #cccccc !important;
+}
+
+/* ========== 深色模式柔和绿色（降低与黑色背景反差） ========== */
+
+.dark-mode .header-gradient,
+.dark-mode .top-header {
+  background: linear-gradient(180deg, #1c2420 0%, #161b18 50%, #121212 100%) !important;
+}
+
+.dark-mode .user-card {
+  background: #242424 !important;
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+  box-shadow: none !important;
+}
+
+.dark-mode .stats-row {
+  background: rgba(143, 168, 146, 0.08) !important;
+  border: 1rpx solid rgba(143, 168, 146, 0.1);
+}
+
+.dark-mode .tab-bar {
+  background: #1a1a1a !important;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.25) !important;
+}
+
+.dark-mode .tab-item.active {
+  background: rgba(143, 168, 146, 0.16) !important;
+  color: #c5d8c7 !important;
+  box-shadow: none !important;
+  border: 1rpx solid rgba(143, 168, 146, 0.22);
+}
+
+.dark-mode .content-area {
+  background: transparent !important;
+}
+
+.dark-mode .item-emoji {
+  background: #252f27 !important;
+}
+
+.dark-mode .item-points,
+.dark-mode .grid-points,
+.dark-mode .list-item-points,
+.dark-mode .record-points.reward,
+.dark-mode .grid-points:not(.negative),
+.dark-mode .homework-points,
+.dark-mode .list-points {
+  color: #9eb0a0 !important;
+}
+
+.dark-mode .btn-action,
+.dark-mode .add-btn,
+.dark-mode .add-btn-text,
+.dark-mode .correct-btn,
+.dark-mode .checkin-btn-quick,
+.dark-mode .btn-primary,
+.dark-mode .btn-confirm,
+.dark-mode .btn-confirm:not(.btn-danger),
+.dark-mode .btn-add-subject,
+.dark-mode .btn-primary {
+  background: #354a38 !important;
+  color: #d4e6d6 !important;
+  box-shadow: none !important;
+}
+
+.dark-mode .btn-secondary {
+  color: #9eb0a0 !important;
+  border-color: rgba(143, 168, 146, 0.35) !important;
+}
+
+.dark-mode .icon-option.selected,
+.dark-mode .gender-option.active,
+.dark-mode .child-item.active {
+  background: rgba(143, 168, 146, 0.15) !important;
+  border-color: rgba(143, 168, 146, 0.35) !important;
+}
+
+.dark-mode .btn-action.punishment {
+  background: #4a3232 !important;
+  color: #e8c4c4 !important;
+}
+
+.dark-mode .btn-action[disabled],
+.dark-mode .btn-submit[disabled] {
+  background: #2a2a2a !important;
+  color: #666666 !important;
+}
+
+.dark-mode .stats-section {
+  background: #1e1e1e !important;
+}
+
+.dark-mode .page-btn {
+  background: #2a2a2a !important;
+  color: #9eb0a0 !important;
+  box-shadow: none !important;
+}
+
+.dark-mode .text-primary,
+.dark-mode .action-btn,
+.dark-mode .child-card-switch {
+  color: #9eb0a0 !important;
+}
+
+.dark-mode .subject-item.active,
+.dark-mode .tab-item.active .tab-text {
+  color: #c5d8c7 !important;
+}
+
+.dark-mode .checkin-rating-item.active {
+  background: rgba(143, 168, 146, 0.15) !important;
+  border-color: rgba(143, 168, 146, 0.35) !important;
+}
+
+.dark-mode .calendar-day.selected,
+.dark-mode .calendar-scroll-item.today,
+.dark-mode .calendar-scroll-item.selected {
+  background: rgba(143, 168, 146, 0.22) !important;
+}
+
+.dark-mode .calendar-day.today {
+  background: rgba(143, 168, 146, 0.12) !important;
+  border-color: rgba(143, 168, 146, 0.35) !important;
+}
+
+.dark-mode .calendar-day.today .day-text {
+  color: #9eb0a0 !important;
+}
+
+.dark-mode .add-subject-btn {
+  background: #354a38 !important;
+  box-shadow: none !important;
+}
+
+/* 子页面：分享海报 */
+.dark-mode .btn-save,
+.dark-mode .btn-share {
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.35);
+}
+
+/* ========== 添加作业 add ========== */
+.dark-mode .subject-header {
+  background: linear-gradient(180deg, #1c2420 0%, #121212 100%) !important;
+}
+
+.dark-mode .type-item.active {
+  border-color: rgba(143, 168, 146, 0.35) !important;
+  background: rgba(143, 168, 146, 0.15) !important;
+}
+
+.dark-mode .day-item.active,
+.dark-mode .end-type-item.active,
+.dark-mode .point-item.active {
+  background: rgba(143, 168, 146, 0.2) !important;
+  color: #c5d8c7 !important;
+  border-color: rgba(143, 168, 146, 0.35) !important;
+}
+
+.dark-mode .btn-submit,
+.dark-mode .btn-add-new {
+  background: #354a38 !important;
+  color: #d4e6d6 !important;
+  box-shadow: none !important;
+}
+
+.dark-mode .btn-add-new {
+  background: #4a4030 !important;
+  color: #e8dcc8 !important;
+}
+
+.dark-mode .preview-count,
+.dark-mode .item-points {
+  color: #c5a86a !important;
+}
+
+.dark-mode .forward-guide,
+.dark-mode .import-instruction,
+.dark-mode .quick-actions .action-btn {
+  background: #1e1e1e !important;
+  border: 1rpx solid #333 !important;
+}
+
+/* OCR / 聊天导入弹窗 */
+.confirm-modal.dark-mode .confirm-mask,
+.custom-action-sheet.dark-mode .custom-action-mask {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+.confirm-modal.dark-mode .confirm-content,
+.confirm-modal.dark-mode .confirm-btn {
+  background: #1e1e1e !important;
+}
+
+.confirm-modal.dark-mode .confirm-title,
+.confirm-modal.dark-mode .confirm-message,
+.confirm-modal.dark-mode .confirm-btn.cancel {
+  color: #e8e8e8 !important;
+}
+
+.confirm-modal.dark-mode .confirm-actions,
+.confirm-modal.dark-mode .confirm-btn.cancel {
+  border-color: #333 !important;
+}
+
+.confirm-modal.dark-mode .confirm-btn.confirm {
+  color: #9eb0a0 !important;
+}
+
+.custom-action-sheet.dark-mode .custom-action-panel {
+  background: #1e1e1e !important;
+}
+
+.custom-action-sheet.dark-mode .custom-action-item,
+.custom-action-sheet.dark-mode .custom-action-cancel {
+  background: #2c2c2c !important;
+  color: #e8e8e8 !important;
+  border-color: #333 !important;
+}
+
+.custom-action-sheet.dark-mode .custom-action-cancel {
+  color: #999 !important;
+}
+
+/* ========== 打卡 checkin ========== */
+.dark-mode .homework-tag {
+  color: #9eb0a0 !important;
+  background: rgba(143, 168, 146, 0.12) !important;
+}
+
+.dark-mode .upload-btn,
+.dark-mode .comment-input,
+.dark-mode .rating-item {
+  background: #2c2c2c !important;
+  border-color: #404040 !important;
+}
+
+.dark-mode .points-badge {
+  background: linear-gradient(135deg, #4a4030, #3a3528) !important;
+  color: #e8dcc8 !important;
+}
+
+/* ========== 违规管理 violations ========== */
+.dark-mode .page-header {
+  background: linear-gradient(180deg, #1c2420 0%, #121212 100%) !important;
+}
+
+.dark-mode .quick-action-item,
+.dark-mode .violation-item,
+.dark-mode .no-violations,
+.dark-mode .history-section {
+  background: #1e1e1e !important;
+  border: 1rpx solid #2a2a2a !important;
+  box-shadow: none !important;
+}
+
+.dark-mode .point-item.active {
+  background: rgba(143, 168, 146, 0.2) !important;
+  color: #c5d8c7 !important;
+}
+
+.dark-mode .violation-points {
+  color: #d4a090 !important;
+  background: rgba(212, 160, 144, 0.12) !important;
+}
+
+.dark-mode .edit-btn {
+  background: rgba(143, 168, 146, 0.12) !important;
+  color: #9eb0a0 !important;
+}
+
+.dark-mode .delete-btn {
+  background: rgba(212, 160, 144, 0.12) !important;
+  color: #d4a090 !important;
+}
+
+/* ========== 我的 me ========== */
+.dark-mode.container {
+  background: #121212 !important;
+}
+
+.dark-mode .top-section {
+  background: #1a1a1a !important;
+}
+
+.dark-mode .menu-section,
+.dark-mode .menu-item {
+  background: #1e1e1e !important;
+}
+
+.dark-mode .menu-icon-wrapper {
+  background: #252f27 !important;
+}
+
+.dark-mode .menu-item:active {
+  background: #2a2a2a !important;
+}
+
+.dark-mode .logout-btn {
+  background: #1e1e1e !important;
+  color: #ccc !important;
+}
+
+.dark-mode .btn-action {
+  background: #2c2c2c !important;
+  color: #9eb0a0 !important;
+  border-color: rgba(143, 168, 146, 0.35) !important;
+}
+
+.dark-mode .btn-action.btn-danger {
+  color: #d4a090 !important;
+  border-color: rgba(212, 160, 144, 0.4) !important;
+}
+
+.dark-mode .settings-item {
+  border-bottom-color: #333 !important;
+}
+
+.dark-mode .modal-title,
+.dark-mode .help-title,
+.dark-mode .settings-title {
+  color: #ffffff !important;
+}
+
+/* ========== 登录 login ========== */
+.dark-mode .logo-box,
+.dark-mode .get-user-info-btn,
+.dark-mode .btn-login {
+  background: #354a38 !important;
+  box-shadow: none !important;
+}
+
+/* ========== 账号 accounts ========== */
+.dark-mode .accounts-section {
+  background: #1e1e1e !important;
+}
+
+.dark-mode .account-item.active {
+  background: rgba(143, 168, 146, 0.12) !important;
+}
+
+.dark-mode .active-badge {
+  background: #354a38 !important;
+  color: #d4e6d6 !important;
+}
+
+/* ========== 复制作业 / 日历弹窗 ========== */
+.dark-mode .copy-confirm-btn {
+  background: #4a4030 !important;
+  color: #e8dcc8 !important;
+  box-shadow: none !important;
+}
+
+.dark-mode .copy-date-selected .copy-date-text {
+  background: rgba(143, 168, 146, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.dark-mode .copy-checkbox.copy-checkbox-checked {
+  background: #4a4030 !important;
+  border-color: #6a5a40 !important;
+}
+
+.dark-mode .copy-btn-confirm {
+  background: #4a4030 !important;
+  color: #e8dcc8 !important;
+}
+
+.dark-mode .checkin-homework-info {
+  background: #252f27 !important;
+}
+
+.dark-mode .checkin-rating-item.active .checkin-rating-label,
+.dark-mode .checkin-rating-item.active .checkin-rating-percent {
+  color: #9eb0a0 !important;
+}
+
+/* ========== 协议 / 政策页 ========== */
+.dark-mode .content {
+  background: #1e1e1e !important;
+  border: 1rpx solid #2a2a2a;
+}
+
+.dark-mode .title {
+  color: #ffffff !important;
+}
+
+.dark-mode .subtitle {
+  color: #888888 !important;
+}
+
+.dark-mode .section-title {
+  color: #c5d8c7 !important;
+}
+
+.dark-mode .text {
+  color: #bbbbbb !important;
+}
+
+/* ========== 通用弹窗补充 ========== */
+.dark-mode .modal-title {
+  color: #ffffff !important;
+}
+
+.dark-mode .sort-btn {
+  background: #333 !important;
+  color: #999 !important;
+}
+
+.dark-mode .subject-actions .action-btn.edit {
+  background: rgba(143, 168, 146, 0.12) !important;
+  color: #9eb0a0 !important;
+}
+
+.dark-mode .subject-actions .action-btn.delete {
+  background: rgba(212, 160, 144, 0.12) !important;
+  color: #d4a090 !important;
+}
+
+.dark-mode .form-hint,
+.dark-mode .form-group-hint {
+  color: #888 !important;
+}
+
+.dark-mode .selected-icon,
+.dark-mode .icon-arrow {
+  color: #ccc !important;
+}

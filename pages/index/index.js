@@ -1,5 +1,6 @@
 const app = getApp();
 const db = wx.cloud.database();
+const theme = require('../../utils/theme.js');
 
 Page({
   data: {
@@ -76,20 +77,15 @@ Page({
   onLoad() {
     this.initDate();
     // 将 app 对象同步到 data 中，以便 wxml 访问
-    this.setData({
-      app: app,
-      darkMode: app.globalData.darkMode
-    });
+    this.setData({ app: app });
+    theme.syncDarkMode(this);
     this.checkLoginAndLoad();
   },
 
   onShow() {
     // 返回时保持之前选中的日期，只刷新数据
     // 不调用 initDate()，以保持选中的日期
-    // 同步深色模式状态
-    this.setData({
-      darkMode: app.globalData.darkMode
-    });
+    theme.syncDarkMode(this);
     this.checkLoginAndLoad();
   },
 

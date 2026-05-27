@@ -5,7 +5,7 @@
 }
 
 /* 账号页面深色模式 */
-.dark-mode .container {
+.container.dark-mode {
   background-color: #121212;
 }
 
@@ -518,6 +518,4 @@
   color: #ccc;
 }
 
-.dark-mode .btn-confirm {
-  background-color: #2E7D32;
-}
+/* btn-confirm：见 styles/dark-theme.wxss */

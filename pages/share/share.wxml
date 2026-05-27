@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container {{darkMode ? 'dark-mode' : ''}}">
   <!-- 海报预览 -->
   <view class="poster-wrapper">
     <canvas type="2d" id="posterCanvas" class="poster-canvas"></canvas>

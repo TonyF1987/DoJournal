@@ -2,6 +2,28 @@
 page {
   height: auto;
   min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.container.dark-mode {
+  min-height: 100vh;
+  background: #121212;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.dark-mode .poster-wrapper {
+  background: #1e1e1e;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .btn-back {
+  background: #2c2c2c;
+  color: #e0e0e0;
+}
+
+.dark-mode .tip {
+  color: #888888;
 }
 
 .poster-wrapper {

@@ -1,3 +1,5 @@
+const theme = require('./utils/theme.js');
+
 App({
   onLaunch() {
     // 初始化云开发
@@ -13,6 +15,7 @@ App({
     // 恢复深色模式设置
     const savedDarkMode = wx.getStorageSync('darkMode');
     this.globalData.darkMode = savedDarkMode || false;
+    theme.applyPageChrome(this.globalData.darkMode);
 
     // 检查登录状态，但不自动获取用户信息（需用户主动登录）
     this.checkLoginStatus();

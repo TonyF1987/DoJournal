@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container {{darkMode ? 'dark-mode' : ''}}">
   <view class="content">
     <view class="section">
       <view class="title">隐私政策</view>

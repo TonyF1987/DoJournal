@@ -1,3 +1,5 @@
+@import './styles/dark-theme.wxss';
+
 /* 全局样式 */
 page {
   background-color: #f5f5f5;
@@ -21,8 +23,8 @@ page.dark-mode {
 
 .dark-mode .btn-secondary {
   background-color: #1E1E1E;
-  color: #81C784;
-  border-color: #81C784;
+  color: #9eb0a0;
+  border-color: rgba(143, 168, 146, 0.35);
 }
 
 .dark-mode .text-secondary {
@@ -35,20 +37,6 @@ page.dark-mode {
 
 .dark-mode .scroll-container {
   background: #121212;
-}
-
-/* 通用文本颜色适配 */
-.dark-mode text {
-  color: inherit;
-}
-
-/* 通用背景和文本样式强制覆盖 */
-.dark-mode view {
-  color: inherit;
-}
-
-.dark-mode text {
-  color: inherit;
 }
 
 /* 全局深色模式强制覆盖 */
@@ -97,7 +85,7 @@ page.dark-mode {
 }
 
 .dark-mode .list-points {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .tab-bar {
@@ -110,7 +98,7 @@ page.dark-mode {
 }
 
 .dark-mode .tab-item.active {
-  color: #81C784;
+  color: #c5d8c7;
 }
 
 .dark-mode .tabs-section {
@@ -125,26 +113,7 @@ page.dark-mode {
   background: #1E1E1E;
 }
 
-.dark-mode .top-header {
-  background: linear-gradient(135deg, #2E7D32, #1B5E20);
-}
-
-.dark-mode .btn-primary {
-  background: linear-gradient(135deg, #2E7D32, #388E3C);
-}
-
-/* 全面深色模式强制覆盖 */
-.dark-mode {
-  background-color: #121212;
-}
-
-.dark-mode view {
-  color: inherit;
-}
-
-.dark-mode text {
-  color: inherit;
-}
+/* top-header / btn-primary：见 styles/dark-theme.wxss */
 
 /* 通用白色背景强制变为深色 */
 .dark-mode .user-card,
@@ -190,7 +159,7 @@ page.dark-mode {
 .dark-mode .grid-points,
 .dark-mode .reward-points,
 .dark-mode .homework-points {
-  color: #81C784;
+  color: #9eb0a0;
 }
 
 .dark-mode .list-points.negative,
@@ -199,11 +168,7 @@ page.dark-mode {
   color: #FF8A80;
 }
 
-/* 通用顶部和区域背景 */
-.dark-mode .top-header,
-.dark-mode .header-gradient {
-  background: linear-gradient(135deg, #2E7D32, #1B5E20);
-}
+/* 通用顶部和区域背景 - 见 dark-theme.wxss */
 
 .dark-mode .tabs-section,
 .dark-mode .list-section,
