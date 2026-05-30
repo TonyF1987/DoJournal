@@ -395,6 +395,10 @@ page {
   background: #FF9800;
 }
 
+.member-restricted {
+  background: #607D8B;
+}
+
 .member-hidden {
   background: #9E9E9E;
 }
@@ -408,6 +412,52 @@ page {
 .member-actions {
   display: flex;
   gap: 12rpx;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.permission-modal .modal-body {
+  padding: 24rpx 32rpx;
+}
+
+.permission-member-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.permission-readonly-tip {
+  display: block;
+  font-size: 24rpx;
+  color: #FF9800;
+  margin-bottom: 20rpx;
+}
+
+.permission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.permission-label {
+  font-size: 28rpx;
+}
+
+.dark-mode .permission-item {
+  border-bottom-color: #333;
+}
+
+.dark-mode .permission-readonly-tip {
+  color: #FFB74D;
 }
 
 .btn-small {

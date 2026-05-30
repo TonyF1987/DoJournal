@@ -1,6 +1,7 @@
 const app = getApp();
 const db = wx.cloud.database();
 const theme = require('../../utils/theme.js');
+const permissionsUtil = require('../../utils/permissions.js');
 
 function getNthRecurringDate(recurringDays, nth, startDateStr) {
   let currentDate = startDateStr ? new Date(startDateStr) : new Date();
@@ -59,7 +60,10 @@ Page({
     pendingOCRConfirmImagePath: '',
     pendingOCRConfirmAppendMode: false,
     pendingOCRConfirmCancelData: null,
-    isReadOnly: false
+    isReadOnly: false,
+    permissions: permissionsUtil.getDefaultPermissions(),
+    canHomework: true,
+    canOcr: true
   },
 
   onLoad(options) {
@@ -123,30 +127,47 @@ Page({
   },
 
   checkReadOnlyPermission() {
-    // 加载用户信息，检查是否有只读权限
-    if (app.globalData.openid) {
-      const currentAccount = app.globalData.userInfo?.account || '';
-      wx.cloud.callFunction({
-        name: 'getUserInfo',
-        data: {
-          account: currentAccount
-        },
-        success: (res) => {
-          if (res.result && res.result.success) {
-            const userInfo = res.result.userInfo;
-            let isReadOnly = false;
-            if (userInfo.familyId && userInfo.familyMembers) {
-              const currentMember = userInfo.familyMembers.find(m => 
-                m.openid === app.globalData.openid && 
-                (m.account || '') === currentAccount
-              );
-              isReadOnly = currentMember && currentMember.readOnly === true;
-            }
-            this.setData({ isReadOnly: isReadOnly });
-          }
-        }
-      });
+    if (!app.globalData.openid) {
+      return;
     }
+
+    const currentAccount = app.globalData.userInfo?.account || '';
+    wx.cloud.callFunction({
+      name: 'getUserInfo',
+      data: {
+        account: currentAccount
+      },
+      success: (res) => {
+        if (res.result && res.result.success) {
+          const userInfo = res.result.userInfo;
+          const currentMember = userInfo.familyMembers
+            ? permissionsUtil.findFamilyMember(userInfo.familyMembers, app.globalData.openid, currentAccount)
+            : null;
+          const perms = userInfo.familyPermissions || permissionsUtil.getMemberPermissions(currentMember);
+          this.setData({
+            isReadOnly: permissionsUtil.hasReadOnly(currentMember),
+            permissions: perms,
+            canHomework: !!perms.homework,
+            canOcr: !!perms.ocr
+          });
+          this.updateCanSubmit();
+        }
+      }
+    });
+  },
+
+  ensurePermission(key) {
+    const perms = this.data.permissions || permissionsUtil.getDefaultPermissions();
+    if (this.data.isReadOnly || perms[key] === false) {
+      wx.showToast({
+        title: this.data.isReadOnly
+          ? '您只有只读权限，无法执行此操作'
+          : (permissionsUtil.PERMISSION_ERRORS[key] || '您没有操作权限'),
+        icon: 'none'
+      });
+      return false;
+    }
+    return true;
   },
 
   loadHomework(homeworkId) {
@@ -408,6 +429,9 @@ Page({
     if (this.data.showAddForm) {
       this.setData({ showAddForm: false });
     } else {
+      if (!this.ensurePermission('homework')) {
+        return;
+      }
       this.resetForm();
       this.setData({ showAddForm: true });
     }
@@ -447,6 +471,9 @@ Page({
   },
 
   deleteHomeworkFromList(e) {
+    if (!this.ensurePermission('homework')) {
+      return;
+    }
     const homework = e.currentTarget.dataset.homework;
     const that = this;
     
@@ -624,6 +651,9 @@ Page({
   },
 
   recognizeAllImages() {
+    if (!this.ensurePermission('ocr')) {
+      return;
+    }
     const images = this.data.importedContent.filter(item => item.type === 'image');
     
     if (images.length === 0) {
@@ -857,7 +887,8 @@ Page({
             name: 'ocrBaidu',
             data: {
               imgUrl: fileID,
-              mode: 'auto'
+              mode: 'auto',
+              account: app.globalData.userInfo?.account || ''
             },
             success: (res) => {
               wx.hideLoading();
@@ -1090,6 +1121,9 @@ Page({
   },
 
   submitHomework(e) {
+    if (!this.ensurePermission('homework')) {
+      return;
+    }
     if (!this.canSubmit()) {
       return;
     }
@@ -1276,6 +1310,9 @@ Page({
   },
 
   canSubmit() {
+    if (!this.data.canHomework) {
+      return false;
+    }
     const { content, recurring, recurringDays, selectedSubject, isEdit, editingHomework, points } = this.data;
     const pointValue = Number(points);
     const hasValidPoints = points !== '' && !Number.isNaN(pointValue) && pointValue >= 1 && pointValue <= 1000;
@@ -1513,6 +1550,9 @@ Page({
   },
 
   deleteHomework() {
+    if (!this.ensurePermission('homework')) {
+      return;
+    }
     const that = this;
     
     // 先检查作业是否已打卡

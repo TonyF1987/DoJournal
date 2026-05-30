@@ -3,6 +3,19 @@ cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 const db = cloud.database();
+const { getMemberPermissions, findMember } = require('./permissions');
+
+function enrichUserWithPermissions(userInfo, openid) {
+  if (!userInfo) {
+    return userInfo;
+  }
+  const member = findMember(userInfo.familyMembers, openid, userInfo.account || '');
+  return {
+    ...userInfo,
+    familyReadOnly: !!(member && member.readOnly === true),
+    familyPermissions: getMemberPermissions(member)
+  };
+}
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
@@ -94,7 +107,7 @@ exports.main = async (event, context) => {
 
       return {
         success: true,
-        userInfo: userInfo
+        userInfo: enrichUserWithPermissions(userInfo, wxContext.OPENID)
       };
     }
 
@@ -144,7 +157,7 @@ exports.main = async (event, context) => {
 
     return {
       success: true,
-      userInfo: userInfo,
+      userInfo: enrichUserWithPermissions(userInfo, wxContext.OPENID),
       allAccounts: usersRes.data
     };
   } catch (err) {

@@ -333,6 +333,7 @@
                     <text class="member-role" wx:if="{{item.role === 'creator'}}">管理员</text>
                     <text class="member-role" wx:elif="{{item.role === 'admin'}}">管理员</text>
                     <text class="member-role member-readonly" wx:if="{{item.readOnly}}">只读</text>
+                    <text class="member-role member-restricted" wx:elif="{{item.isRestricted}}">受限</text>
                     <text class="member-role member-hidden" wx:if="{{item.hidden}}">隐藏</text>
                   </view>
                   <view class="member-account" wx:if="{{item.account}}">
@@ -341,6 +342,9 @@
                   </view>
                 </view>
                 <view wx:if="{{isFamilyCreator && !(item.openid === currentUserOpenid && item.account === currentUserAccount)}}" class="member-actions">
+                <button class="btn-action btn-small" bindtap="showMemberPermissionModal" data-openid="{{item.openid}}" data-account="{{item.account}}" wx:if="{{item.role !== 'creator'}}">
+                  权限设置
+                </button>
                 <button class="btn-action btn-small" bindtap="toggleMemberReadOnly" data-openid="{{item.openid}}" data-account="{{item.account}}" data-readonly="{{!item.readOnly}}">
                   {{item.readOnly ? '取消只读' : '设为只读'}}
                 </button>
@@ -453,6 +457,39 @@
           </view>
         </block>
       </view>
+    </view>
+  </view>
+</view>
+
+<!-- 成员权限设置弹窗 -->
+<view class="modal {{settings.darkMode ? 'dark-mode' : ''}}" wx:if="{{showPermissionModal}}" bindtap="closePermissionModal">
+  <view class="modal-mask"></view>
+  <view class="modal-content permission-modal" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text>权限设置</text>
+      <text class="close-btn" bindtap="closePermissionModal">×</text>
+    </view>
+    <view class="modal-body">
+      <text class="permission-member-name">{{editingPermissionMember.nickName}}</text>
+      <text class="permission-readonly-tip" wx:if="{{editingPermissionMember.readOnly}}">该成员为只读，请先取消只读后再配置细粒度权限</text>
+      <view class="permission-list">
+        <block wx:for="{{permissionOptions}}" wx:key="key">
+          <view class="permission-item">
+            <text class="permission-label">{{item.label}}</text>
+            <switch
+              checked="{{editingPermissions[item.key]}}"
+              disabled="{{editingPermissionMember.readOnly}}"
+              bindchange="onPermissionSwitchChange"
+              data-key="{{item.key}}"
+              color="#4CAF50"
+            />
+          </view>
+        </block>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="closePermissionModal">取消</button>
+      <button class="btn-confirm" bindtap="saveMemberPermissions" disabled="{{editingPermissionMember.readOnly}}">保存</button>
     </view>
   </view>
 </view>

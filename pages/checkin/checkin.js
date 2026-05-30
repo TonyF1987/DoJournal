@@ -1,6 +1,7 @@
 const app = getApp();
 const db = wx.cloud.database();
 const theme = require('../../utils/theme.js');
+const permissionsUtil = require('../../utils/permissions.js');
 
 Page({
   data: {
@@ -11,7 +12,9 @@ Page({
     comment: '',
     rating: 0,
     ratingPercent: 0,
-    actualPoints: 0
+    actualPoints: 0,
+    isReadOnly: false,
+    canCheckin: true
   },
 
   onLoad(options) {
@@ -30,8 +33,34 @@ Page({
         homeworkId: options.id,
         checkinDate: options.date || ''
       });
+      this.loadPermissions();
       this.loadHomework();
     }
+  },
+
+  loadPermissions() {
+    if (!app.globalData.openid) {
+      return;
+    }
+
+    const currentAccount = app.globalData.userInfo?.account || '';
+    wx.cloud.callFunction({
+      name: 'getUserInfo',
+      data: { account: currentAccount },
+      success: (res) => {
+        if (res.result && res.result.success) {
+          const userInfo = res.result.userInfo;
+          const currentMember = userInfo.familyMembers
+            ? permissionsUtil.findFamilyMember(userInfo.familyMembers, app.globalData.openid, currentAccount)
+            : null;
+          const perms = userInfo.familyPermissions || permissionsUtil.getMemberPermissions(currentMember);
+          this.setData({
+            isReadOnly: permissionsUtil.hasReadOnly(currentMember),
+            canCheckin: !!perms.checkin
+          });
+        }
+      }
+    });
   },
 
   onShow() {
@@ -123,6 +152,14 @@ Page({
 
   // 提交打卡
   submitCheckIn() {
+    if (this.data.isReadOnly || !this.data.canCheckin) {
+      wx.showToast({
+        title: this.data.isReadOnly ? '您只有只读权限，无法打卡' : '您没有打卡权限',
+        icon: 'none'
+      });
+      return;
+    }
+
     if (!this.data.proofImage) {
       wx.showToast({
         title: '请上传完成凭证',

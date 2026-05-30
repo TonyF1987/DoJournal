@@ -4,6 +4,7 @@ cloud.init({
 });
 const db = cloud.database();
 const _ = db.command;
+const { canPerform, getPermissionError, getCurrentFamilyMember } = require('./permissions');
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
@@ -30,29 +31,12 @@ exports.main = async (event, context) => {
     user = usersRes.data[0];
   }
 
-  // 检查是否是只读权限（使用 openid + account 联合判断）
-  let isReadOnly = false;
-  try {
-    // 如果用户有家庭，检查是否是只读
-    if (user.familyId) {
-      const familyRes = await db.collection('families').doc(user.familyId).get();
-      
-      if (familyRes.data) {
-        const family = familyRes.data;
-        const members = family.members || [];
-        const currentMember = members.find(m => m.openid === wxContext.OPENID && m.account === (user.account || ''));
-        
-        if (currentMember && currentMember.readOnly) {
-          isReadOnly = true;
-        }
-      }
-    }
-  } catch (err) {
-    console.error('检查权限失败:', err);
-  }
-  
-  if (isReadOnly) {
-    return { success: false, errMsg: '您只有只读权限，无法修改科目' };
+  const currentMember = await getCurrentFamilyMember(db, user, wxContext.OPENID);
+  if (!canPerform(currentMember, 'subjects')) {
+    return {
+      success: false,
+      errMsg: getPermissionError(currentMember, 'subjects', '您只有只读权限，无法修改科目')
+    };
   }
 
   try {

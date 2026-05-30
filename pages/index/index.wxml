@@ -95,7 +95,7 @@
   <view class="section homework-section">
     <view class="homework-header">
       <text class="homework-title">{{formattedSelectedDate}} 作业</text>
-      <view class="homework-actions">
+      <view class="homework-actions" wx:if="{{canHomework}}">
         <text class="action-btn" bindtap="copyHomework">复制</text>
         <text class="action-btn" bindtap="editDayHomework">编辑</text>
       </view>
@@ -111,7 +111,7 @@
             <text class="tab-text">{{item.name}}</text>
         </view>
         </block>
-        <view class="add-subject-btn" bindtap="goToAddSubject">
+        <view class="add-subject-btn" bindtap="goToAddSubject" wx:if="{{canSubjects}}">
           <text>+</text>
         </view>
       </scroll-view>
@@ -121,7 +121,7 @@
     <view class="homework-list" wx:if="{{subjectHomework.length > 0}}">
       <block wx:for="{{subjectHomework}}" wx:key="_id">
         <view class="homework-card {{item.status === 'completed' ? 'done' : ''}}">
-          <view class="card-left" catchtap="toggleCheckIn" data-id="{{item._id}}" data-status="{{item.status}}">
+          <view class="card-left {{canCheckin ? '' : 'disabled'}}" catchtap="toggleCheckIn" data-id="{{item._id}}" data-status="{{item.status}}">
             <view wx:if="{{item.status === 'completed'}}" class="done-icon-left">✓</view>
             <view wx:else class="check-circle"></view>
           </view>
@@ -153,7 +153,7 @@
   </view>
 
   <!-- 添加按钮 -->
-  <view class="add-btn" bindtap="goToAdd">
+  <view class="add-btn" bindtap="goToAdd" wx:if="{{canHomework}}">
     <text>+</text>
   </view>
 </view>

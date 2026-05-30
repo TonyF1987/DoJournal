@@ -1158,6 +1158,10 @@ page {
   padding-top: 4rpx;
 }
 
+.card-left.disabled {
+  opacity: 0.35;
+}
+
 .done-icon-left {
   width: 48rpx;
   height: 48rpx;

@@ -4,6 +4,7 @@ cloud.init({
 });
 const db = cloud.database();
 const _ = db.command;
+const { getDefaultPermissions, normalizePermissions } = require('./permissions');
 
 // 根据openid获取所有用户账号
 async function getUsersByOpenid(openid) {
@@ -68,6 +69,8 @@ exports.main = async (event, context) => {
         return await updateFamilyName(wxContext, data);
       case 'setMemberReadOnly':
         return await setMemberReadOnly(wxContext, data);
+      case 'setMemberPermissions':
+        return await setMemberPermissions(wxContext, data);
       case 'setMemberHidden':
         return await setMemberHidden(wxContext, data);
       case 'dissolveFamily':
@@ -230,6 +233,7 @@ async function joinFamily(wxContext, data) {
     nickName: user.nickName || '',
     avatarUrl: user.avatarUrl || '',
     role: 'member',
+    permissions: getDefaultPermissions(),
     joinTime: db.serverDate()
   };
 
@@ -823,6 +827,98 @@ async function setMemberReadOnly(wxContext, data) {
   };
 }
 
+// 设置成员细粒度权限
+async function setMemberPermissions(wxContext, data) {
+  const { memberOpenid, memberAccount, permissions, account } = data;
+
+  if (!memberOpenid) {
+    return { success: false, errMsg: '请提供成员OpenID' };
+  }
+
+  if (!permissions || typeof permissions !== 'object') {
+    return { success: false, errMsg: '请提供权限配置' };
+  }
+
+  const currentAccount = account || '';
+  const currentUsers = await getUsersByOpenid(wxContext.OPENID);
+
+  if (currentUsers.length === 0) {
+    return { success: false, errMsg: '用户不存在' };
+  }
+
+  const currentUser = currentUsers.find(u => (u.account || '') === currentAccount) || currentUsers[0];
+
+  if (!currentUser.familyId) {
+    return { success: false, errMsg: '您还没有加入家庭' };
+  }
+
+  const familyId = currentUser.familyId;
+  const familyRes = await db.collection('families').doc(familyId).get();
+
+  if (!familyRes.data) {
+    return { success: false, errMsg: '家庭不存在' };
+  }
+
+  const family = familyRes.data;
+
+  if (checkReadOnly(family.members, wxContext.OPENID, currentAccount)) {
+    return { success: false, errMsg: '只读账号不能修改成员权限' };
+  }
+
+  const currentMember = findMember(family.members, wxContext.OPENID, currentAccount);
+  if (!currentMember) {
+    return { success: false, errMsg: '您不在这个家庭中' };
+  }
+
+  if (currentMember.role !== 'creator') {
+    return { success: false, errMsg: '只有家庭创建者可以修改成员权限' };
+  }
+
+  const targetMember = findMember(family.members, memberOpenid, memberAccount || '');
+  if (!targetMember) {
+    return { success: false, errMsg: '成员不存在' };
+  }
+
+  if (targetMember.role === 'creator') {
+    return { success: false, errMsg: '不能修改家庭创建者的权限' };
+  }
+
+  const normalizedPermissions = normalizePermissions(permissions);
+  const updatedMembers = family.members.map(m => {
+    if (m.openid === memberOpenid && m.account === (memberAccount || '')) {
+      return { ...m, permissions: normalizedPermissions };
+    }
+    return m;
+  });
+
+  await db.collection('families').doc(familyId).update({
+    data: {
+      members: updatedMembers,
+      updateTime: db.serverDate()
+    }
+  });
+
+  const targetUserRes = await db.collection('users').where({
+    _openid: memberOpenid,
+    account: memberAccount || ''
+  }).get();
+
+  if (targetUserRes.data.length > 0) {
+    await db.collection('users').doc(targetUserRes.data[0]._id).update({
+      data: {
+        familyPermissions: normalizedPermissions,
+        updateTime: db.serverDate()
+      }
+    });
+  }
+
+  return {
+    success: true,
+    message: '成员权限已更新',
+    permissions: normalizedPermissions
+  };
+}
+
 // 设置成员隐藏
 async function setMemberHidden(wxContext, data) {
   const { memberOpenid, memberAccount, hidden, account } = data;
@@ -1081,6 +1177,10 @@ async function addSameOpenIdMember(wxContext, data) {
   
   const family = familyRes.data;
 
+  if (checkReadOnly(family.members, wxContext.OPENID, account)) {
+    return { success: false, errMsg: '只读账号不能添加成员' };
+  }
+
   // 检查权限（使用 openid + account 联合判断）
   const currentMember = findMember(family.members, wxContext.OPENID, account);
   if (!currentMember) {
@@ -1116,6 +1216,7 @@ async function addSameOpenIdMember(wxContext, data) {
     nickName: targetUser.nickName || '',
     avatarUrl: targetUser.avatarUrl || '',
     role: 'member',
+    permissions: getDefaultPermissions(),
     joinTime: db.serverDate()
   };
 

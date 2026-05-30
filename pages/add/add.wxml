@@ -16,6 +16,10 @@
       <text class="read-only-icon">👁️</text>
       <text class="read-only-text">您只有只读权限，无法添加/编辑作业</text>
     </view>
+    <view class="read-only-banner" wx:elif="{{!canHomework}}">
+      <text class="read-only-icon">🔒</text>
+      <text class="read-only-text">您没有作业管理权限</text>
+    </view>
     
     <!-- 科目模式页面 -->
     <view wx:if="{{isSubjectMode}}" class="subject-mode-container">
@@ -38,7 +42,7 @@
                 <text class="item-points">+{{item.points}}分</text>
                 <text wx:if="{{item.recurring}}" class="item-recurring">🔄 {{item.recurringDaysText}}</text>
                 <view class="item-actions">
-                  <text class="delete-btn" catchtap="deleteHomeworkFromList" data-homework="{{item}}">删除</text>
+                  <text class="delete-btn" catchtap="deleteHomeworkFromList" data-homework="{{item}}" wx:if="{{canHomework}}">删除</text>
                 </view>
               </view>
             </view>
@@ -53,7 +57,7 @@
 
       <!-- 添加新作业按钮 -->
       <view class="add-button-section">
-        <button class="btn-add-new" bindtap="toggleAddForm">
+        <button class="btn-add-new" bindtap="toggleAddForm" wx:if="{{canHomework}}">
           {{showAddForm ? '收起' : '添加新作业'}}
         </button>
       </view>
@@ -126,7 +130,7 @@
               </view>
               <view class="image-action-buttons">
                 <button class="btn-secondary" bindtap="selectFromAlbum">添加更多图片</button>
-                <button class="btn-primary" bindtap="recognizeAllImages">识别全部图片</button>
+                <button class="btn-primary" bindtap="recognizeAllImages" wx:if="{{canOcr}}">识别全部图片</button>
               </view>
             </view>
 
@@ -307,7 +311,7 @@
             </view>
             <view class="image-action-buttons">
               <button class="btn-secondary" bindtap="selectFromAlbum">添加更多图片</button>
-              <button class="btn-primary" bindtap="recognizeAllImages">识别全部图片</button>
+              <button class="btn-primary" bindtap="recognizeAllImages" wx:if="{{canOcr}}">识别全部图片</button>
             </view>
           </view>
 
@@ -406,7 +410,7 @@
         <!-- 提交按钮 -->
         <view class="submit-section">
           <button class="btn-submit" form-type="submit" disabled="{{!canSubmit}}">{{isEdit ? '保存修改' : '添加作业'}}</button>
-          <button class="btn-delete" wx:if="{{isEdit}}" bindtap="deleteHomework">删除作业</button>
+          <button class="btn-delete" wx:if="{{isEdit && canHomework}}" bindtap="deleteHomework">删除作业</button>
         </view>
       </form>
     </view>

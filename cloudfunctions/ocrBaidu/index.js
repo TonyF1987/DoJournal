@@ -113,41 +113,28 @@ async function imageToBase64(imageUrl) {
 // 主函数
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { imgUrl, mode = 'auto' } = event;
+  const { imgUrl, mode = 'auto', account } = event;
   const db = cloud.database();
+  const { canPerform, getPermissionError, getCurrentFamilyMember } = require('./permissions');
 
   try {
-    // 检查是否是只读权限
-    try {
-      // 首先获取用户信息
-      const userRes = await db.collection('users').where({
-        _openid: wxContext.OPENID
-      }).get();
+    const userRes = await db.collection('users').where({
+      _openid: wxContext.OPENID
+    }).get();
 
-      if (userRes.data && userRes.data.length > 0) {
-        const user = userRes.data[0];
-
-        // 如果用户有家庭，检查是否是只读
-        if (user.familyId) {
-          const familyRes = await db.collection('families').doc(user.familyId).get();
-          
-          if (familyRes.data) {
-            const family = familyRes.data;
-            const members = family.members || [];
-            const currentMember = members.find(m => m.openid === wxContext.OPENID);
-            
-            if (currentMember && currentMember.readOnly) {
-              return {
-                errCode: -4,
-                errMsg: '您只有只读权限，无法使用OCR功能',
-                items: []
-              };
-            }
-          }
-        }
+    if (userRes.data && userRes.data.length > 0) {
+      let user = userRes.data[0];
+      if (account) {
+        user = userRes.data.find(u => (u.account || '') === account) || user;
       }
-    } catch (err) {
-      console.error('检查权限失败:', err);
+      const currentMember = await getCurrentFamilyMember(db, user, wxContext.OPENID);
+      if (!canPerform(currentMember, 'ocr')) {
+        return {
+          errCode: -4,
+          errMsg: getPermissionError(currentMember, 'ocr', '您只有只读权限，无法使用OCR功能'),
+          items: []
+        };
+      }
     }
     console.log('开始百度OCR识别,图片URL:', imgUrl, '模式:', mode)
 
