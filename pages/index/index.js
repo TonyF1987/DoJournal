@@ -435,7 +435,7 @@ Page({
       subjects: subjects,
       selectedSubject: subjects.length > 0 ? subjects[0].name : ''
     });
-    this.updateSelectedDateHomework();
+    this.updateSubjectHomework();
   },
 
   setGreeting() {
@@ -698,6 +698,34 @@ Page({
     return userInfo.children.find(c => c.id === userInfo.currentChildId) || null;
   },
 
+  getMonthDateRange(year, month) {
+    const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    return { startDate, endDate };
+  },
+
+  normalizeHomeworkDate(dateVal) {
+    if (!dateVal) return '';
+    if (typeof dateVal === 'string') {
+      const match = dateVal.trim().match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      if (match) {
+        return `${match[1]}-${String(parseInt(match[2], 10)).padStart(2, '0')}-${String(parseInt(match[3], 10)).padStart(2, '0')}`;
+      }
+      return dateVal.trim();
+    }
+    if (typeof dateVal === 'object' && dateVal.getFullYear) {
+      const d = dateVal;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    return String(dateVal);
+  },
+
+  matchesHomeworkDate(item, dateStr) {
+    const itemDate = this.normalizeHomeworkDate(item.homeworkDate || item.date);
+    return itemDate === dateStr;
+  },
+
   loadHomework() {
     const currentChild = this.data.currentChild;
     if (!currentChild) {
@@ -711,11 +739,15 @@ Page({
       return;
     }
 
-    // 通过云函数加载当前小朋友的作业（包括已完成和未完成）
+    const { startDate, endDate } = this.getMonthDateRange(this.data.currentYear, this.data.currentMonth);
+
+    // 按当前月份加载作业，避免全量 limit(100) 截断周期作业
     wx.cloud.callFunction({
       name: 'getHomeworks',
       data: {
-        childId: currentChild.id
+        childId: currentChild.id,
+        startDate,
+        endDate
       },
       success: (res) => {
         if (res.result && res.result.success) {
@@ -821,7 +853,7 @@ Page({
     // 计算今日完成数量
     let completedTodayCount = 0;
     allHomework.forEach(item => {
-      if (item.homeworkDate === todayStr) {
+      if (this.matchesHomeworkDate(item, todayStr)) {
         const checkinKey = `${item._id}_${todayStr}`;
         const hasCheckin = !!checkinMap[checkinKey];
         if (hasCheckin || item.status === 'completed') {
@@ -1680,8 +1712,7 @@ Page({
       const demoCalendarData = this.generateDemoCalendar();
       this.setData({ calendarData: demoCalendarData });
     } else {
-      // 已登录，加载打卡记录
-      this.loadMonthCheckins();
+      this.loadHomework();
     }
   },
 
@@ -1704,8 +1735,7 @@ Page({
       const demoCalendarData = this.generateDemoCalendar();
       this.setData({ calendarData: demoCalendarData });
     } else {
-      // 已登录，加载打卡记录
-      this.loadMonthCheckins();
+      this.loadHomework();
     }
   },
 
@@ -1756,8 +1786,7 @@ Page({
         // 更新选中日期的作业
         this.updateDemoSelectedDateHomework(dateItem.dateStr);
       } else {
-        // 已登录，加载打卡记录
-        this.loadMonthCheckins();
+        this.loadHomework();
       }
     } else {
       // 月份相同，只更新选中日期
@@ -1923,7 +1952,7 @@ Page({
       let completed = 0;
 
       allHomework.forEach(item => {
-        if (item.homeworkDate === dateStr) {
+        if (this.matchesHomeworkDate(item, dateStr)) {
           total++;
           
           // 检查是否有对应的打卡记录
@@ -1965,7 +1994,7 @@ Page({
     const completedHomework = this.data.completedHomework || [];
     const allHomework = [...pendingHomework, ...completedHomework];
     
-    return allHomework.some(item => item.homeworkDate === dateStr);
+    return allHomework.some(item => this.matchesHomeworkDate(item, dateStr));
   },
 
   // 更新选中日期的作业列表
@@ -1986,7 +2015,7 @@ Page({
     });
     
     const selectedHomework = allHomework.filter(item => {
-      return item.homeworkDate === selectedDate;
+      return this.matchesHomeworkDate(item, selectedDate);
     });
     
     console.log('updateSelectedDateHomework - filtered homework count:', selectedHomework.length, {
@@ -2045,7 +2074,7 @@ Page({
     const subjects = this.data.subjects || [];
     
     subjects.forEach(subject => {
-      const subjectName = subject.name;
+      const subjectName = (subject.name || '').trim();
       let hasHomework = false;
       let hasPending = false;
       
@@ -2095,13 +2124,13 @@ Page({
 
   // 更新当前科目的作业列表
   updateSubjectHomework() {
-    const selectedSubject = this.data.selectedSubject;
+    const selectedSubject = (this.data.selectedSubject || '').trim();
     const selectedHomework = this.data.selectedDateHomework || [];
     
     let subjectHomework = selectedHomework;
     if (selectedSubject) {
       subjectHomework = selectedHomework.filter(item => {
-        return (item.subject || '其他') === selectedSubject;
+        return (item.subject || '其他').trim() === selectedSubject;
       });
     }
     

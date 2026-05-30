@@ -5,9 +5,31 @@ cloud.init({
 const db = cloud.database();
 const _ = db.command;
 
+const PAGE_SIZE = 100;
+const MAX_PAGES = 20;
+
+async function fetchAllHomework(query, orderField) {
+  let allData = [];
+
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const res = await db.collection('homework')
+      .where(query)
+      .orderBy(orderField, 'desc')
+      .skip(page * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+      .get();
+
+    allData = allData.concat(res.data);
+    if (res.data.length < PAGE_SIZE) {
+      break;
+    }
+  }
+
+  return allData;
+}
+
 exports.main = async (event, context) => {
-  const wxContext = cloud.getWXContext();
-  const { childId, subject, status } = event;
+  const { childId, subject, status, startDate, endDate } = event;
 
   if (!childId) {
     return {
@@ -17,7 +39,7 @@ exports.main = async (event, context) => {
   }
 
   try {
-    let query = {
+    const query = {
       childId: childId
     };
 
@@ -29,16 +51,16 @@ exports.main = async (event, context) => {
       query.status = status;
     }
 
-    // 加载作业
-    const res = await db.collection('homework')
-      .where(query)
-      .orderBy('createTime', 'desc')
-      .limit(100)
-      .get();
+    if (startDate && endDate) {
+      query.homeworkDate = _.gte(startDate).and(_.lte(endDate));
+    }
+
+    const orderField = startDate && endDate ? 'homeworkDate' : 'createTime';
+    const data = await fetchAllHomework(query, orderField);
 
     return {
       success: true,
-      data: res.data
+      data
     };
   } catch (err) {
     console.error('获取作业失败:', err);
