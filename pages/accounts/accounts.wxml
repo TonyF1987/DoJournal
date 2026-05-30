@@ -1,12 +1,17 @@
 <view class="container {{darkMode ? 'dark-mode' : ''}}">
   <!-- 标题提示 -->
-  <view class="tips-section" wx:if="{{isOriginalCreatorGlobal || !hasFamily}}">
+  <view class="tips-section" wx:if="{{canSwitchAccount && isCreator}}">
     <text class="tips-text">您可以使用不同的账号登录，每个账号都是独立的，但可以加入同一个家庭</text>
   </view>
 
-  <!-- 非创建者提示 -->
-  <view class="tips-section warning-tips" wx:if="{{hasFamily && !isOriginalCreatorGlobal}}">
-    <text class="tips-text">当前账号不是家庭创建者，只能查看和使用当前账号</text>
+  <!-- 已切换到其他账号，管理员会话内可切回 -->
+  <view class="tips-section" wx:if="{{canSwitchAccount && hasFamily && !isCreator}}">
+    <text class="tips-text">您已切换到其他账号，可点击家庭管理员账号切回</text>
+  </view>
+
+  <!-- 非家庭管理员提示 -->
+  <view class="tips-section warning-tips" wx:if="{{hasFamily && !canSwitchAccount}}">
+    <text class="tips-text">当前账号不是家庭管理员，只能查看和使用当前账号</text>
   </view>
 
   <!-- 账号列表 -->
@@ -18,9 +23,9 @@
     <view class="accounts-list">
       <block wx:for="{{accounts}}" wx:key="_id">
         <view class="account-item {{currentAccountId === item._id ? 'active' : ''}}" 
-              bindtap="{{(isOriginalCreatorGlobal || !hasFamily) ? 'switchAccount' : ''}}" 
+              bindtap="{{canSwitchAccount ? 'switchAccount' : ''}}" 
               data-account="{{item}}"
-              style="{{!(isOriginalCreatorGlobal || !hasFamily) ? 'cursor: default;' : ''}}">
+              style="{{!canSwitchAccount ? 'cursor: default;' : ''}}">
           <view class="account-avatar">
             <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" class="account-avatar-img" binderror="onAccountAvatarError" data-index="{{index}}" />
             <text wx:else>👤</text>
@@ -42,14 +47,14 @@
           <view wx:if="{{currentAccountId === item._id}}" class="account-status">
             <text class="status-text">当前使用</text>
           </view>
-          <view wx:elif="{{(isOriginalCreatorGlobal || !hasFamily)}}" class="account-arrow">›</view>
+          <view wx:elif="{{canSwitchAccount}}" class="account-arrow">›</view>
         </view>
       </block>
     </view>
   </view>
 
   <!-- 添加新账号 -->
-  <view class="add-account-section" wx:if="{{isOriginalCreatorGlobal || !hasFamily}}">
+  <view class="add-account-section" wx:if="{{canSwitchAccount}}">
     <view class="add-account-btn" bindtap="goToAddAccount">
       <text class="add-icon">+</text>
       <text class="add-text">添加新账号</text>

@@ -46,8 +46,12 @@ Page({
       { key: 'children', label: '孩子管理' },
       { key: 'rewards', label: '积分奖励' },
       { key: 'exchange', label: '积分兑换' },
-      { key: 'ocr', label: 'OCR识别' }
-    ]
+      { key: 'ocr', label: 'OCR识别' },
+      { key: 'leaveFamily', label: '退出家庭' },
+      { key: 'deleteAccount', label: '注销账号' }
+    ],
+    canLeaveFamily: true,
+    canDeleteAccount: true
   },
 
   onLoad() {
@@ -107,9 +111,11 @@ Page({
             const userData = res.result.userInfo;
             console.log('用户数据:', userData);
             const currentChild = this.getCurrentChild(userData);
+            const permissionState = this.applyPermissionState(userData);
             this.setData({
               userInfo: userData,
-              currentChild: currentChild
+              currentChild: currentChild,
+              ...permissionState
             });
             app.saveUserInfo(userData);
             app.globalData.isLoggedIn = true;
@@ -127,6 +133,41 @@ Page({
       return null;
     }
     return userInfo.children.find(c => c.id === userInfo.currentChildId);
+  },
+
+  applyPermissionState(userInfo) {
+    if (!userInfo) {
+      return { canLeaveFamily: true, canDeleteAccount: true };
+    }
+    const member = permissionsUtil.findFamilyMember(
+      userInfo.familyMembers,
+      app.globalData.openid,
+      userInfo.account || ''
+    );
+    const perms = userInfo.familyPermissions || permissionsUtil.getMemberPermissions(member);
+    return {
+      canLeaveFamily: !userInfo.familyId || permissionsUtil.canPerform(member, 'leaveFamily'),
+      canDeleteAccount: !userInfo.familyId || permissionsUtil.canPerform(member, 'deleteAccount')
+    };
+  },
+
+  ensurePermission(key) {
+    const userInfo = this.data.userInfo || app.globalData.userInfo;
+    const member = userInfo
+      ? permissionsUtil.findFamilyMember(userInfo.familyMembers, app.globalData.openid, userInfo.account || '')
+      : null;
+    if (!permissionsUtil.canPerform(member, key)) {
+      wx.showToast({
+        title: permissionsUtil.getPermissionError(
+          member,
+          key,
+          key === 'deleteAccount' ? '您只有只读权限，无法注销账号' : '您只有只读权限，无法退出家庭'
+        ),
+        icon: 'none'
+      });
+      return false;
+    }
+    return true;
   },
 
   checkLoginAndPrompt() {
@@ -406,6 +447,7 @@ Page({
 
   leaveFamily() {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('leaveFamily')) return;
     wx.showModal({
       title: '确认退出',
       content: '退出家庭后，您将不再能查看和管理家庭数据',
@@ -603,15 +645,7 @@ Page({
   },
 
   deleteAccount() {
-    // 检查是否是只读账号
-    if (this.data.userInfo.familyReadOnly) {
-      wx.showModal({
-        title: '提示',
-        content: '您只有只读权限，无法注销账号',
-        showCancel: false
-      });
-      return;
-    }
+    if (!this.ensurePermission('deleteAccount')) return;
 
     wx.showModal({
       title: '确认注销',

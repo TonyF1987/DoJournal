@@ -260,7 +260,7 @@ Page({
       app.globalData.isLoggedIn = true;
       app.globalData.openid = userInfo._openid;
       app.globalData.userInfo = userInfo;
-      app.saveUserInfo(userInfo);
+      app.saveUserInfo(userInfo, { fromLogin: true });
       
       setTimeout(() => {
         wx.switchTab({
@@ -311,7 +311,7 @@ Page({
       app.globalData.isLoggedIn = true;
       app.globalData.openid = userInfo._openid;
       app.globalData.userInfo = userInfo;
-      app.saveUserInfo(userInfo);
+      app.saveUserInfo(userInfo, { fromLogin: true });
       
       wx.showToast({
         title: '登录成功',

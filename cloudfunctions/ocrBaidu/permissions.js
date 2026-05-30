@@ -1,3 +1,8 @@
+/**
+ * 云函数 permissions 模块的源码副本（请勿作为云函数部署）。
+ * 修改后请同步到各云函数目录下的 permissions.js，例如：
+ * cp shared/cloud-permissions/permissions.js cloudfunctions/manageFamily/permissions.js
+ */
 const DEFAULT_PERMISSIONS = {
   checkin: true,
   homework: true,
@@ -5,7 +10,9 @@ const DEFAULT_PERMISSIONS = {
   children: true,
   rewards: true,
   exchange: true,
-  ocr: true
+  ocr: true,
+  leaveFamily: true,
+  deleteAccount: true
 };
 
 const PERMISSION_ERRORS = {
@@ -15,7 +22,9 @@ const PERMISSION_ERRORS = {
   children: '您没有孩子管理权限',
   rewards: '您没有积分奖励管理权限',
   exchange: '您没有积分兑换权限',
-  ocr: '您没有OCR识别权限'
+  ocr: '您没有OCR识别权限',
+  leaveFamily: '您没有退出家庭权限',
+  deleteAccount: '您没有注销账号权限'
 };
 
 function getDefaultPermissions() {
