@@ -3,7 +3,7 @@ cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 const db = cloud.database();
-const _ = db.command;
+const { canPerform, getPermissionError, findMember } = require('./permissions');
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
@@ -31,17 +31,16 @@ exports.main = async (event, context) => {
       user = usersRes.data[0];
     }
     
-    // 检查是否是只读权限（使用 openid + account 联合判断）
     if (user.familyId) {
       const familyRes = await db.collection('families').doc(user.familyId).get();
       
       if (familyRes.data) {
-        const family = familyRes.data;
-        const members = family.members || [];
-        const currentMember = members.find(m => m.openid === openid && m.account === (user.account || ''));
-        
-        if (currentMember && currentMember.readOnly) {
-          return { success: false, errMsg: '您只有只读权限，无法注销账号' };
+        const currentMember = findMember(familyRes.data.members, openid, user.account || '');
+        if (!canPerform(currentMember, 'deleteAccount')) {
+          return {
+            success: false,
+            errMsg: getPermissionError(currentMember, 'deleteAccount', '您只有只读权限，无法注销账号')
+          };
         }
       }
     }
@@ -67,7 +66,6 @@ exports.main = async (event, context) => {
     }).get();
 
     for (const family of familyRes.data) {
-      // 使用 openid + account 联合判断来过滤成员
       const updatedMembers = family.members.filter(m => !(m.openid === openid && m.account === (user.account || '')));
       
       if (updatedMembers.length === 0) {

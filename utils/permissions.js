@@ -5,7 +5,9 @@ const DEFAULT_PERMISSIONS = {
   children: true,
   rewards: true,
   exchange: true,
-  ocr: true
+  ocr: true,
+  leaveFamily: true,
+  deleteAccount: true
 };
 
 const PERMISSION_LABELS = {
@@ -15,7 +17,9 @@ const PERMISSION_LABELS = {
   children: '孩子管理',
   rewards: '积分奖励',
   exchange: '积分兑换',
-  ocr: 'OCR识别'
+  ocr: 'OCR识别',
+  leaveFamily: '退出家庭',
+  deleteAccount: '注销账号'
 };
 
 const PERMISSION_ERRORS = {
@@ -25,7 +29,9 @@ const PERMISSION_ERRORS = {
   children: '您没有孩子管理权限',
   rewards: '您没有积分奖励管理权限',
   exchange: '您没有积分兑换权限',
-  ocr: '您没有OCR识别权限'
+  ocr: '您没有OCR识别权限',
+  leaveFamily: '您没有退出家庭权限',
+  deleteAccount: '您没有注销账号权限'
 };
 
 function getDefaultPermissions() {

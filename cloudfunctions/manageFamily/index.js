@@ -4,7 +4,7 @@ cloud.init({
 });
 const db = cloud.database();
 const _ = db.command;
-const { getDefaultPermissions, normalizePermissions } = require('./permissions');
+const { getDefaultPermissions, normalizePermissions, canPerform, getPermissionError, findMember } = require('./permissions');
 
 // 根据openid获取所有用户账号
 async function getUsersByOpenid(openid) {
@@ -23,11 +23,6 @@ function isSameMember(member, openid, account) {
     return false;
   }
   return true;
-}
-
-// 从members中查找匹配的成员
-function findMember(members, openid, account) {
-  return members.find(m => m.openid === openid && (m.account || '') === (account || ''));
 }
 
 // 从members中过滤掉匹配的成员
@@ -294,9 +289,12 @@ async function leaveFamily(wxContext, data) {
   
   const family = familyRes.data;
 
-  // 检查只读权限
-  if (checkReadOnly(family.members, wxContext.OPENID, account || '')) {
-    return { success: false, errMsg: '只读账号不能退出家庭' };
+  const currentMember = findMember(family.members, wxContext.OPENID, account || '');
+  if (!canPerform(currentMember, 'leaveFamily')) {
+    return {
+      success: false,
+      errMsg: getPermissionError(currentMember, 'leaveFamily', '只读账号不能退出家庭')
+    };
   }
 
   // 移除成员（使用 openid + account 联合判断）

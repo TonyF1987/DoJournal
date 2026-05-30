@@ -537,7 +537,7 @@
         
         <view class="family-actions">
           <button class="btn-confirm" bindtap="generateInviteCode">生成邀请码</button>
-          <button class="btn-danger" bindtap="leaveFamily">退出家庭</button>
+          <button wx:if="{{canLeaveFamily}}" class="btn-danger" bindtap="leaveFamily">退出家庭</button>
         </view>
       </view>
       

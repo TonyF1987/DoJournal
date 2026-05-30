@@ -70,7 +70,7 @@
 
     <view class="menu-divider"></view>
 
-    <view class="menu-item menu-item-danger" bindtap="deleteAccount">
+    <view class="menu-item menu-item-danger" wx:if="{{canDeleteAccount}}" bindtap="deleteAccount">
       <view class="menu-icon-wrapper">
         <text class="menu-icon">🗑️</text>
       </view>
@@ -363,7 +363,7 @@
           <button wx:if="{{isFamilyCreator}}" class="btn-confirm" bindtap="showAddAccountModal">添加本微信其他账号</button>
           <button wx:if="{{isFamilyCreator}}" class="btn-cancel" bindtap="generateInviteCode">生成邀请码</button>
           <button wx:if="{{isFamilyCreator}}" class="btn-action btn-danger" bindtap="showDissolveFamily">解散家庭</button>
-          <button wx:else class="btn-danger" bindtap="leaveFamily">退出家庭</button>
+          <button wx:elif="{{canLeaveFamily}}" class="btn-danger" bindtap="leaveFamily">退出家庭</button>
         </view>
       </view>
 

@@ -51,8 +51,9 @@ App({
         this.globalData.currentChildId = parsedUserInfo.currentChildId;
         this.globalData.children = parsedUserInfo.children || [];
         
-        // isOriginalCreator: 只要有记录过原始管理员，就能切换账号
-        this.globalData.isOriginalCreator = !!this.globalData.originalCreatorOpenid;
+        const sessionCanSwitch = wx.getStorageSync('sessionCanSwitchAccounts') === true;
+        this.globalData.sessionCanSwitchAccounts = sessionCanSwitch
+          || parsedUserInfo.familyRole === 'creator';
       } catch (e) {
         console.error('解析用户信息失败', e);
       }
@@ -91,7 +92,7 @@ App({
         
         // 保存用户信息
         if (userInfo) {
-          this.saveUserInfo(userInfo);
+          this.saveUserInfo(userInfo, { fromLogin: true });
         }
         
         console.log('登录成功:', res.result);
@@ -125,11 +126,20 @@ App({
     originalCreatorOpenid: '', // 原始管理员的openid
     originalCreatorAccount: '', // 原始管理员的账号
     isOriginalCreator: false, // 是否是从原始管理员登录（可以切换账号）
+    sessionCanSwitchAccounts: false, // 当前会话是否允许切换账号（管理员登录后为 true）
     darkMode: false // 深色模式开关
   },
 
+  canSwitchAccounts() {
+    const userInfo = this.globalData.userInfo;
+    if (!userInfo || !userInfo.familyId) {
+      return true;
+    }
+    return !!this.globalData.sessionCanSwitchAccounts;
+  },
+
   // 保存用户信息到本地存储
-  saveUserInfo(userInfo) {
+  saveUserInfo(userInfo, options = {}) {
     this.globalData.userInfo = userInfo;
     this.globalData.currentChildId = userInfo.currentChildId;
     this.globalData.children = userInfo.children || [];
@@ -145,8 +155,17 @@ App({
       wx.setStorageSync('originalCreatorAccount', this.globalData.originalCreatorAccount);
     }
     
-    // isOriginalCreator: 只要有记录过原始管理员，就能切换账号
     this.globalData.isOriginalCreator = !!this.globalData.originalCreatorOpenid;
+
+    if (userInfo.familyRole === 'creator') {
+      this.globalData.sessionCanSwitchAccounts = true;
+      wx.setStorageSync('sessionCanSwitchAccounts', true);
+    } else if (options.fromLogin) {
+      this.globalData.sessionCanSwitchAccounts = false;
+      wx.removeStorageSync('sessionCanSwitchAccounts');
+    } else if (this.globalData.sessionCanSwitchAccounts) {
+      wx.setStorageSync('sessionCanSwitchAccounts', true);
+    }
     
     wx.setStorageSync('userInfo', JSON.stringify(userInfo));
     wx.setStorageSync('openid', userInfo._openid);
@@ -207,6 +226,7 @@ App({
     this.globalData.originalCreatorOpenid = '';
     this.globalData.originalCreatorAccount = '';
     this.globalData.isOriginalCreator = false;
+    this.globalData.sessionCanSwitchAccounts = false;
     
     wx.removeStorageSync('userInfo');
     wx.removeStorageSync('openid');
@@ -214,5 +234,6 @@ App({
     wx.removeStorageSync('isLoggedIn');
     wx.removeStorageSync('originalCreatorOpenid');
     wx.removeStorageSync('originalCreatorAccount');
+    wx.removeStorageSync('sessionCanSwitchAccounts');
   },
 });

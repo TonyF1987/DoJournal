@@ -16,6 +16,7 @@ Page({
     canHomework: true,
     canSubjects: true,
     canChildren: true,
+    canLeaveFamily: true,
     currentChild: null,
     showChildModal: false,
     showAddChildModal: false,
@@ -81,6 +82,7 @@ Page({
   },
 
   onLoad() {
+    this._updateHomeworkSeq = 0;
     this.initDate();
     // 将 app 对象同步到 data 中，以便 wxml 访问
     this.setData({ app: app });
@@ -110,6 +112,7 @@ Page({
   checkLoginAndLoad() {
     console.log('checkLoginAndLoad - app.globalData:', app.globalData);
     
+    const wasDemo = this.data.showDemoBanner;
     // 检查是否显示演示数据提示
     const shouldShowDemo = !app.globalData.isLoggedIn && !app.globalData.openid;
     this.setData({ showDemoBanner: shouldShowDemo });
@@ -125,10 +128,41 @@ Page({
     }
 
     console.log('用户已登录，加载真实数据');
-    // 清理演示数据
-    this.clearDemoData();
+    // 仅从演示模式切到真实数据时清理，避免 onShow 反复清空导致作业列表竞态空白
+    if (wasDemo) {
+      this.clearDemoData();
+    }
     this.setGreeting();
     this.loadUserInfo();
+    this.refreshPageData();
+  },
+
+  resolveCurrentChild() {
+    if (this.data.currentChild) {
+      return this.data.currentChild;
+    }
+    const fromPageUser = this.getCurrentChild(this.data.userInfo);
+    if (fromPageUser) {
+      return fromPageUser;
+    }
+    const fromGlobalUser = this.getCurrentChild(app.globalData.userInfo);
+    if (fromGlobalUser) {
+      return fromGlobalUser;
+    }
+    if (app.getCurrentChild) {
+      return app.getCurrentChild();
+    }
+    return null;
+  },
+
+  refreshPageData() {
+    const currentChild = this.resolveCurrentChild();
+    if (!currentChild) {
+      return;
+    }
+    if (!this.data.currentChild || this.data.currentChild.id !== currentChild.id) {
+      this.setData({ currentChild });
+    }
     this.loadSubjects();
     this.loadHomework();
   },
@@ -424,7 +458,7 @@ Page({
 
   // 加载科目列表
   loadSubjects() {
-    const currentChild = this.data.currentChild;
+    const currentChild = this.resolveCurrentChild();
     if (!currentChild) {
       console.log('没有选择小朋友，不加载科目');
       this.setData({ 
@@ -437,11 +471,19 @@ Page({
     let subjects = currentChild.subjects || [];
     // 按 sort 排序
     subjects.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    const previousSubject = (this.data.selectedSubject || '').trim();
+    const selectedSubject = subjects.some(s => (s.name || '').trim() === previousSubject)
+      ? previousSubject
+      : (subjects.length > 0 ? subjects[0].name : '');
     this.setData({
       subjects: subjects,
-      selectedSubject: subjects.length > 0 ? subjects[0].name : ''
+      selectedSubject: selectedSubject
+    }, () => {
+      // 仅按当前科目重新筛选，完整刷新由 loadHomework → updateSelectedDateHomework 负责
+      if ((this.data.selectedDateHomework || []).length > 0) {
+        this.updateSubjectHomework(this.data.selectedDateHomework);
+      }
     });
-    this.updateSubjectHomework();
   },
 
   setGreeting() {
@@ -477,7 +519,8 @@ Page({
       canCheckin: !!perms.checkin,
       canHomework: !!perms.homework,
       canSubjects: !!perms.subjects,
-      canChildren: !!perms.children
+      canChildren: !!perms.children,
+      canLeaveFamily: !!perms.leaveFamily
     };
   },
 
@@ -540,6 +583,14 @@ Page({
 
             // 检查用户状态并给出引导
             this.checkUserStatusAndGuide(userInfo);
+
+            // 用户信息就绪后，若作业尚未加载则补拉（避免 currentChild 未就绪时 loadHomework 被跳过）
+            const homeworkLoaded = (this.data.pendingHomework || []).length > 0
+              || (this.data.completedHomework || []).length > 0;
+            if (currentChild && !homeworkLoaded) {
+              this.loadSubjects();
+              this.loadHomework();
+            }
           } else {
             // 如果没有用户记录，可能需要重新登录
             console.error('未找到用户记录');
@@ -754,16 +805,14 @@ Page({
   },
 
   loadHomework() {
-    const currentChild = this.data.currentChild;
+    const currentChild = this.resolveCurrentChild();
     if (!currentChild) {
-      console.log('没有选择小朋友，不加载作业');
-      this.setData({
-        pendingHomework: [],
-        completedHomework: []
-      });
-      this.loadMonthCheckins();
-      this.updateSelectedDateHomework();
+      console.log('没有选择小朋友，跳过加载作业');
       return;
+    }
+
+    if (!this.data.currentChild || this.data.currentChild.id !== currentChild.id) {
+      this.setData({ currentChild });
     }
 
     const { startDate, endDate } = this.getMonthDateRange(this.data.currentYear, this.data.currentMonth);
@@ -786,25 +835,22 @@ Page({
             recurringDaysText: item.recurring ? this.formatRecurringDays(item.recurringDays) : ''
           }));
           
-          // 分离已完成和未完成的作业
-          const pendingHomework = allHomework.filter(item => item.status === 'pending');
+          // 分离已完成和未完成的作业（非 completed 均视为待完成，避免 status 缺失时被丢弃）
           const completedHomework = allHomework.filter(item => item.status === 'completed');
+          const pendingHomework = allHomework.filter(item => item.status !== 'completed');
           
           this.setData({
             pendingHomework: pendingHomework,
             completedHomework: completedHomework
+          }, () => {
+            // 同时刷新用户信息（特别是连续打卡数据）
+            this.loadUserInfo();
+            
+            // 加载打卡记录并计算今日完成数量（generateCalendarData 会更新选中日期的作业列表）
+            this.loadMonthCheckins(() => {
+              this.calculateCompletedToday();
+            });
           });
-          
-          // 同时刷新用户信息（特别是连续打卡数据）
-          this.loadUserInfo();
-          
-          // 加载打卡记录并计算今日完成数量
-          this.loadMonthCheckins(() => {
-            this.calculateCompletedToday();
-          });
-          
-          // 重新更新选中日期的作业列表，因为 pendingHomework 已更新
-          this.updateSelectedDateHomework();
         }
       },
       fail: (err) => {
@@ -1713,10 +1759,9 @@ Page({
     this.setData({
       calendarData: calendarData,
       dateHomeworkStats: dateHomeworkStats
+    }, () => {
+      this.updateSelectedDateHomework();
     });
-    
-    // 更新选中日期的作业列表
-    this.updateSelectedDateHomework();
   },
 
   // 上一个月
@@ -1819,18 +1864,18 @@ Page({
       this.setData({
         selectedDate: dateItem.dateStr,
         formattedSelectedDate: formattedDate
+      }, () => {
+        // 检查是否登录
+        if (!app.globalData.isLoggedIn && !app.globalData.openid) {
+          // 未登录，更新演示日历数据
+          const demoCalendarData = this.generateDemoCalendar();
+          this.setData({ calendarData: demoCalendarData });
+          // 更新选中日期的作业
+          this.updateDemoSelectedDateHomework(dateItem.dateStr);
+        } else {
+          this.generateCalendarData(this.data.monthCheckins);
+        }
       });
-      
-      // 检查是否登录
-      if (!app.globalData.isLoggedIn && !app.globalData.openid) {
-        // 未登录，更新演示日历数据
-        const demoCalendarData = this.generateDemoCalendar();
-        this.setData({ calendarData: demoCalendarData });
-        // 更新选中日期的作业
-        this.updateDemoSelectedDateHomework(dateItem.dateStr);
-      } else {
-        this.generateCalendarData(this.data.monthCheckins);
-      }
     }
   },
 
@@ -2027,6 +2072,8 @@ Page({
   async updateSelectedDateHomework() {
     const selectedDate = this.data.selectedDate;
     if (!selectedDate) return;
+
+    const seq = ++this._updateHomeworkSeq;
     
     console.log('updateSelectedDateHomework - selectedDate:', selectedDate);
     
@@ -2122,46 +2169,43 @@ Page({
         subjectStatusMap[subjectName] = 'none';
       }
     });
-    
+
+    if (seq !== this._updateHomeworkSeq) return;
+
+    const activeSubject = (this.data.selectedSubject || '').trim();
     this.setData({
       selectedDateHomework: processedHomework,
-      subjectStatusMap: subjectStatusMap
+      subjectStatusMap: subjectStatusMap,
+      subjectHomework: this.filterHomeworkBySubject(processedHomework, activeSubject)
     });
-    
-    this.updateSubjectHomework();
   },
 
   // 选择科目
   selectSubject(e) {
     const subject = e.currentTarget.dataset.subject;
     this.setData({
-      selectedSubject: subject
+      selectedSubject: subject,
+      subjectHomework: this.filterHomeworkBySubject(this.data.selectedDateHomework, subject)
     });
 
     // 检查是否登录
     if (!app.globalData.isLoggedIn && !app.globalData.openid) {
       // 未登录，更新演示数据
       this.updateDemoSelectedDateHomework(this.data.selectedDate);
-    } else {
-      // 已登录，正常更新
-      this.updateSubjectHomework();
     }
   },
 
+  filterHomeworkBySubject(homeworkList, subject) {
+    const selectedSubject = (subject != null ? subject : this.data.selectedSubject || '').trim();
+    const list = homeworkList || this.data.selectedDateHomework || [];
+    if (!selectedSubject) return list;
+    return list.filter(item => (item.subject || '其他').trim() === selectedSubject);
+  },
+
   // 更新当前科目的作业列表
-  updateSubjectHomework() {
-    const selectedSubject = (this.data.selectedSubject || '').trim();
-    const selectedHomework = this.data.selectedDateHomework || [];
-    
-    let subjectHomework = selectedHomework;
-    if (selectedSubject) {
-      subjectHomework = selectedHomework.filter(item => {
-        return (item.subject || '其他').trim() === selectedSubject;
-      });
-    }
-    
+  updateSubjectHomework(homeworkList) {
     this.setData({
-      subjectHomework: subjectHomework
+      subjectHomework: this.filterHomeworkBySubject(homeworkList)
     });
   },
 
@@ -3059,6 +3103,7 @@ Page({
 
   // 退出家庭
   leaveFamily() {
+    if (!this.ensurePermission('leaveFamily')) return;
     wx.showModal({
       title: '确认退出',
       content: '退出家庭后，您将不再能查看和管理家庭数据',
