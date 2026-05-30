@@ -1,6 +1,7 @@
 const app = getApp();
 const db = wx.cloud.database();
 const theme = require('../../utils/theme.js');
+const permissionsUtil = require('../../utils/permissions.js');
 
 Page({
   data: {
@@ -10,6 +11,11 @@ Page({
       avatarUrl: ''
     },
     isReadOnly: false,
+    permissions: permissionsUtil.getDefaultPermissions(),
+    canCheckin: true,
+    canHomework: true,
+    canSubjects: true,
+    canChildren: true,
     currentChild: null,
     showChildModal: false,
     showAddChildModal: false,
@@ -459,6 +465,36 @@ Page({
     this.setData({ greeting });
   },
 
+  buildPermissionState(userInfo) {
+    const currentAccount = userInfo?.account || '';
+    const currentMember = userInfo?.familyMembers
+      ? permissionsUtil.findFamilyMember(userInfo.familyMembers, app.globalData.openid, currentAccount)
+      : null;
+    const perms = userInfo?.familyPermissions || permissionsUtil.getMemberPermissions(currentMember);
+    return {
+      isReadOnly: permissionsUtil.hasReadOnly(currentMember),
+      permissions: perms,
+      canCheckin: !!perms.checkin,
+      canHomework: !!perms.homework,
+      canSubjects: !!perms.subjects,
+      canChildren: !!perms.children
+    };
+  },
+
+  ensurePermission(key) {
+    const perms = this.data.permissions || permissionsUtil.getDefaultPermissions();
+    if (this.data.isReadOnly || perms[key] === false) {
+      wx.showToast({
+        title: this.data.isReadOnly
+          ? '您只有只读权限，无法执行此操作'
+          : (permissionsUtil.PERMISSION_ERRORS[key] || '您没有操作权限'),
+        icon: 'none'
+      });
+      return false;
+    }
+    return true;
+  },
+
   loadUserInfo() {
     // 如果没有用户信息，尝试获取
     if (!app.globalData.userInfo) {
@@ -493,21 +529,12 @@ Page({
           if (res.result && res.result.success) {
             const userInfo = res.result.userInfo;
             const currentChild = this.getCurrentChild(userInfo);
-            
-            // 检查是否是只读权限
-            let isReadOnly = false;
-            if (userInfo.familyId && userInfo.familyMembers) {
-              const currentMember = userInfo.familyMembers.find(m => 
-                m.openid === app.globalData.openid && 
-                (m.account || '') === currentAccount
-              );
-              isReadOnly = currentMember && currentMember.readOnly === true;
-            }
+            const permissionState = this.buildPermissionState(userInfo);
             
             this.setData({
               userInfo: userInfo,
               currentChild: currentChild || null,
-              isReadOnly: isReadOnly
+              ...permissionState
             });
             app.saveUserInfo(userInfo);
 
@@ -870,11 +897,6 @@ Page({
     });
   },
 
-  // 跳转到添加科目
-  goToAddSubject() {
-    this.showAddSubjectModal();
-  },
-
   // 按科目分组作业
   groupHomeworkBySubject(homeworkList) {
     const grouped = {};
@@ -908,6 +930,7 @@ Page({
 
   toggleCheckIn(e) {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('checkin')) return;
     
     // 检查前置条件
     if (!this.checkPreconditions(() => {
@@ -1111,6 +1134,7 @@ Page({
 
   goToAdd() {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('homework')) return;
     
     // 检查前置条件
     if (!this.checkPreconditions(() => {
@@ -1140,6 +1164,7 @@ Page({
   // 复制当天作业
   copyHomework() {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('homework')) return;
     const selectedDate = this.data.selectedDate;
     const allSubjects = this.data.subjects || [];
     
@@ -1508,6 +1533,7 @@ Page({
 
   // 编辑当天作业 - 跳转到添加页面
   editDayHomework() {
+    if (!this.ensurePermission('homework')) return;
     const selectedSubject = this.data.selectedSubject;
     const selectedDate = this.data.selectedDate;
     
@@ -2131,6 +2157,7 @@ Page({
   // 跳转到添加科目页面
   // 打开科目管理弹窗
   goToAddSubject() {
+    if (!this.ensurePermission('subjects')) return;
     this.setData({
       showSubjectManageModal: true
     });
@@ -2582,6 +2609,7 @@ Page({
   // 打开添加/编辑小朋友弹窗
   openAddChildModal(e) {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('children')) return;
 
     // 检查是否有家庭
     if (!this.data.userInfo || !this.data.userInfo.familyId) {
@@ -2656,6 +2684,7 @@ Page({
 
   // 保存小朋友
   saveChild() {
+    if (!this.ensurePermission('children')) return;
     const newChild = this.data.newChild;
     if (!newChild.name.trim()) {
       wx.showToast({ title: '请输入名字', icon: 'none' });

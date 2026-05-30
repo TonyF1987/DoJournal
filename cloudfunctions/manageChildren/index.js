@@ -4,6 +4,7 @@ cloud.init({
 });
 const db = cloud.database();
 const _ = db.command;
+const { canPerform, getPermissionError, getCurrentFamilyMember } = require('./permissions');
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
@@ -30,31 +31,14 @@ exports.main = async (event, context) => {
     user = usersRes.data[0];
   }
 
-  // 检查是否是只读权限（只有 list、switch 操作允许）
   const readOnlyActions = ['list', 'switch'];
   if (!readOnlyActions.includes(action)) {
-    let isReadOnly = false;
-    try {
-      // 如果用户有家庭，检查是否是只读（使用 openid + account 联合判断）
-      if (user.familyId) {
-        const familyRes = await db.collection('families').doc(user.familyId).get();
-        
-        if (familyRes.data) {
-          const family = familyRes.data;
-          const members = family.members || [];
-          const currentMember = members.find(m => m.openid === wxContext.OPENID && m.account === (user.account || ''));
-          
-          if (currentMember && currentMember.readOnly) {
-            isReadOnly = true;
-          }
-        }
-      }
-    } catch (err) {
-      console.error('检查权限失败:', err);
-    }
-    
-    if (isReadOnly) {
-      return { success: false, errMsg: '您只有只读权限，无法修改小朋友信息' };
+    const currentMember = await getCurrentFamilyMember(db, user, wxContext.OPENID);
+    if (!canPerform(currentMember, 'children')) {
+      return {
+        success: false,
+        errMsg: getPermissionError(currentMember, 'children', '您只有只读权限，无法修改小朋友信息')
+      };
     }
   }
   const userId = user._id;

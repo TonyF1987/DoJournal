@@ -1,4 +1,11 @@
 <view class="container {{darkMode ? 'dark-mode' : ''}}">
+  <view class="read-only-banner" wx:if="{{isReadOnly}}">
+    <text>您只有只读权限，无法打卡</text>
+  </view>
+  <view class="read-only-banner" wx:elif="{{!canCheckin}}">
+    <text>您没有打卡权限</text>
+  </view>
+
   <!-- 作业详情 -->
   <view class="card" wx:if="{{homework}}">
     <view class="homework-header">
@@ -72,7 +79,7 @@
 
   <!-- 打卡按钮 -->
   <view class="submit-section">
-    <button class="btn-submit" bindtap="submitCheckIn" disabled="{{!proofImage || rating === 0}}">完成打卡</button>
+    <button class="btn-submit" bindtap="submitCheckIn" disabled="{{!canCheckin || !proofImage || rating === 0}}">完成打卡</button>
     <text class="tip">上传凭证并选择评价后即可打卡</text>
   </view>
 

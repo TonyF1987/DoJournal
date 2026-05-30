@@ -1,6 +1,7 @@
 const app = getApp();
 const db = wx.cloud.database();
 const theme = require('../../utils/theme.js');
+const permissionsUtil = require('../../utils/permissions.js');
 
 Page({
   data: {
@@ -34,7 +35,19 @@ Page({
     registrationEnabled: true, // 注册开关状态
     isAdmin: false, // 是否是管理员
     showRegistrationInvitationModal: false, // 注册邀请码弹窗
-    registrationInvitationCode: '' // 注册邀请码
+    registrationInvitationCode: '', // 注册邀请码
+    showPermissionModal: false,
+    editingPermissionMember: null,
+    editingPermissions: {},
+    permissionOptions: [
+      { key: 'checkin', label: '打卡' },
+      { key: 'homework', label: '作业管理' },
+      { key: 'subjects', label: '科目管理' },
+      { key: 'children', label: '孩子管理' },
+      { key: 'rewards', label: '积分奖励' },
+      { key: 'exchange', label: '积分兑换' },
+      { key: 'ocr', label: 'OCR识别' }
+    ]
   },
 
   onLoad() {
@@ -784,7 +797,8 @@ Page({
     // 确保所有成员都有 hidden 字段
     const normalizedMembers = familyMembers.map(member => ({
       ...member,
-      hidden: member.hidden === true  // 只有显式为 true 才算隐藏
+      hidden: member.hidden === true,
+      isRestricted: permissionsUtil.isRestricted(member)
     }));
     
     // 如果是创建者，显示所有成员
@@ -846,6 +860,84 @@ Page({
         }
       }
     });
+  },
+
+  showMemberPermissionModal(e) {
+    const memberOpenid = e.currentTarget.dataset.openid;
+    const memberAccount = e.currentTarget.dataset.account || '';
+    const member = (this.data.familyMembers || []).find(
+      (item) => item.openid === memberOpenid && (item.account || '') === memberAccount
+    );
+
+    if (!member) {
+      wx.showToast({ title: '成员不存在', icon: 'none' });
+      return;
+    }
+
+    this.setData({
+      showPermissionModal: true,
+      editingPermissionMember: member,
+      editingPermissions: permissionsUtil.normalizePermissions(member.permissions)
+    });
+  },
+
+  closePermissionModal() {
+    this.setData({
+      showPermissionModal: false,
+      editingPermissionMember: null,
+      editingPermissions: {}
+    });
+  },
+
+  onPermissionSwitchChange(e) {
+    const key = e.currentTarget.dataset.key;
+    const value = e.detail.value;
+    this.setData({
+      [`editingPermissions.${key}`]: value
+    });
+  },
+
+  async saveMemberPermissions() {
+    const member = this.data.editingPermissionMember;
+    if (!member) {
+      return;
+    }
+
+    if (member.readOnly) {
+      wx.showToast({ title: '请先取消只读', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '保存中...' });
+
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'manageFamily',
+        data: {
+          action: 'setMemberPermissions',
+          data: {
+            memberOpenid: member.openid,
+            memberAccount: member.account || '',
+            permissions: this.data.editingPermissions,
+            account: this.data.userInfo.account || ''
+          }
+        }
+      });
+
+      wx.hideLoading();
+
+      if (res.result && res.result.success) {
+        wx.showToast({ title: '权限已更新', icon: 'success' });
+        this.closePermissionModal();
+        this.loadFamilyInfo(false);
+      } else {
+        wx.showToast({ title: res.result?.errMsg || '保存失败', icon: 'none' });
+      }
+    } catch (err) {
+      wx.hideLoading();
+      console.error('保存权限失败:', err);
+      wx.showToast({ title: '保存失败', icon: 'none' });
+    }
   },
 
   // 切换成员只读状态

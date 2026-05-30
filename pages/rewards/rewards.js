@@ -1,6 +1,7 @@
 const app = getApp();
 const db = wx.cloud.database();
 const theme = require('../../utils/theme.js');
+const permissionsUtil = require('../../utils/permissions.js');
 
 Page({
   data: {
@@ -59,7 +60,12 @@ Page({
     currentPage: 0,
     hasMore: true,
     isLoading: false,
-    showDemoBanner: false
+    showDemoBanner: false,
+    isReadOnly: false,
+    permissions: permissionsUtil.getDefaultPermissions(),
+    canRewards: true,
+    canExchange: true,
+    canChildren: true
   },
 
   onLoad() {
@@ -170,13 +176,22 @@ Page({
         success: (res) => {
           if (res.result && res.result.success) {
             const userData = res.result.userInfo;
+            const currentMember = userData.familyMembers
+              ? permissionsUtil.findFamilyMember(userData.familyMembers, app.globalData.openid, currentAccount)
+              : null;
+            const perms = userData.familyPermissions || permissionsUtil.getMemberPermissions(currentMember);
           
             // 获取当前小朋友
             const currentChild = this.getCurrentChild(userData);
             this.setData({ 
               userInfo: userData,
               currentChild: currentChild,
-              children: userData.children || []
+              children: userData.children || [],
+              isReadOnly: permissionsUtil.hasReadOnly(currentMember),
+              permissions: perms,
+              canRewards: !!perms.rewards,
+              canExchange: !!perms.exchange,
+              canChildren: !!perms.children
             });
             app.saveUserInfo(userData);
             app.globalData.isLoggedIn = true;
@@ -486,8 +501,23 @@ Page({
     }
   },
 
+  ensurePermission(key) {
+    const perms = this.data.permissions || permissionsUtil.getDefaultPermissions();
+    if (this.data.isReadOnly || perms[key] === false) {
+      wx.showToast({
+        title: this.data.isReadOnly
+          ? '您只有只读权限，无法执行此操作'
+          : (permissionsUtil.PERMISSION_ERRORS[key] || '您没有操作权限'),
+        icon: 'none'
+      });
+      return false;
+    }
+    return true;
+  },
+
   showAddModal(e) {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('rewards')) return;
     const type = e.currentTarget.dataset.type;
     this.setData({
       showAddModal: true,
@@ -500,6 +530,7 @@ Page({
 
   editReward(e) {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('rewards')) return;
     const item = e.currentTarget.dataset.item;
     const type = e.currentTarget.dataset.type;
     this.setData({
@@ -513,6 +544,7 @@ Page({
 
   deleteReward(e) {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('rewards')) return;
     const item = e.currentTarget.dataset.item;
     const type = e.currentTarget.dataset.type;
     const currentChild = this.data.currentChild;
@@ -607,6 +639,7 @@ Page({
 
   saveItem() {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('rewards')) return;
     const { currentModalType, currentItem, editingItem, currentChild } = this.data;
 
     if (!currentChild) {
@@ -672,6 +705,7 @@ Page({
 
   exchangeReward(e) {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('exchange')) return;
     const rewardId = e.currentTarget.dataset.id;
     const points = Number(e.currentTarget.dataset.points);
     const currentChild = this.data.currentChild;
@@ -732,6 +766,7 @@ Page({
 
   executePunishment(e) {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('rewards')) return;
     const violation = e.currentTarget.dataset.item;
 
     wx.showModal({
