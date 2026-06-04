@@ -191,7 +191,8 @@ Page({
             points: data.points || 10,
             subject: data.subject || '',
             selectedSubject: data.subject || '',
-            importedContent: (data.images || []).map(url => ({ type: 'image', url }))
+            importedContent: (data.images || []).map(url => ({ type: 'image', url })),
+            editingHomeworkRecurring: !!(data.recurring || data.recurringBatchId)
           });
           this.updateCanSubmit();
         } else {
@@ -1120,6 +1121,36 @@ Page({
     this.updateCanSubmit();
   },
 
+  isRecurringHomework(homework) {
+    return !!(homework && (homework.recurring || homework.recurringBatchId));
+  },
+
+  formatRecurringUpdateMessage(result, updateMode) {
+    if (updateMode !== 'all') {
+      return '保存成功';
+    }
+    const created = (result && result.created) || 0;
+    const removed = (result && result.removed) || 0;
+    const count = (result && result.updated) || 1;
+    if (created || removed) {
+      return `已同步${count}条（新增${created}，删除${removed}）`;
+    }
+    return `已更新${count}条作业`;
+  },
+
+  promptRecurringUpdateScope(onConfirm) {
+    wx.showActionSheet({
+      itemList: ['仅修改当天作业', '修改所有周期作业'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          onConfirm('single');
+        } else if (res.tapIndex === 1) {
+          onConfirm('all');
+        }
+      }
+    });
+  },
+
   submitHomework(e) {
     if (!this.ensurePermission('homework')) {
       return;
@@ -1128,26 +1159,41 @@ Page({
       return;
     }
 
-    wx.showLoading({
-      title: this.data.editingHomework ? '保存中...' : (this.data.isEdit ? '保存中...' : '添加中...')
-    });
-
     const images = this.data.importedContent
       .filter(item => item.type === 'image')
       .map(item => item.url);
 
     if (this.data.editingHomework) {
-      this.updateHomeworkFromList(images);
-    } else if (this.data.isEdit) {
-      this.updateHomework(images);
-    } else {
-      this.addHomework(images);
+      const homework = this.data.editingHomework;
+      if (this.isRecurringHomework(homework)) {
+        this.promptRecurringUpdateScope((updateMode) => {
+          this.updateHomeworkFromList(images, updateMode);
+        });
+      } else {
+        this.updateHomeworkFromList(images, 'single');
+      }
+      return;
     }
+
+    if (this.data.isEdit) {
+      if (this.data.editingHomeworkRecurring) {
+        this.promptRecurringUpdateScope((updateMode) => {
+          this.updateHomework(images, updateMode);
+        });
+      } else {
+        this.updateHomework(images, 'single');
+      }
+      return;
+    }
+
+    wx.showLoading({ title: '添加中...' });
+    this.addHomework(images);
   },
 
-  updateHomeworkFromList(images) {
+  updateHomeworkFromList(images, updateMode = 'single') {
     const homework = this.data.editingHomework;
-    
+
+    wx.showLoading({ title: '保存中...' });
     wx.cloud.callFunction({
       name: 'updateHomework',
       data: {
@@ -1163,13 +1209,14 @@ Page({
         images: images,
         points: this.data.points,
         subject: this.data.selectedSubject,
-        account: app.globalData.userInfo?.account || ''
+        account: app.globalData.userInfo?.account || '',
+        updateMode: updateMode
       },
       success: (res) => {
         wx.hideLoading();
         if (res.result && res.result.success) {
           wx.showToast({
-            title: '保存成功',
+            title: this.formatRecurringUpdateMessage(res.result, updateMode),
             icon: 'success'
           });
           this.setData({
@@ -1253,14 +1300,8 @@ Page({
     });
   },
 
-  updateHomework(images) {
-    console.log('更新作业，ID:', this.data.homeworkId);
-    console.log('更新数据:', {
-      title: this.data.selectedSubject || '作业',
-      content: this.data.content,
-      points: this.data.points
-    });
-    
+  updateHomework(images, updateMode = 'single') {
+    wx.showLoading({ title: '保存中...' });
     wx.cloud.callFunction({
       name: 'updateHomework',
       data: {
@@ -1276,14 +1317,14 @@ Page({
         images: images,
         points: this.data.points,
         subject: this.data.selectedSubject,
-        account: app.globalData.userInfo?.account || ''
+        account: app.globalData.userInfo?.account || '',
+        updateMode: updateMode
       },
       success: (res) => {
         wx.hideLoading();
-        console.log('云函数返回:', res);
         if (res.result && res.result.success) {
           wx.showToast({
-            title: '保存成功',
+            title: this.formatRecurringUpdateMessage(res.result, updateMode),
             icon: 'success'
           });
 
