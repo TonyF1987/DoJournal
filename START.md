@@ -1,322 +1,287 @@
 # 快速开始指南
 
-欢迎使用儿童作业打卡小程序！本指南将帮助你在5分钟内快速启动项目。
+欢迎使用 DoJournal（作业打卡）！本指南帮助你在约 15 分钟内从零完成本地搭建。
 
-## 一分钟快速启动（前提条件已配置）
-
-如果你已经完成了以下配置：
-- ✅ 已安装微信开发者工具
-- ✅ 已注册微信小程序
-- ✅ 已开通云开发
-- ✅ 已创建数据库集合
-- ✅ 已部署云函数
-
-那么直接：
-
-1. 打开微信开发者工具
-2. 导入项目（选择当前目录）
-3. 点击「编译」
-4. 开始测试！
+> 完整架构说明见 [README.md](README.md)，发布上线见 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 ---
 
-## 五分钟完整启动（从零开始）
+## 一分钟快速启动（前提已配置）
 
-### 步骤1：准备环境（1分钟）
+若你已完成 AppID、云环境、数据库集合、云函数部署：
 
-1. **下载微信开发者工具**
-   - 访问：https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html
-   - 下载并安装最新版本
-
-2. **注册小程序账号**
-   - 访问：https://mp.weixin.qq.com/
-   - 使用微信扫码注册
-   - 完成基本认证
-
-3. **获取 AppID**
-   - 登录微信公众平台
-   - 进入「开发」->「开发管理」->「开发设置」
-   - 复制 AppID
+1. 用微信开发者工具导入本项目目录
+2. 点击「编译」
+3. 使用「真机调试」开始测试
 
 ---
 
-### 步骤2：配置项目（1分钟）
+## 完整启动步骤
 
-1. **修改 AppID**
-   - 打开 `project.config.json` 文件
-   - 将 `"appid": "your_appid_here"` 改为你的 AppID
+### 步骤 1：准备环境
 
-2. **配置云开发环境ID**
-   - 打开 `app.js` 文件
-   - 将 `env: 'your_env_id'` 改为你的云环境ID
-   - （环境ID在开通云开发后会显示）
+1. **安装微信开发者工具**
+   - https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html
 
----
+2. **注册小程序**
+   - https://mp.weixin.qq.com/
+   - 获取 AppID（开发 → 开发管理 → 开发设置）
 
-### 步骤3：开通云开发（1分钟）
+3. **Fork / Clone 项目**
 
-1. 在微信开发者工具中打开项目
-2. 点击顶部「云开发」按钮
-3. 点击「开通」
-4. 选择「免费版」套餐
-5. 创建环境，环境名称填写 `homework-checkin`
-6. 记下环境ID（格式：`xxx-xxx`）
-7. 将环境ID填入 `app.js` 文件
+```bash
+git clone https://github.com/your-username/DoJournal.git
+cd DoJournal
+```
 
 ---
 
-### 步骤4：创建数据库（1分钟）
+### 步骤 2：配置项目（2 分钟）
 
-1. 在微信开发者工具中，点击「云开发」
-2. 进入「数据库」
-3. 点击「+」号，依次创建4个集合：
-   - `users`
-   - `homework`
-   - `rewards`
-   - `exchange_records`
-
-4. 设置数据库权限（每个集合都需要设置）：
-   - 点击集合名称 -> 「权限设置」
-   - 选择「所有用户可读，仅创建者可写」
-
-5. 初始化奖励数据：
-   - 进入 `rewards` 集合
-   - 点击「添加记录」
-   - 添加以下数据（复制粘贴 JSON）：
+**修改 AppID** — [project.config.json](project.config.json)：
 
 ```json
 {
-  "name": "30分钟游戏时间",
-  "description": "可以玩30分钟喜欢的游戏",
-  "image": "/images/default-reward.png",
-  "points": 50,
-  "stock": 999,
-  "createTime": {"$date": "2026-01-16T00:00:00.000Z"}
+  "appid": "你的小程序AppID"
 }
 ```
 
-重复添加多个奖励，修改 `points`、`stock` 等字段。
+**修改云环境 ID** — [app.js](app.js)：
+
+```javascript
+wx.cloud.init({
+  env: 'your-env-id',  // 替换为你的云开发环境 ID
+  traceUser: true
+});
+```
+
+> 仓库内现有的 AppID 和环境 ID 仅为示例，请勿直接使用。
 
 ---
 
-### 步骤5：部署云函数（1分钟）
+### 步骤 3：开通云开发（2 分钟）
 
-依次右键点击以下云函数文件夹，选择「上传并部署：云端安装依赖」：
-
-1. `cloudfunctions/login`
-2. `cloudfunctions/addHomework`
-3. `cloudfunctions/completeHomework`
-4. `cloudfunctions/exchangeReward`
-5. `cloudfunctions/generateRecurringTasks`
-
-等待每个云函数部署完成（约30秒/个）。
+1. 微信开发者工具打开项目
+2. 顶部点击「云开发」→「开通」
+3. 选择「按量计费 / 免费版」
+4. 创建环境（如 `dojournal-dev`）
+5. 复制环境 ID，填入 `app.js`
 
 ---
 
-## 开始测试！
+### 步骤 4：创建数据库集合（3 分钟）
 
-### 方式1：模拟器测试
+云开发控制台 → 数据库 → 点击「+」创建以下集合：
 
-1. 在微信开发者工具中，点击「编译」
-2. 选择「模拟器」
-3. 使用预置的模拟器进行测试
+| 集合 | 说明 |
+|------|------|
+| `users` | 用户账号 |
+| `families` | 家庭 |
+| `homework` | 作业 |
+| `checkins` | 打卡记录 |
+| `point_records` | 积分流水 |
+| `appConfig` | 应用配置 |
+| `registration_invitations` | 注册邀请码 |
+| `family_invitations` | 家庭邀请码 |
 
-### 方式2：真机测试（推荐）
+**权限设置**（每个集合）：「所有用户可读，仅创建者可写」
 
-1. 点击「真机调试」或「预览」
-2. 使用微信扫描二维码
-3. 在手机上真实体验
+可选集合：`violations`、`violationRecords`（违规功能，也可运行时初始化）
 
----
+> 不要创建旧版 `rewards`、`exchange_records` 集合，奖励数据已嵌入孩子记录中。
 
-## 测试流程
+数据模型详见 [database/init.js](database/init.js)。
 
-### 1. 添加第一个作业
+**可选：配置管理员**（控制注册开关）
 
-1. 点击底部「添加作业」
-2. 填写标题：数学作业
-3. 填写内容：完成课本第10页
-4. 选择积分：10分
-5. 点击「添加作业」
+在 `appConfig` 集合添加一条记录：
 
-### 2. 完成作业打卡
+```json
+{
+  "key": "adminAccounts",
+  "value": [
+    { "openid": "你的OpenID", "account": "" }
+  ]
+}
+```
 
-1. 在首页找到刚添加的作业
-2. 点击进入打卡页面
-3. 点击「拍照」，拍摄完成凭证
-4. 点击「完成打卡」
-
-### 3. 查看积分
-
-1. 打卡成功后，查看首页
-2. 应该显示获得积分
-3. 连续打卡天数显示为1
-
-### 4. 连续打卡测试
-
-1. 第二天再来打卡
-2. 连续天数会增加
-3. 连续3天可获得额外奖励
-
-### 5. 兑换奖励
-
-1. 点击底部「奖励」
-2. 找到一个可兑换的奖励
-3. 点击「兑换」
-4. 确认兑换
-
-### 6. 分享打卡
-
-1. 完成打卡后，点击「去分享」
-2. 等待海报生成
-3. 点击「保存到相册」
+首次登录后可在云开发控制台 → 数据库 → `users` 中查看你的 `_openid`。
 
 ---
 
-## 常见问题快速解决
+### 步骤 5：部署云函数（5 分钟）
 
-### 问题1：云函数调用失败
+在微信开发者工具中，右键各云函数文件夹 → **上传并部署：云端安装依赖**。
 
-**现象**：点击按钮无反应或报错
+#### 第一批（认证，优先部署）
 
-**解决**：
-1. 检查云函数是否已部署（云函数列表中是否有文件图标）
-2. 检查环境ID是否正确
-3. 查看云函数日志定位问题
+- `login`
+- `handleAuth`
+- `getUserInfo`
+
+#### 第二批（家庭与孩子）
+
+- `manageFamily`
+- `manageChildren`
+- `manageSubjects`
+
+#### 第三批（作业）
+
+- `addHomework`
+- `updateHomework`
+- `deleteHomework`
+- `getHomework`
+- `getHomeworks`
+- `copyHomework`
+
+#### 第四批（打卡与积分）
+
+- `completeHomework`
+- `cancelCheckin`
+- `getCheckins`
+- `getPointRecords`
+- `exchangeReward`
+- `manageRewards`
+
+#### 第五批（其他）
+
+- `deleteAccount`
+- `ocrBaidu`（需要 OCR 功能时部署，并配置环境变量）
+
+#### 可选（一般不需要）
+
+- `generateRecurringTasks`（定时任务，当前版本周期作业在创建时已预生成）
+- `ocrGeneral`、`checkinHomework`、`getPhoneNumber`（遗留/备用，可不部署）
+
+**OCR 环境变量**（部署 `ocrBaidu` 后配置）：
+
+| 变量名 | 说明 |
+|--------|------|
+| `BAIDU_OCR_API_KEY` | 百度 OCR API Key |
+| `BAIDU_OCR_SECRET_KEY` | 百度 OCR Secret Key |
+
+详见 [BAIDU_OCR_SETUP.md](BAIDU_OCR_SETUP.md)。
 
 ---
 
-### 问题2：数据库查询失败
+### 步骤 6：编译与测试
 
-**现象**：页面数据不显示
-
-**解决**：
-1. 检查数据库集合是否已创建
-2. 检查权限设置（所有用户可读，仅创建者可写）
-3. 确保用户已登录（首次进入会自动创建用户）
+1. 点击「编译」
+2. 推荐「真机调试」（模拟器部分功能受限）
+3. 首次进入会引导登录/注册
 
 ---
 
-### 问题3：图片上传失败
+## 推荐测试流程
 
-**现象**：上传凭证时失败
+### 1. 登录注册
 
-**解决**：
-1. 检查云存储是否已开启
-2. 检查存储空间是否充足
-3. 尝试使用较小的图片（<5MB）
+- 首次打开 → 进入登录页
+- 完成注册或使用邀请码（若关闭了开放注册）
+
+### 2. 家庭与孩子
+
+- 「我的」→ 创建家庭（或加入已有家庭）
+- 添加/切换孩子（首页顶部可切换当前孩子）
+
+### 3. 科目与作业
+
+- 首页选择日期 → 进入科目 → 添加作业
+- 测试手动添加、周期作业（选择星期几 + 重复次数）
+- 测试 OCR 导入（需已配置 `ocrBaidu`）
+
+### 4. 打卡
+
+- 首页点击待完成作业 → 上传凭证 → 完成打卡
+- 确认积分增加、连续天数更新
+
+### 5. 积分与奖励
+
+- 底部「积分」Tab → 添加奖励 → 兑换
+- 查看积分流水
+
+### 6. 周期作业编辑/删除
+
+- 编辑周期作业 → 选择「仅修改当天」或「修改所有周期作业」
+- 删除时同样可选择范围
+
+### 7. 分享
+
+- 打卡成功后 → 生成海报 → 保存到相册
 
 ---
 
-### 问题4：Canvas绘制失败
+## 界面说明
 
-**现象**：分享海报无法生成
+当前 TabBar 为三个 Tab（非旧版四 Tab）：
 
-**解决**：
-1. 检查微信开发者工具基础库版本 >= 2.9.0
-2. 使用真机测试（模拟器可能不支持Canvas 2D）
-3. 查看Console错误信息
+| Tab | 页面 | 功能 |
+|-----|------|------|
+| 首页 | `pages/index` | 日历、科目、作业列表、打卡入口 |
+| 积分 | `pages/rewards` | 奖励、兑换、积分流水 |
+| 我的 | `pages/me` | 家庭、权限、账号、设置 |
+
+添加/编辑作业入口在首页科目视图中，非独立 Tab。
 
 ---
 
-### 问题5：积分计算错误
+## 常见问题
 
-**现象**：打卡后积分不正确
+### 云函数调用失败
 
-**解决**：
-1. 检查作业设置的积分数值
-2. 查看云函数日志确认计算逻辑
-3. 刷新页面查看最新数据
+1. 确认云函数已部署（云函数列表有绿色图标）
+2. 确认 `app.js` 中环境 ID 正确
+3. 云开发控制台 → 云函数 → 日志
+
+### 首页作业列表为空
+
+1. 确认已选择正确的孩子
+2. 确认 `getHomeworks` 已部署
+3. 检查数据库 `homework` 集合是否有对应 `childId` 的记录
+
+### OCR 识别失败
+
+1. 确认 `ocrBaidu` 已部署
+2. 确认环境变量已配置
+3. 参考 [CLOUD_FUNCTION_TIMEOUT.md](CLOUD_FUNCTION_TIMEOUT.md) 调整超时
+
+### 数据库权限错误
+
+所有集合设为「所有用户可读，仅创建者可写」。
 
 ---
 
 ## 项目结构速览
 
 ```
-homework-checkin/
-├── app.js                 # 小程序入口
-├── app.json              # 全局配置
-├── app.wxss              # 全局样式
-├── project.config.json   # 项目配置
-├── cloudfunctions/       # 云函数
-│   ├── login/            # 登录
-│   ├── addHomework/      # 添加作业
-│   ├── completeHomework/ # 完成作业
-│   ├── exchangeReward/   # 兑换奖励
-│   └── generateRecurringTasks/ # 生成周期作业
-├── pages/                # 页面
-│   ├── index/            # 首页
-│   ├── add/              # 添加作业
-│   ├── checkin/          # 打卡
-│   ├── rewards/          # 奖励商城
-│   └── share/            # 分享
-├── utils/                # 工具函数
-├── images/               # 图片资源
-├── database/             # 数据库脚本
-├── README.md             # 项目说明
-├── DEPLOYMENT.md         # 部署指南
-├── TESTING.md            # 测试指南
-└── START.md              # 快速开始（本文件）
+DoJournal/
+├── app.js / app.json          # 入口
+├── cloudfunctions/            # 24 个云函数
+├── pages/
+│   ├── index/                 # 首页
+│   ├── add/                   # 添加/编辑作业
+│   ├── checkin/               # 打卡
+│   ├── rewards/               # 积分
+│   ├── me/                    # 我的
+│   ├── login/                 # 登录
+│   └── accounts/              # 账号切换
+├── utils/                     # 工具函数
+├── shared/cloud-permissions/  # 权限模块
+└── database/init.js           # 数据模型
 ```
 
 ---
 
 ## 下一步
 
-1. **准备图标资源**
-   - 在 `images/` 目录下准备 TabBar 图标
-   - 图标尺寸：81×81 像素，PNG格式
-   - 需要灰色和绿色两种状态
-
-2. **自定义奖励**
-   - 在云开发控制台编辑 `rewards` 集合
-   - 添加更多奖励项
-   - 修改积分和库存
-
-3. **设置定时任务**
-   - 在云开发控制台为 `generateRecurringTasks` 配置定时触发器
-   - 每天凌晨自动生成周期作业
-
-4. **上传发布**
-   - 测试无误后上传代码
-   - 提交审核
-   - 正式发布
+1. **配置 OCR** — [BAIDU_OCR_SETUP.md](BAIDU_OCR_SETUP.md)
+2. **完整部署与发布** — [DEPLOYMENT.md](DEPLOYMENT.md)
+3. **测试清单** — [TESTING.md](TESTING.md)
+4. **参与贡献** — [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
-## 需要帮助？
+## 官方资源
 
-📖 查看详细文档：
-- `README.md` - 项目完整说明
-- `DEPLOYMENT.md` - 详细部署指南
-- `TESTING.md` - 完整测试方案
-
-🔗 官方资源：
 - [微信小程序文档](https://developers.weixin.qq.com/miniprogram/dev/framework/)
 - [云开发文档](https://developers.weixin.qq.com/miniprogram/dev/wxcloud/basis/getting-started.html)
-
----
-
-## 开发者提示
-
-### 修改云函数后
-
-每次修改云函数代码后，需要重新部署：
-1. 保存云函数代码
-2. 右键点击云函数文件夹
-3. 选择「上传并部署：云端安装依赖」
-
-### 修改页面后
-
-页面修改后，直接保存即可，会自动刷新预览。
-
-### 查看日志
-
-1. 进入云开发控制台
-2. 选择「云函数」
-3. 点击云函数名称
-4. 查看「日志」和「监控」
-
----
-
-**祝你使用愉快！** 🎉
