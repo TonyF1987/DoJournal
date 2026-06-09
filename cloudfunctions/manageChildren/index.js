@@ -4,7 +4,7 @@ cloud.init({
 });
 const db = cloud.database();
 const _ = db.command;
-const { canPerform, getPermissionError, getCurrentFamilyMember } = require('./permissions');
+const { canPerform, getPermissionError, getCurrentFamilyMember, isFamilyMemberResolved } = require('./permissions');
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
@@ -34,6 +34,9 @@ exports.main = async (event, context) => {
   const readOnlyActions = ['list', 'switch'];
   if (!readOnlyActions.includes(action)) {
     const currentMember = await getCurrentFamilyMember(db, user, wxContext.OPENID);
+    if (!isFamilyMemberResolved(user, currentMember)) {
+      return { success: false, errMsg: '您不在这个家庭中' };
+    }
     if (!canPerform(currentMember, 'children')) {
       return {
         success: false,

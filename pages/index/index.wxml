@@ -237,7 +237,7 @@
                 </view>
               </view>
             </view>
-            <view class="child-actions">
+            <view class="child-actions" wx:if="{{canChildren}}">
               <view class="child-edit" catchtap="openAddChildModal" data-child="{{item}}">✏️</view>
               <view class="child-delete" catchtap="deleteChild" data-child="{{item}}">🗑️</view>
             </view>
@@ -245,7 +245,7 @@
         </block>
       </view>
     </view>
-    <view class="modal-footer">
+    <view class="modal-footer" wx:if="{{canChildren}}">
       <button class="btn-confirm" bindtap="openAddChildModal">➕ 添加小朋友</button>
     </view>
   </view>

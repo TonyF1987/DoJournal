@@ -31,7 +31,7 @@ exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
   const { imgUrl, account } = event;
   const db = cloud.database();
-  const { canPerform, getPermissionError, getCurrentFamilyMember } = require('./permissions');
+  const { canPerform, getPermissionError, getCurrentFamilyMember, isFamilyMemberResolved } = require('./permissions');
 
   try {
     const userRes = await db.collection('users').where({
@@ -44,6 +44,9 @@ exports.main = async (event, context) => {
         user = userRes.data.find(u => (u.account || '') === account) || user;
       }
       const currentMember = await getCurrentFamilyMember(db, user, wxContext.OPENID);
+      if (!isFamilyMemberResolved(user, currentMember)) {
+        return { errCode: -4, errMsg: '您不在这个家庭中', items: [] };
+      }
       if (!canPerform(currentMember, 'ocr')) {
         return {
           errCode: -4,

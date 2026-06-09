@@ -87,6 +87,13 @@ async function getCurrentFamilyMember(db, user, openid) {
   }
 }
 
+function isFamilyMemberResolved(user, member) {
+  if (!user || !user.familyId) {
+    return true;
+  }
+  return !!member;
+}
+
 function getMemberPermissions(member) {
   if (!member || member.role === 'creator') {
     return getDefaultPermissions();
@@ -109,5 +116,6 @@ module.exports = {
   getPermissionError,
   findMember,
   getCurrentFamilyMember,
+  isFamilyMemberResolved,
   getMemberPermissions
 };

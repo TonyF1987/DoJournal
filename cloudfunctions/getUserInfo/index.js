@@ -75,7 +75,7 @@ exports.main = async (event, context) => {
           if (familyRes.data) {
             // 更新家庭中的成员信息（使用 openid + account 联合判断）
             const updatedMembers = familyRes.data.members.map(member => {
-              if (member.openid === wxContext.OPENID && member.account === (userInfo.account || '')) {
+              if (member.openid === wxContext.OPENID && (member.account || '') === (userInfo.account || '')) {
                 return {
                   ...member,
                   nickName: nickName || member.nickName,

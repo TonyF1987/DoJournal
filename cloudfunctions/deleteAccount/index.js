@@ -3,7 +3,7 @@ cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 const db = cloud.database();
-const { canPerform, getPermissionError, findMember } = require('./permissions');
+const { canPerform, getPermissionError, findMember, isFamilyMemberResolved } = require('./permissions');
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
@@ -36,6 +36,9 @@ exports.main = async (event, context) => {
       
       if (familyRes.data) {
         const currentMember = findMember(familyRes.data.members, openid, user.account || '');
+        if (!isFamilyMemberResolved(user, currentMember)) {
+          return { success: false, errMsg: '您不在这个家庭中' };
+        }
         if (!canPerform(currentMember, 'deleteAccount')) {
           return {
             success: false,

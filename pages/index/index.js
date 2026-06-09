@@ -2804,6 +2804,7 @@ Page({
   // 删除小朋友
   deleteChild(e) {
     if (!this.checkLoginAndPrompt()) return;
+    if (!this.ensurePermission('children')) return;
     const child = e.currentTarget.dataset.child;
     console.log('删除小朋友，child:', child);
     

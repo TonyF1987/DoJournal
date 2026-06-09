@@ -4,7 +4,7 @@ cloud.init({
 });
 const db = cloud.database();
 const _ = db.command;
-const { getDefaultPermissions, normalizePermissions, canPerform, getPermissionError, findMember } = require('./permissions');
+const { getDefaultPermissions, normalizePermissions, canPerform, getPermissionError, findMember, isFamilyMemberResolved } = require('./permissions');
 
 // 根据openid获取所有用户账号
 async function getUsersByOpenid(openid) {
@@ -290,6 +290,9 @@ async function leaveFamily(wxContext, data) {
   const family = familyRes.data;
 
   const currentMember = findMember(family.members, wxContext.OPENID, account || '');
+  if (!isFamilyMemberResolved(user, currentMember)) {
+    return { success: false, errMsg: '您不在这个家庭中' };
+  }
   if (!canPerform(currentMember, 'leaveFamily')) {
     return {
       success: false,
@@ -791,7 +794,7 @@ async function setMemberReadOnly(wxContext, data) {
 
   // 更新成员只读权限
   const updatedMembers = family.members.map(m => {
-    if (m.openid === memberOpenid && m.account === (memberAccount || '')) {
+    if (m.openid === memberOpenid && (m.account || '') === (memberAccount || '')) {
       return { ...m, readOnly: readOnly };
     }
     return m;
@@ -883,7 +886,7 @@ async function setMemberPermissions(wxContext, data) {
 
   const normalizedPermissions = normalizePermissions(permissions);
   const updatedMembers = family.members.map(m => {
-    if (m.openid === memberOpenid && m.account === (memberAccount || '')) {
+    if (m.openid === memberOpenid && (m.account || '') === (memberAccount || '')) {
       return { ...m, permissions: normalizedPermissions };
     }
     return m;
@@ -983,7 +986,7 @@ async function setMemberHidden(wxContext, data) {
 
   // 更新成员隐藏状态
   const updatedMembers = family.members.map(m => {
-    if (m.openid === memberOpenid && m.account === (memberAccount || '')) {
+    if (m.openid === memberOpenid && (m.account || '') === (memberAccount || '')) {
       return { ...m, hidden: hidden };
     }
     return m;
@@ -1057,6 +1060,7 @@ async function dissolveFamily(wxContext, data) {
             familyId: null,
             familyRole: null,
             familyReadOnly: null,
+            familyPermissions: null,
             updateTime: db.serverDate()
           }
         });

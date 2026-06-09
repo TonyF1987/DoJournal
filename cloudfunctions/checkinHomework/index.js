@@ -4,7 +4,7 @@ cloud.init({
 });
 const db = cloud.database();
 const _ = db.command;
-const { canPerform, getPermissionError, getCurrentFamilyMember } = require('./permissions');
+const { canPerform, getPermissionError, getCurrentFamilyMember, isFamilyMemberResolved } = require('./permissions');
 
 function getLocalDateStr(date) {
   const year = date.getFullYear();
@@ -35,6 +35,9 @@ exports.main = async (event, context) => {
 
   // 检查打卡权限
   const currentMember = await getCurrentFamilyMember(db, user, wxContext.OPENID);
+  if (!isFamilyMemberResolved(user, currentMember)) {
+    return { success: false, errMsg: '您不在这个家庭中' };
+  }
   if (!canPerform(currentMember, 'checkin')) {
     return {
       success: false,
